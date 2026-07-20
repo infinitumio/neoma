@@ -21,7 +21,7 @@ Only the latest release receives security fixes.
 
 Please report vulnerabilities privately:
 
-- Email: `YOUR_PUBLIC_PROJECT_EMAIL`
+- Discord: `panda2187`
 - Or use GitHub's _Report a vulnerability_ (Security Advisories) on the repository
 
 Please include reproduction steps and the impact you foresee. You should receive an

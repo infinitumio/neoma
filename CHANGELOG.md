@@ -44,5 +44,5 @@ Initial release.
 - Unit tests (Vitest) and end-to-end tests (Playwright)
 - Docker/nginx self-hosting setup
 
-[Unreleased]: https://github.com/YOUR_GITHUB_USERNAME/neoma/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/YOUR_GITHUB_USERNAME/neoma/releases/tag/v0.1.0
+[Unreleased]: https://github.com/infinitumio/neoma/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/infinitumio/neoma/releases/tag/v0.1.0

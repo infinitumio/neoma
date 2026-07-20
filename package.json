@@ -6,13 +6,13 @@
   "type": "module",
   "private": true,
   "author": "Iwan",
-  "homepage": "https://github.com/YOUR_GITHUB_USERNAME/neoma",
+  "homepage": "https://github.com/infinitumio/neoma",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_GITHUB_USERNAME/neoma.git"
+    "url": "https://github.com/infinitumio/neoma.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR_GITHUB_USERNAME/neoma/issues"
+    "url": "https://github.com/infinitumio/neoma/issues"
   },
   "engines": {
     "node": ">=20"

@@ -10,9 +10,9 @@ neoma is a lightweight, open-source research journal and linked-note application
 It works in your browser, runs offline and keeps your knowledge in portable Markdown files.
 
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-4ade80.svg)](LICENSE)
-[![Build](https://github.com/YOUR_GITHUB_USERNAME/neoma/actions/workflows/build.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/neoma/actions/workflows/build.yml)
-[![Tests](https://github.com/YOUR_GITHUB_USERNAME/neoma/actions/workflows/test.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/neoma/actions/workflows/test.yml)
-[![Latest release](https://img.shields.io/github/v/release/YOUR_GITHUB_USERNAME/neoma?include_prereleases&color=2f9e6e)](https://github.com/YOUR_GITHUB_USERNAME/neoma/releases)
+[![Build](https://github.com/infinitumio/neoma/actions/workflows/build.yml/badge.svg)](https://github.com/infinitumio/neoma/actions/workflows/build.yml)
+[![Tests](https://github.com/infinitumio/neoma/actions/workflows/test.yml/badge.svg)](https://github.com/infinitumio/neoma/actions/workflows/test.yml)
+[![Latest release](https://img.shields.io/github/v/release/infinitumio/neoma?include_prereleases&color=2f9e6e)](https://github.com/infinitumio/neoma/releases)
 [![PWA](https://img.shields.io/badge/PWA-installable-4ade80.svg)](#installation)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-2f9e6e.svg)](CONTRIBUTING.md)
 
@@ -68,7 +68,7 @@ readable in any text editor.
 neoma is a web application — nothing to install to try it:
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/neoma.git
+git clone https://github.com/infinitumio/neoma.git
 cd neoma
 npm ci
 npm run dev          # http://localhost:5173
@@ -173,8 +173,8 @@ improve it, and network-hosted versions must offer their source to users.
 neoma was created by **Iwan** as an open-source project for researchers, students,
 developers and anyone who wants complete ownership of their notes.
 
-- Repository: `https://github.com/YOUR_GITHUB_USERNAME/neoma`
-- Contact: `YOUR_PUBLIC_PROJECT_EMAIL`
+- Repository: `https://github.com/infinitumio/neoma`
+- Contact: Discord `panda2187`
 
 _neoma is an independent, community-driven project. It is not affiliated with Obsidian,
 Modrinth, or any other organisation._

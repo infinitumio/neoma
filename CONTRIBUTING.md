@@ -6,7 +6,7 @@ to be an approachable codebase.
 ## Development setup
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/neoma.git
+git clone https://github.com/infinitumio/neoma.git
 cd neoma
 nvm use            # Node 20 (see .nvmrc)
 npm ci

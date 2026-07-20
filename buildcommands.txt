@@ -868,9 +868,9 @@ Present the project as independently created and community-driven.
 Use these placeholders until replaced:
 
 * Original creator: `Iwan`
-* GitHub username: `YOUR_GITHUB_USERNAME`
-* Repository URL: `https://github.com/YOUR_GITHUB_USERNAME/neoma`
-* Contact: `YOUR_PUBLIC_PROJECT_EMAIL`
+* GitHub username: `infinitumio`
+* Repository URL: `https://github.com/infinitumio/neoma`
+* Contact Discord: `panda2187`
 
 The README should include:
 
