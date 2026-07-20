@@ -25,3 +25,6 @@ blob-report/
 
 # Vite
 .vite/
+
+# TypeScript incremental build info
+*.tsbuildinfo
