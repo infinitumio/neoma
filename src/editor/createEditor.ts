@@ -35,6 +35,9 @@ import {
 export interface EditorCallbacks {
   onChange: (content: string) => void
   onSave: () => void
+  /** Fired when the selection, document, or focus changes (for the
+   *  floating formatting toolbar). */
+  onSelectionChange?: (view: EditorView) => void
 }
 
 export interface EditorOptions {
@@ -86,6 +89,9 @@ export function buildExtensions(callbacks: EditorCallbacks, options: EditorOptio
     ]),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) callbacks.onChange(update.state.doc.toString())
+      if (update.docChanged || update.selectionSet || update.focusChanged) {
+        callbacks.onSelectionChange?.(update.view)
+      }
     }),
   ]
 }

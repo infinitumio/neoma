@@ -200,7 +200,7 @@ export interface Theme {
   variables?: Record<string, string>
 }
 
-export type EditorMode = 'edit' | 'split' | 'reading'
+export type EditorMode = 'edit' | 'split' | 'reading' | 'source'
 
 export type SortOrder = 'name' | 'created' | 'modified'
 

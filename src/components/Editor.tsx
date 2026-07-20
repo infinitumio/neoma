@@ -4,13 +4,28 @@
  * one of these, so at most one EditorView exists at a time; per-note editor
  * state (cursor, history) is cached across tab switches.
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EditorView } from '@codemirror/view'
 import type { EditorState } from '@codemirror/state'
 import { createEditorState } from '@/editor/createEditor'
 import { updateNoteContent, saveNoteNow, saveAttachment } from '@/app/vaultStore'
 import { useSettings } from '@/settings/settingsStore'
 import { useUi } from '@/app/uiStore'
+import { SelectionToolbar, type ToolbarPosition } from './SelectionToolbar'
+
+/** Position the toolbar above the top of the current (non-empty) selection. */
+function toolbarPositionFor(view: EditorView): ToolbarPosition | null {
+  if (!view.hasFocus) return null
+  const sel = view.state.selection.main
+  if (sel.empty) return null
+  const from = view.coordsAtPos(sel.from)
+  const to = view.coordsAtPos(sel.to)
+  if (!from || !to) return null
+  // Anchor above the topmost edge; clamp so it stays on screen.
+  const top = Math.max(8, Math.min(from.top, to.top) - 44)
+  const left = Math.min(Math.max(from.left, 120), window.innerWidth - 120)
+  return { top, left }
+}
 
 // Session cache of editor states so switching tabs keeps cursor + undo.
 const stateCache = new Map<string, EditorState>()
@@ -31,9 +46,14 @@ export function Editor({ path, content }: EditorProps) {
   pathRef.current = path
   const showLineNumbers = useSettings((s) => s.settings.showLineNumbers)
   const spellcheck = useSettings((s) => s.settings.spellcheck)
+  const [toolbar, setToolbar] = useState<ToolbarPosition | null>(null)
 
   useEffect(() => {
     if (!container.current) return
+    const refreshToolbar = () => {
+      const view = viewRef.current
+      setToolbar(view ? toolbarPositionFor(view) : null)
+    }
     const callbacks = {
       onChange: (text: string) => updateNoteContent(pathRef.current, text),
       onSave: () => {
@@ -41,6 +61,7 @@ export function Editor({ path, content }: EditorProps) {
           useUi.getState().toast('Could not save the note', 'error')
         })
       },
+      onSelectionChange: () => refreshToolbar(),
     }
     const options = { showLineNumbers, spellcheck }
     const cached = stateCache.get(path)
@@ -83,10 +104,15 @@ export function Editor({ path, content }: EditorProps) {
 
     dom.addEventListener('paste', onPaste)
     dom.addEventListener('drop', onDrop)
+    // Keep the floating toolbar glued to the selection while scrolling.
+    const onScroll = () => refreshToolbar()
+    view.scrollDOM.addEventListener('scroll', onScroll, { passive: true })
 
     return () => {
       dom.removeEventListener('paste', onPaste)
       dom.removeEventListener('drop', onDrop)
+      view.scrollDOM.removeEventListener('scroll', onScroll)
+      setToolbar(null)
       stateCache.set(pathRef.current, view.state)
       view.destroy()
       viewRef.current = null
@@ -105,5 +131,19 @@ export function Editor({ path, content }: EditorProps) {
     }
   }, [content])
 
-  return <div ref={container} className="editor-pane" data-testid="editor" />
+  return (
+    <>
+      <div ref={container} className="editor-pane" data-testid="editor" />
+      {toolbar && viewRef.current && (
+        <SelectionToolbar
+          view={viewRef.current}
+          position={toolbar}
+          onAfterCommand={() => {
+            const view = viewRef.current
+            setToolbar(view ? toolbarPositionFor(view) : null)
+          }}
+        />
+      )}
+    </>
+  )
 }

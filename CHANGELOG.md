@@ -6,6 +6,16 @@ All notable changes to neoma are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Read-only **Markdown source view** — a fourth view mode showing the exact `.md` file
+  content (frontmatter included) with a copy button and line count
+- **View-mode switcher** in the note header (Edit / Split / Reading / Source), making
+  every mode discoverable without the command palette
+- **Floating selection toolbar** in the editor — highlight text to reformat it in place
+  (bold, italic, strikethrough, highlight, inline code, wiki link)
+- `View Markdown source` command (`Mod+Shift+M`)
+
 ## [0.1.0] - 2026-07-20
 
 Initial release.

@@ -130,6 +130,17 @@ export function buildDefaultCommands(): Command[] {
       },
     },
     {
+      id: 'ui.toggle-source',
+      title: 'View Markdown source',
+      category: 'View',
+      shortcut: 'Mod+Shift+M',
+      isAvailable: hasActiveNote,
+      run: () => {
+        const ui = useUi.getState()
+        ui.setEditorMode(ui.editorMode === 'source' ? 'edit' : 'source')
+      },
+    },
+    {
       id: 'ui.toggle-theme',
       title: 'Toggle dark/light theme',
       category: 'View',

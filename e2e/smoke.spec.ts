@@ -216,3 +216,38 @@ test('reading mode renders markdown and the app works offline after reload', asy
   await expect(page.locator('.status-bar')).toContainText('Offline')
   await context.setOffline(false)
 })
+
+test('Markdown source view shows the raw .md including frontmatter', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, '---\ntitle: Raw\n---\n\n# Heading\n\n**bold** text')
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+
+  await page.getByRole('button', { name: 'Source', exact: true }).click()
+  const source = page.locator('[data-testid="source-view"]')
+  await expect(source).toBeVisible()
+  // The exact file content is shown verbatim (frontmatter and markers).
+  await expect(source.locator('.source-pre')).toContainText('title: Raw')
+  await expect(source.locator('.source-pre')).toContainText('**bold** text')
+  // It is a viewer, not an editor: no CodeMirror surface here.
+  await expect(source.locator('.cm-content')).toHaveCount(0)
+})
+
+test('selection toolbar formats highlighted text in place', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'format me')
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+
+  // Select the whole line, then apply bold from the floating toolbar.
+  const editor = page.locator('.cm-content')
+  await editor.click()
+  await page.keyboard.press('ControlOrMeta+a')
+  const toolbar = page.locator('.selection-toolbar')
+  await expect(toolbar).toBeVisible()
+  await toolbar.getByRole('button', { name: 'Bold' }).click()
+
+  // Verify via the source view that the markers were written to the file.
+  await page.getByRole('button', { name: 'Source', exact: true }).click()
+  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText(
+    '**format me**',
+  )
+})

@@ -41,7 +41,8 @@ readable in any text editor.
 
 ## Features
 
-- **Markdown editor** (CodeMirror 6) with edit, split, and reading modes
+- **Markdown editor** (CodeMirror 6) with edit, split, reading and read-only **source**
+  views, plus a floating toolbar to format highlighted text in place
 - **Wiki links** — `[[Note]]`, `[[Note|Alias]]`, `[[Note#Heading]]` — with autocompletion
 - **Backlinks**, linked/unlinked mentions, broken-link and orphan detection
 - **Tags** (`#tag` and frontmatter), with a tag browser

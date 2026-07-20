@@ -250,6 +250,57 @@
   flex-shrink: 0;
 }
 
+/* Note view (header + editor area) */
+.note-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.note-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* View-mode switcher (segmented control) */
+.view-switcher {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+}
+
+.view-switcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.view-switcher-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.view-switcher-btn.active {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
 /* Editor area */
 .editor-area {
   flex: 1;
@@ -281,6 +332,80 @@
 .preview-content {
   max-width: var(--editor-line-width, 46rem);
   margin: 0 auto;
+}
+
+/* Read-only Markdown source view */
+.source-view {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.source-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-bg);
+  z-index: 1;
+}
+
+.source-pre {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+
+.source-pre:focus-visible {
+  box-shadow: none;
+  outline: 2px solid var(--color-accent-muted);
+  outline-offset: -2px;
+}
+
+.source-pre code {
+  font-family: inherit;
+}
+
+/* Floating selection formatting toolbar */
+.selection-toolbar {
+  position: fixed;
+  z-index: 250;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  transform: translateX(-50%);
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
+}
+
+.selection-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.selection-toolbar-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-accent);
 }
 
 .cm-editor {

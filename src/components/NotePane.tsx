@@ -5,6 +5,8 @@
  */
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Editor } from './Editor'
+import { SourceView } from './SourceView'
+import { ViewModeSwitcher } from './ViewModeSwitcher'
 
 // The preview pulls in the markdown pipeline + KaTeX; load it on demand so
 // the initial bundle stays small for people who just want to type.
@@ -58,21 +60,27 @@ export function NotePane({ path }: NotePaneProps) {
   }
 
   return (
-    <div className={`editor-area ${editorMode}`} data-mode={editorMode}>
-      {(editorMode === 'edit' || editorMode === 'split') && (
-        <Editor path={path} content={note.content} />
-      )}
-      {(editorMode === 'reading' || editorMode === 'split') && (
-        <Suspense
-          fallback={
-            <div className="preview-pane" aria-busy="true">
-              <p className="text-faint">Rendering…</p>
-            </div>
-          }
-        >
-          <Preview path={path} content={note.content} />
-        </Suspense>
-      )}
+    <div className="note-view">
+      <div className="note-header">
+        <ViewModeSwitcher />
+      </div>
+      <div className={`editor-area ${editorMode}`} data-mode={editorMode}>
+        {(editorMode === 'edit' || editorMode === 'split') && (
+          <Editor path={path} content={note.content} />
+        )}
+        {(editorMode === 'reading' || editorMode === 'split') && (
+          <Suspense
+            fallback={
+              <div className="preview-pane" aria-busy="true">
+                <p className="text-faint">Rendering…</p>
+              </div>
+            }
+          >
+            <Preview path={path} content={note.content} />
+          </Suspense>
+        )}
+        {editorMode === 'source' && <SourceView content={note.content} />}
+      </div>
     </div>
   )
 }
