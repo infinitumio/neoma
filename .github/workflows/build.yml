@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Production build + PWA artifact validation + Docker image build.
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Production build
+        run: npm run build
+      - name: Validate PWA artifacts
+        run: |
+          test -f dist/sw.js || (echo "service worker missing" && exit 1)
+          test -f dist/manifest.webmanifest || (echo "web manifest missing" && exit 1)
+          test -f dist/icons/icon-512.png || (echo "PWA icon missing" && exit 1)
+          node -e "
+            const m = require('./dist/manifest.webmanifest');
+            if (!m.name || !m.icons?.length || m.display !== 'standalone')
+              { console.error('manifest invalid', m); process.exit(1) }
+            console.log('manifest ok:', m.name, m.icons.length, 'icons');
+          "
+      - name: Check for external runtime origins in the bundle
+        run: |
+          # Privacy guard: the bundle must not reference third-party CDNs.
+          ! grep -REl "https?://(cdn\.|unpkg\.com|cdnjs|jsdelivr|fonts\.googleapis)" dist/assets && echo "no external CDN references"
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: neoma-dist
+          path: dist/
+          retention-days: 14
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t neoma:ci .
+      - name: Smoke test container
+        run: |
+          docker run -d --rm -p 8080:80 --name neoma-ci neoma:ci
+          sleep 3
+          curl -fsS http://localhost:8080/ | grep -qi '<div id="root">'
+          curl -fsS http://localhost:8080/manifest.webmanifest >/dev/null
+          docker stop neoma-ci

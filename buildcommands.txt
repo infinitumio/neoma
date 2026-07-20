@@ -1,0 +1,1082 @@
+# Build neoma
+
+Create a production-quality, completely open-source, local-first web application called **neoma**.
+
+neoma is a lightweight Markdown note-taking, research-journal and personal knowledge-management application. It should provide the essential standards users expect from applications such as Obsidian—Markdown files, wiki links, backlinks, tags, frontmatter, daily notes, search, keyboard shortcuts and complete data ownership—without copying Obsidian’s branding, proprietary code or exact interface.
+
+The application must work:
+
+* As a normal web application
+* As an installable Progressive Web App
+* Completely offline after installation
+* Locally through `npm run dev`
+* Locally through a production build
+* Through Docker for optional self-hosting
+* Without requiring an account, cloud service or internet connection
+* Without telemetry, analytics, advertisements or tracking
+
+The finished project must be a real, functional application—not merely a landing page, visual prototype or collection of static components.
+
+## Product identity
+
+Product name: **neoma**
+
+Tagline: **Your knowledge, rooted locally.**
+
+Product description:
+
+> neoma is a lightweight, open-source research journal and linked-note application. Your notes remain local, portable and readable as ordinary Markdown files.
+
+The product should feel:
+
+* Fast
+* Calm
+* Technical
+* Academic
+* Private
+* Open
+* Dependable
+* Modern without appearing corporate
+
+Create an original neoma logo. Use a simple geometric leaf combined with a document, page or branching-link motif. It must remain recognisable at favicon size.
+
+Do not use Obsidian’s purple branding, crystal imagery, logo, wording or exact interface.
+
+## Design direction
+
+Take visual inspiration from **Modrinth**, especially its:
+
+* Clean dark interface
+* Compact navigation
+* Rounded panels
+* Clear spacing
+* Restrained use of colour
+* Strong typography
+* Subtle borders
+* Efficient information density
+* Polished hover and focus states
+* Practical developer-focused aesthetic
+
+Do not reproduce Modrinth’s exact layouts, logo, icons, components or branding.
+
+Create an original neoma design system.
+
+### Visual system
+
+Use a dark theme by default with an optional light theme.
+
+Dark-theme palette:
+
+* Main background: near-black charcoal
+* Sidebar: slightly lighter charcoal
+* Raised panels: soft dark grey
+* Primary accent: fresh leaf green
+* Secondary accent: muted emerald
+* Primary text: warm off-white
+* Secondary text: neutral grey
+* Borders: low-contrast grey
+* Warning: amber
+* Error: red
+* Success: green
+
+Use CSS variables for every design token so themes can be created easily.
+
+Use:
+
+* Rounded corners between 6px and 10px
+* Subtle borders rather than heavy shadows
+* Clear keyboard-focus outlines
+* Smooth transitions between 100ms and 180ms
+* Compact but readable spacing
+* System fonts by default
+* Optional bundled open-source font with no external font request
+
+Do not load fonts, analytics, scripts, icons or assets from external CDNs.
+
+## Application layout
+
+Build a responsive three-panel workspace.
+
+### Left activity rail
+
+Include icons for:
+
+* Files
+* Search
+* Tags
+* Backlinks
+* Daily journal
+* Templates
+* Graph
+* Settings
+* GitHub repository
+
+The activity rail should be collapsible.
+
+### File sidebar
+
+Include:
+
+* Vault name
+* New note button
+* New folder button
+* Collapsible folder tree
+* Note context menu
+* Pin or favourite note
+* Rename
+* Move
+* Duplicate
+* Delete
+* Restore recently deleted note
+* Sort by name, created date and modified date
+
+Support drag-and-drop file organisation.
+
+### Main editor
+
+Include three editing modes:
+
+1. Edit
+2. Split edit and preview
+3. Reading view
+
+The editor should support:
+
+* Markdown
+* Headings
+* Bold
+* Italic
+* Strikethrough
+* Highlighting
+* Ordered and unordered lists
+* Task lists
+* Blockquotes
+* Inline code
+* Code blocks
+* Tables
+* Horizontal rules
+* Footnotes
+* Mathematical notation
+* Links
+* Images
+* Callout blocks
+* Wiki links using `[[Note Name]]`
+* Aliased wiki links using `[[Note Name|Displayed Text]]`
+* Heading links using `[[Note Name#Heading]]`
+* Tags using `#tag`
+* YAML frontmatter
+* Citation keys such as `[@smith2025]`
+
+Use CodeMirror 6 or another lightweight, open-source editor library. Do not build a text editor engine from scratch.
+
+### Right contextual sidebar
+
+Allow users to open:
+
+* Current-note outline
+* Backlinks
+* Linked mentions
+* Note properties
+* Tags
+* Note information
+* Word count
+* Character count
+* Created and modified dates
+
+The sidebar should be optional and collapsible.
+
+## Core note system
+
+Markdown files must be the primary, canonical note format.
+
+A note should remain usable outside neoma in:
+
+* A plain text editor
+* VS Code
+* Obsidian
+* Logseq
+* Joplin after import
+* GitHub
+* Other Markdown-compatible applications
+
+Do not create a proprietary note format.
+
+Support YAML frontmatter such as:
+
+```yaml
+---
+title: Transformer Experiment 01
+created: 2026-07-20
+modified: 2026-07-20
+type: experiment
+status: active
+tags:
+  - transformers
+  - experiments
+aliases:
+  - Attention Experiment
+---
+```
+
+Preserve unsupported frontmatter fields instead of deleting them.
+
+## Storage architecture
+
+Create a storage abstraction so the application does not depend on one browser-storage mechanism.
+
+Implement these adapters:
+
+### 1. Local folder adapter
+
+Where browser support allows it, let the user choose a local folder as their vault.
+
+Read and write ordinary:
+
+* `.md` files
+* Image files
+* PDF attachments
+* Other permitted attachment files
+
+Request file-system permissions only after an explicit user action.
+
+Never upload local files.
+
+### 2. Browser vault adapter
+
+Provide a browser-managed vault using IndexedDB or the Origin Private File System.
+
+This mode must:
+
+* Work offline
+* Autosave locally
+* Support multiple vaults
+* Export a complete vault
+* Import a complete vault
+* Survive normal page reloads
+* Clearly explain that clearing browser-site data may remove browser-managed vaults
+
+### 3. Portable import and export
+
+Support:
+
+* Importing a folder when supported
+* Importing individual Markdown files
+* Importing a ZIP archive
+* Exporting the complete vault as ZIP
+* Exporting one note as Markdown
+* Exporting one note as HTML
+* Exporting one note as PDF through a print-friendly view
+
+ZIP exports must preserve the original folder hierarchy and attachment paths.
+
+Do not make a remote database the source of truth.
+
+## Offline requirements
+
+Configure neoma as an installable Progressive Web App.
+
+Include:
+
+* Web-app manifest
+* Application icons
+* Service worker
+* Offline application shell
+* Cache versioning
+* Offline fallback handling
+* Install prompt
+* Update-available notification
+* Clear cache-management logic
+
+After the first successful load, all core functions must work without internet:
+
+* Opening the app
+* Opening a vault
+* Creating notes
+* Editing notes
+* Searching notes
+* Following links
+* Viewing backlinks
+* Using templates
+* Changing settings
+* Exporting data
+
+No core feature may depend on a remote API.
+
+## Research-journal features
+
+Make neoma particularly useful for HDR students, academics, researchers and developers.
+
+Include built-in optional templates for:
+
+### Daily research journal
+
+Sections:
+
+* Objectives
+* Work completed
+* Findings
+* Decisions
+* Problems
+* Questions
+* Supervisor follow-up
+* Next actions
+
+### Literature note
+
+Sections:
+
+* Citation
+* Research question
+* Methodology
+* Dataset
+* Main findings
+* Limitations
+* Important quotations
+* Personal interpretation
+* Connections to my research
+* Follow-up reading
+
+### Experiment log
+
+Sections:
+
+* Hypothesis
+* Environment
+* Dataset
+* Model or method
+* Parameters
+* Procedure
+* Results
+* Unexpected behaviour
+* Limitations
+* Decision
+* Reproduction steps
+* Next experiment
+
+### Supervisor meeting
+
+Sections:
+
+* Date
+* Attendees
+* Discussion
+* Feedback
+* Decisions
+* Questions
+* Actions
+* Next meeting
+
+### Research question
+
+Sections:
+
+* Question
+* Motivation
+* Existing evidence
+* Assumptions
+* Possible methods
+* Risks
+* Open questions
+* Related notes
+
+Allow users to edit, delete and create their own templates.
+
+## Daily notes
+
+Include a daily-note system with:
+
+* Configurable folder
+* Configurable date format
+* Configurable default template
+* Open today’s note command
+* Previous and next day navigation
+* Calendar-style date picker
+* Automatic creation only after user confirmation or explicit command
+
+Default file format:
+
+`YYYY-MM-DD.md`
+
+## Links and backlinks
+
+Parse wiki links and normal Markdown links.
+
+For every note, display:
+
+* Incoming links
+* Outgoing links
+* Unlinked mentions
+* Broken links
+* Orphaned-note status
+
+When renaming a note, offer to update links throughout the vault.
+
+Do not silently rewrite files without showing the user what will change.
+
+## Search
+
+Implement fast local full-text search.
+
+Search should support:
+
+* Note titles
+* Note contents
+* File paths
+* Tags
+* Properties
+* Exact phrases
+* Excluded terms
+* Filter by folder
+* Filter by note type
+* Filter by created date
+* Filter by modified date
+
+Search must remain entirely local.
+
+Display matching text with highlighted context.
+
+Build the index incrementally so large vaults do not freeze the interface.
+
+Where appropriate, perform indexing in a Web Worker.
+
+## Graph view
+
+Include a lightweight graph view showing relationships between notes.
+
+Support:
+
+* Local graph for the current note
+* Whole-vault graph
+* Zoom
+* Pan
+* Node selection
+* Search
+* Hide orphaned notes
+* Filter by folder
+* Filter by tag
+* Limit graph depth
+
+The graph must load only when opened so the graph library does not increase the initial bundle unnecessarily.
+
+The graph is secondary to the editor. Do not prioritise visual effects over performance.
+
+## Command palette
+
+Add a command palette opened with:
+
+* `Ctrl+K` on Windows and Linux
+* `Cmd+K` on macOS
+
+Include commands for:
+
+* Create note
+* Open note
+* Search
+* Open today’s journal
+* Insert template
+* Toggle sidebar
+* Toggle reading mode
+* Toggle theme
+* Rename note
+* Move note
+* Export note
+* Open settings
+* Show keyboard shortcuts
+
+Commands must be searchable and keyboard-accessible.
+
+## Keyboard shortcuts
+
+Support common shortcuts:
+
+* New note
+* Quick open
+* Search
+* Save
+* Toggle preview
+* Insert link
+* Bold
+* Italic
+* Command palette
+* Open daily note
+* Close active note
+
+Let users customise shortcuts later through a clean shortcut registry architecture.
+
+## Tabs
+
+Support lightweight editor tabs.
+
+Include:
+
+* Open note in current tab
+* Open note in new tab
+* Close tab
+* Close other tabs
+* Pin tab
+* Reopen recently closed tab
+* Restore open tabs when reopening the application
+
+Do not render every inactive editor simultaneously.
+
+## Attachments
+
+Allow users to:
+
+* Paste images
+* Drag images into notes
+* Link PDFs
+* Add local attachments
+* Open attachments
+* Rename attachments
+* Reveal attachments in the file tree
+
+Store attachments in a configurable folder.
+
+Use relative Markdown paths.
+
+Do not upload attachments.
+
+## Academic citation compatibility
+
+Do not attempt to replace Zotero.
+
+Provide lightweight compatibility with academic workflows:
+
+* Recognise citation keys such as `[@smith2025]`
+* Allow a note property for DOI
+* Allow a note property for Zotero URI
+* Allow a note property for BibTeX key
+* Make citation keys searchable
+* Preserve Pandoc-compatible citation syntax
+* Support pasting BibTeX into a code block without alteration
+
+Design the application so a deeper Zotero integration can be added later as an optional plugin.
+
+## Settings
+
+Create settings categories for:
+
+* Appearance
+* Editor
+* Files and links
+* Daily notes
+* Templates
+* Search
+* Backups
+* Keyboard shortcuts
+* About
+* Privacy
+* Open-source licences
+
+Settings must be stored locally.
+
+Include an easy “Export settings” and “Import settings” option.
+
+## Themes
+
+Create:
+
+* neoma Dark
+* neoma Light
+
+Build themes using CSS variables.
+
+Allow a community theme to override documented variables without modifying the application source.
+
+Do not add an online theme marketplace in the first version.
+
+## Extensibility
+
+Use a modular architecture that can support plugins later.
+
+For version one:
+
+* Create a documented internal command registry
+* Create a documented panel registry
+* Create a documented Markdown extension registry
+* Create a documented settings registry
+* Keep first-party features modular
+* Do not execute arbitrary third-party code
+* Do not build a plugin marketplace yet
+
+The goal is to remain plugin-ready without making the initial release heavy or insecure.
+
+## Privacy and security
+
+neoma must be private by default.
+
+Requirements:
+
+* No user accounts
+* No analytics
+* No telemetry
+* No advertisements
+* No tracking pixels
+* No external API calls
+* No note uploads
+* No hidden network requests
+* No remote AI functionality
+* No cloud dependency
+* No automatic data collection
+
+Add a privacy screen stating:
+
+> neoma does not collect, transmit or sell your notes or usage data. Your vault remains on your device unless you deliberately export or synchronise it using another tool.
+
+Add a small network-status indicator showing:
+
+* Local
+* Offline
+* Update available
+
+Do not show an alarming error when offline. Offline use is a normal supported state.
+
+## Performance standards
+
+neoma must be lightweight.
+
+Targets:
+
+* Fast first load
+* Lazy-load graph and secondary features
+* Avoid large UI frameworks
+* Avoid unnecessary dependencies
+* Avoid background polling
+* Avoid rerendering the entire vault after an edit
+* Debounce indexing and autosave
+* Virtualise long file and search-result lists
+* Use Web Workers for expensive indexing where useful
+* Code-split secondary routes and panels
+* Keep the initial JavaScript bundle as small as reasonably possible
+
+Display a usable editor quickly rather than waiting for the entire vault index to finish.
+
+## Accessibility
+
+Meet WCAG 2.2 AA expectations.
+
+Include:
+
+* Full keyboard navigation
+* Visible focus indicators
+* Semantic HTML
+* ARIA labels where necessary
+* Accessible dialogs
+* Accessible menus
+* Sufficient colour contrast
+* Reduced-motion support
+* Screen-reader-friendly buttons
+* No colour-only status indicators
+
+Test the interface at 200% zoom.
+
+## Responsive behaviour
+
+Desktop is the primary workspace, but the application must also work on tablets and mobile browsers.
+
+On smaller screens:
+
+* Collapse the activity rail
+* Show file navigation as a drawer
+* Show the contextual sidebar as a sheet
+* Keep the editor full-width
+* Use touch-friendly hit targets
+* Preserve keyboard functionality when a keyboard is attached
+
+## Technology
+
+Use a modern, lightweight and maintainable stack:
+
+* React
+* TypeScript
+* Vite
+* CSS variables
+* Lightweight utility CSS or carefully structured CSS modules
+* CodeMirror 6
+* Unified, Remark and Rehype for Markdown processing
+* IndexedDB through a small abstraction such as Dexie
+* A lightweight local search library
+* Web Workers for indexing
+* `vite-plugin-pwa` or equivalent
+* Vitest
+* React Testing Library
+* Playwright
+* ESLint
+* Prettier
+
+Use Lucide or another open-source icon set. Bundle the required icons rather than making external requests.
+
+Avoid:
+
+* Electron
+* A required backend
+* Supabase
+* Firebase
+* Authentication services
+* Remote databases
+* External analytics
+* Proprietary SDKs
+* Runtime CDN dependencies
+* Excessive animation libraries
+* Large component libraries
+
+## Architecture
+
+Organise the code into clear modules:
+
+```text
+src/
+├── app/
+├── components/
+├── editor/
+├── markdown/
+├── storage/
+│   ├── adapters/
+│   ├── browser-vault/
+│   ├── local-folder/
+│   └── import-export/
+├── search/
+├── links/
+├── graph/
+├── templates/
+├── commands/
+├── settings/
+├── themes/
+├── workers/
+├── hooks/
+├── utils/
+└── types/
+```
+
+Create interfaces for:
+
+* Vault
+* Note
+* Folder
+* Attachment
+* StorageAdapter
+* SearchIndex
+* LinkIndex
+* Command
+* Template
+* Theme
+* ApplicationSettings
+
+The UI must not call IndexedDB or browser file APIs directly. All file operations must pass through the storage abstraction.
+
+## Data integrity
+
+Protect the user’s work.
+
+Implement:
+
+* Debounced autosave
+* Visible save state
+* Atomic writes where possible
+* Recovery copy before destructive operations
+* Recently deleted notes
+* Confirmation before permanent deletion
+* Exportable backups
+* Error handling for revoked folder permissions
+* Clear warnings before replacing an imported vault
+* Conflict detection when a local file changes outside neoma
+
+Never silently discard unsaved text.
+
+## Git compatibility
+
+neoma does not need to implement Git itself.
+
+Make vaults naturally Git-friendly:
+
+* Plain Markdown
+* Stable frontmatter formatting
+* Relative attachment paths
+* No binary database required inside folder-based vaults
+* No rewriting unchanged notes
+* No random IDs inserted into note content
+* Predictable filenames
+
+Include documentation explaining how users can optionally initialise their vault as a private Git repository.
+
+## GitHub repository
+
+Create a professional open-source GitHub repository.
+
+The repository must include:
+
+```text
+.github/
+├── ISSUE_TEMPLATE/
+│   ├── bug_report.yml
+│   ├── feature_request.yml
+│   └── documentation.yml
+├── workflows/
+│   ├── ci.yml
+│   ├── test.yml
+│   ├── build.yml
+│   └── release.yml
+├── CODEOWNERS
+├── dependabot.yml
+└── pull_request_template.md
+
+docs/
+├── architecture.md
+├── storage.md
+├── markdown-compatibility.md
+├── privacy.md
+├── contributing.md
+└── roadmap.md
+
+public/
+src/
+tests/
+e2e/
+```
+
+Also include:
+
+* `README.md`
+* `LICENSE`
+* `CONTRIBUTING.md`
+* `CODE_OF_CONDUCT.md`
+* `SECURITY.md`
+* `CHANGELOG.md`
+* `ROADMAP.md`
+* `.editorconfig`
+* `.gitignore`
+* `.nvmrc`
+* `.env.example`
+* `Dockerfile`
+* `docker-compose.yml`
+* `package.json`
+* Lock file
+* PWA manifest
+* Release configuration
+
+Use the **AGPL-3.0-or-later** licence throughout the repository.
+
+Add SPDX licence headers where appropriate.
+
+Do not include dependencies that prevent the complete application from being distributed under an open-source licence.
+
+## Repository ownership
+
+Present the project as independently created and community-driven.
+
+Use these placeholders until replaced:
+
+* Original creator: `Iwan`
+* GitHub username: `YOUR_GITHUB_USERNAME`
+* Repository URL: `https://github.com/YOUR_GITHUB_USERNAME/neoma`
+* Contact: `YOUR_PUBLIC_PROJECT_EMAIL`
+
+The README should include:
+
+> neoma was created by Iwan as an open-source project for researchers, students, developers and anyone who wants complete ownership of their notes.
+
+Do not claim affiliation with Obsidian, Modrinth, QUT or any other organisation.
+
+## README design
+
+Create an attractive, professional README with:
+
+1. Centred neoma logo
+2. Product name and tagline
+3. Status badges
+4. Screenshot or interface preview
+5. Short description
+6. Core principles
+7. Feature overview
+8. Installation instructions
+9. Local development instructions
+10. Docker instructions
+11. Offline-use explanation
+12. Storage explanation
+13. Markdown compatibility
+14. Privacy statement
+15. Roadmap
+16. Contributing instructions
+17. Licence
+18. Creator attribution
+
+Suggested opening:
+
+# neoma
+
+**Your knowledge, rooted locally.**
+
+neoma is a lightweight, open-source research journal and linked-note application. It works in your browser, runs offline and keeps your knowledge in portable Markdown files.
+
+Add badges for:
+
+* Licence
+* Build
+* Tests
+* Latest release
+* PWA
+* Contributions welcome
+
+Do not include fake download numbers, fake contributors, fake stars, fake testimonials or fake release badges.
+
+## Contribution experience
+
+Make contribution approachable.
+
+Include:
+
+* Clear development setup
+* Architecture overview
+* Good-first-issue label guidance
+* Feature-request process
+* Bug-report template
+* Pull-request checklist
+* Formatting commands
+* Testing commands
+* Commit guidance
+* Accessibility checklist
+* Privacy checklist
+* Dependency-licence checklist
+
+Add a statement that contributions must not introduce:
+
+* Telemetry
+* Tracking
+* Mandatory cloud services
+* Proprietary note formats
+* Undocumented external requests
+* Dependencies that compromise the open-source licence
+
+## CI and testing
+
+Configure GitHub Actions to run:
+
+* Dependency installation
+* Type checking
+* Linting
+* Unit tests
+* Production build
+* End-to-end smoke tests
+* PWA validation
+* Accessibility checks where practical
+
+Test important user flows:
+
+1. Create a browser vault
+2. Create a note
+3. Edit and autosave a note
+4. Add a wiki link
+5. View a backlink
+6. Search for a phrase
+7. Create a daily note
+8. Apply a template
+9. Export the vault
+10. Import the exported vault
+11. Reload while offline
+12. Recover from a revoked folder permission
+13. Rename a linked note
+14. Delete and restore a note
+
+## Demo content
+
+Create an optional demo vault that users may load from the welcome screen.
+
+Include:
+
+* Welcome to neoma
+* Research dashboard
+* Daily research journal
+* Literature note
+* Experiment log
+* Supervisor meeting
+* Research questions
+* Markdown guide
+* Privacy and portability guide
+
+Do not automatically add demo notes to a user-created vault.
+
+## Welcome flow
+
+The initial screen should provide:
+
+* Create browser vault
+* Open local folder
+* Import vault
+* Explore demo vault
+* Learn how storage works
+
+Include a short privacy message:
+
+> No account is required. Your notes remain on this device.
+
+Do not force users through a lengthy onboarding flow.
+
+## First-release scope
+
+Prioritise a reliable first release.
+
+The first release must include:
+
+* Markdown editor
+* Reading preview
+* Browser vault
+* Local-folder support where available
+* Import and export
+* File tree
+* Search
+* Wiki links
+* Backlinks
+* Tags
+* Frontmatter
+* Daily notes
+* Templates
+* Command palette
+* Dark and light themes
+* PWA installation
+* Full offline operation
+* Automated tests
+* GitHub documentation
+
+The following may be marked as later roadmap items if necessary:
+
+* Community plugins
+* Community themes
+* Collaborative editing
+* Optional encrypted sync
+* Mobile-native wrappers
+* Advanced Zotero plugin
+* Canvas
+* Publish-to-web
+* Local AI integrations
+
+Do not sacrifice data integrity, portability or offline reliability to implement roadmap features.
+
+## Final acceptance criteria
+
+Before presenting the project as complete, verify that:
+
+* It is a functional note-taking application
+* It can create and edit Markdown notes
+* It can work without internet
+* It can be installed as a PWA
+* It does not require an account
+* It does not contact external services
+* It can export all user data
+* Exported notes are understandable outside neoma
+* Wiki links and backlinks function
+* Search functions locally
+* Daily-note templates function
+* The interface is responsive
+* Keyboard navigation functions
+* The dark and light themes function
+* Automated tests pass
+* The production build succeeds
+* Docker instructions work
+* The repository has complete open-source documentation
+* The README identifies Iwan as the original creator
+* The project contains no fake functionality or placeholder buttons
+
+Where browser capabilities differ, implement graceful fallbacks and explain them honestly in the interface and documentation.
+
+Begin by creating the architecture, repository structure, design system and storage interfaces. Then build the functional minimum viable product. Do not focus on a promotional landing page until the actual editor, storage, offline operation and import/export workflow are working.

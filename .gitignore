@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dev-dist/
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
+/playwright/.cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.DS_Store
+.idea/
+*.local
+*.log
+
+# Vite
+.vite/

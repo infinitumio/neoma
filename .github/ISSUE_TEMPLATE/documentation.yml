@@ -1,0 +1,24 @@
+name: Documentation
+description: Report missing, unclear or incorrect documentation
+title: '[Docs]: '
+labels: ['documentation', 'triage']
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Where?
+      description: File or page (e.g. README.md, docs/storage.md, in-app text)
+      placeholder: docs/storage.md
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is missing, unclear or wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: If you can, propose the wording you'd like to see.

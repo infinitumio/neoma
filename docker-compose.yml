@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Optional self-hosting. neoma is a static app — this just serves files.
+services:
+  neoma:
+    build: .
+    image: neoma:latest
+    container_name: neoma
+    ports:
+      - '8080:80'
+    restart: unless-stopped
