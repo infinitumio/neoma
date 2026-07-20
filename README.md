@@ -176,5 +176,4 @@ developers and anyone who wants complete ownership of their notes.
 - Repository: `https://github.com/infinitumio/neoma`
 - Contact: Discord `panda2187`
 
-_neoma is an independent, community-driven project. It is not affiliated with Obsidian,
-Modrinth, or any other organisation._
+_neoma is an independent, community-driven project. It is not affiliated with Obsidian or any other organisation._
