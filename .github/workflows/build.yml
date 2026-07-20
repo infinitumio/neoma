@@ -30,7 +30,8 @@ jobs:
           test -f dist/manifest.webmanifest || (echo "web manifest missing" && exit 1)
           test -f dist/icons/icon-512.png || (echo "PWA icon missing" && exit 1)
           node -e "
-            const m = require('./dist/manifest.webmanifest');
+            const fs = require('node:fs');
+            const m = JSON.parse(fs.readFileSync('./dist/manifest.webmanifest', 'utf8'));
             if (!m.name || !m.icons?.length || m.display !== 'standalone')
               { console.error('manifest invalid', m); process.exit(1) }
             console.log('manifest ok:', m.name, m.icons.length, 'icons');
