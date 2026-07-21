@@ -8,7 +8,7 @@ that don't fit, and add product-specific probes as neoma evolves.
 
 - **Time:** ~30–45 minutes.
 - **Format:** moderated. Ask them to **think aloud** while they work.
-- **Watch, don't rescue:** note *where they hesitate*, not just what they say. When they
+- **Watch, don't rescue:** note _where they hesitate_, not just what they say. When they
   ask "how do I…?", reply "what would you try?" before answering.
 - **Task vs. opinion:** items marked _Task_ are things to watch them attempt — you learn
   more from where they get stuck than from their stated opinions. Keep opinion questions
