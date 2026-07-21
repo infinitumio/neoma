@@ -138,6 +138,9 @@ export interface SearchResultItem {
   path: string
   title: string
   score: number
+  /** parent folder of the note ('' for vault root) */
+  folder?: string
+  modifiedAt?: number
   /** matched excerpt with `start`/`end` highlighting offsets */
   snippets: Array<{ text: string; ranges: Array<[number, number]> }>
 }

@@ -10,6 +10,7 @@ import { RightSidebar } from '@/components/RightSidebar'
 import { StatusBar } from '@/components/StatusBar'
 import { CommandPalette } from '@/components/CommandPalette'
 import { SettingsModal } from '@/components/SettingsModal'
+import { HelpModal } from '@/components/HelpModal'
 import { Dialogs } from '@/components/Dialogs'
 import { Toasts } from '@/components/Toasts'
 import { useVault, flushAllSaves, openVault } from './vaultStore'
@@ -131,6 +132,7 @@ export default function App() {
       {showWorkspace ? <Workspace /> : <WelcomeScreen />}
       <CommandPalette />
       <SettingsModal />
+      <HelpModal />
       <Dialogs />
       <Toasts />
     </>

@@ -130,6 +130,44 @@
   padding: 0 0.15em;
 }
 
+/* Coloured highlights (see docs/markdown-compatibility.md).
+   Backgrounds are translucent so text stays readable in both themes. */
+.markdown-body mark.mark-yellow,
+mark.mark-yellow {
+  background: var(--hl-yellow);
+  color: inherit;
+}
+.markdown-body mark.mark-green,
+mark.mark-green {
+  background: var(--hl-green);
+  color: inherit;
+}
+.markdown-body mark.mark-blue,
+mark.mark-blue {
+  background: var(--hl-blue);
+  color: inherit;
+}
+.markdown-body mark.mark-purple,
+mark.mark-purple {
+  background: var(--hl-purple);
+  color: inherit;
+}
+.markdown-body mark.mark-red,
+mark.mark-red {
+  background: var(--hl-red);
+  color: inherit;
+}
+.markdown-body mark.mark-orange,
+mark.mark-orange {
+  background: var(--hl-orange);
+  color: inherit;
+}
+.markdown-body mark.mark-grey,
+mark.mark-grey {
+  background: var(--hl-grey);
+  color: inherit;
+}
+
 .markdown-body .wiki-link {
   color: var(--color-accent);
   border-bottom: 1px dotted color-mix(in srgb, var(--color-accent) 50%, transparent);
@@ -232,6 +270,53 @@
 .callout-quote,
 .callout-example {
   --callout-color: var(--color-text-secondary);
+}
+.callout-theorem,
+.callout-lemma {
+  --callout-color: var(--color-accent-muted);
+}
+.callout-definition {
+  --callout-color: var(--color-info);
+}
+.callout-proof,
+.callout-toggle {
+  --callout-color: var(--color-text-secondary);
+}
+
+/* Foldable callouts render as <details>/<summary> */
+details.callout > summary.callout-title {
+  cursor: pointer;
+  list-style: none;
+}
+details.callout > summary.callout-title::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.4em;
+  transition: transform var(--transition-fast);
+}
+details.callout[open] > summary.callout-title::before {
+  transform: rotate(90deg);
+}
+details.callout > summary.callout-title::-webkit-details-marker {
+  display: none;
+}
+
+/* Numbered display equations */
+.markdown-body {
+  counter-reset: neoma-equation;
+}
+.markdown-body .katex-display {
+  position: relative;
+}
+.markdown-body .katex-display::after {
+  counter-increment: neoma-equation;
+  content: '(' counter(neoma-equation) ')';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-faint);
+  font-size: 0.85em;
 }
 
 /* KaTeX sizing inside notes */

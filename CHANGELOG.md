@@ -6,15 +6,55 @@ All notable changes to neoma are documented here. The format follows
 
 ## [Unreleased]
 
-### Added
+### Phase 1 — reliability and core usability (from user feedback)
 
+#### Fixed
+
+- **Italic formatting** now works correctly, including bold-italic combinations — toggling
+  italic on `**bold**` yields `***both***` instead of destroying the bold. Regression tests
+  added for every inline style.
+
+#### Added
+
+- **Slash commands** — type `/` on a blank line (or after a list marker) for a searchable
+  menu of block inserts: text (headings, lists, callouts, toggles, code), academic
+  (equation, theorem, definition, proof, flashcard, exam question, lecture summary…),
+  media (image, PDF link, table, page links/embeds) and organisation (subpage, properties,
+  date, study checklist). Every command inserts real, portable Markdown.
+- **Pages and subpages** — nest pages using the folder-note convention
+  (`Machine Learning/Machine Learning.md`), stored as ordinary folders and files.
+  Breadcrumbs above the editor, drag-a-page-onto-a-page to nest, convert to/from top-level,
+  and a Subpages list in the context sidebar.
+- **Coloured highlights** — yellow (portable `==text==`) plus green/blue/purple/red/orange/
+  grey via a documented `<mark data-color>` extension; readable in both themes and
+  preserved on export. Pick a colour from the selection toolbar's highlighter.
+- **Search overhaul** — visible Broad / Exact word / Exact phrase modes, case-sensitivity,
+  folder scope, and a "Search completed — N matches in M pages checked" confirmation. The
+  advanced `tag:`/`path:`/`type:` syntax stays available.
+- **Clearer action feedback** — success toasts for create/rename/move/import, an Undo
+  action on delete, and confirmations throughout.
+- **Stronger mathematics** — a common-symbol menu (inserts LaTeX), double-click a rendered
+  equation to copy its LaTeX, auto-numbered display equations, and theorem/definition/proof
+  callout blocks. All rendered offline by KaTeX.
+- **Vault onboarding** — a "Create your vault" dialog that explains what a vault is in plain
+  language and offers starter vaults (University study, Research project, Personal knowledge
+  base, Blank).
+- **Help section** — plain-language answers (what is a vault, offline mode, subpages,
+  linking, maths, highlights, backups) plus a keyboard-shortcut reference, from the activity
+  rail or `F1`.
+- Beginner-facing **"page" terminology** and clearer empty states.
 - Read-only **Markdown source view** — a fourth view mode showing the exact `.md` file
-  content (frontmatter included) with a copy button and line count
-- **View-mode switcher** in the note header (Edit / Split / Reading / Source), making
-  every mode discoverable without the command palette
-- **Floating selection toolbar** in the editor — highlight text to reformat it in place
-  (bold, italic, strikethrough, highlight, inline code, wiki link)
-- `View Markdown source` command (`Mod+Shift+M`)
+  content (frontmatter included) with a copy button and line count.
+- **View-mode switcher** in the note header (Edit / Split / Reading / Source).
+- **Floating selection toolbar** — highlight text to reformat it in place.
+- `View Markdown source` command (`Mod+Shift+M`).
+
+### Not yet done (tracked for later phases)
+
+Desktop app (Tauri), PDF embedding/split view, calendar, tasks, exam dashboard,
+flashcard review, graph folder-colours, cross-device sync and Notion import are **not**
+in this release — see [ROADMAP.md](ROADMAP.md) and the GitHub issue tracker. They are not
+presented as complete anywhere in the app.
 
 ## [0.1.0] - 2026-07-20
 

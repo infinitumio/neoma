@@ -3,7 +3,14 @@
  * Left activity rail. Panels are provided by the panel registry so future
  * plugins can add entries without touching this component.
  */
-import { Waypoints, Settings, Github, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import {
+  Waypoints,
+  Settings,
+  Github,
+  HelpCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from 'lucide-react'
 import { useUi } from '@/app/uiStore'
 import { useTabs } from '@/app/tabsStore'
 import { REPOSITORY_URL } from '@/app/about'
@@ -50,6 +57,14 @@ export function ActivityRail() {
         <Waypoints size={18} aria-hidden />
       </button>
       <div className="rail-spacer" />
+      <button
+        className="rail-btn"
+        aria-label="Help"
+        title="Help"
+        onClick={() => ui.setHelpOpen(true)}
+      >
+        <HelpCircle size={18} aria-hidden />
+      </button>
       <button
         className="rail-btn"
         aria-label="Settings"

@@ -16,9 +16,12 @@ import { debounce } from '@/utils/misc'
 import {
   basename,
   dirname,
+  folderNoteOf,
+  isFolderNote,
   isMarkdown,
   isWithin,
   joinPath,
+  pageFolderOf,
   sanitizeName,
   stem,
   uniquePath,
@@ -411,6 +414,86 @@ export async function createFolder(parent: string, name: string): Promise<string
   await adapter.createFolder(path)
   updateEntry({ path, kind: 'folder' })
   return path
+}
+
+/* ------------------------------------------------------------------ */
+/* Page hierarchy (subpages via the folder-note convention)            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Create a subpage under `parentPath` (a note). If the parent is a plain
+ * note `A/B.md`, it is first promoted to a folder note `A/B/B.md` so the
+ * hierarchy stays visible to any Markdown tool as ordinary folders.
+ * Returns the new subpage's path.
+ */
+export async function createSubpage(parentPath: string, name = 'Untitled'): Promise<string | null> {
+  if (!adapter) return null
+  let folder = pageFolderOf(parentPath)
+  if (!folder) {
+    folder = parentPath.replace(/\.md$/i, '')
+    const promoted = folderNoteOf(folder)
+    if (useVault.getState().entries.has(promoted)) {
+      // Folder + index note already exist (e.g. re-created).
+    } else {
+      await adapter.createFolder(folder)
+      updateEntry({ path: folder, kind: 'folder' })
+      await moveFileInternal(parentPath, promoted)
+    }
+  }
+  return createNote(folder, name)
+}
+
+/** All direct subpages of a page (folder-note children, excluding itself). */
+export function subpagesOf(path: string): string[] {
+  const folder = pageFolderOf(path)
+  if (!folder) return []
+  const entries = useVault.getState().entries
+  const children: string[] = []
+  for (const entry of entries.values()) {
+    if (entry.kind !== 'file' || !isMarkdown(entry.path)) continue
+    if (entry.path === path) continue
+    const dir = dirname(entry.path)
+    if (dir === folder) children.push(entry.path)
+    else if (dirname(dir) === folder && isFolderNote(entry.path)) children.push(entry.path)
+  }
+  return children.sort((a, b) => a.localeCompare(b))
+}
+
+/**
+ * Rename a page. For a folder note (`A/B/B.md`) both the folder and its
+ * index note are renamed so the convention stays intact. Returns a link
+ * update plan when other notes link to the renamed page.
+ */
+export async function renamePage(path: string, newName: string): Promise<LinkUpdatePlan | null> {
+  const folder = pageFolderOf(path)
+  if (!folder) return renameNote(path, newName)
+  const clean = sanitizeName(newName)
+  await renameFolder(folder, clean)
+  const newFolder = joinPath(dirname(folder), clean)
+  return renameNote(joinPath(newFolder, basename(path)), clean)
+}
+
+/** Move a note to the vault root (convert a subpage into a top-level page). */
+export async function convertToTopLevel(path: string): Promise<void> {
+  await moveNote(path, '')
+}
+
+/**
+ * Make `path` a subpage of `targetNote`: promotes the target to a folder
+ * note if needed, then moves the note inside. Used by drag-and-drop.
+ */
+export async function nestUnder(path: string, targetNote: string): Promise<void> {
+  if (!adapter || path === targetNote) return
+  let folder = pageFolderOf(targetNote)
+  if (!folder) {
+    folder = targetNote.replace(/\.md$/i, '')
+    if (isWithin(folder, path)) return // already inside
+    await adapter.createFolder(folder)
+    updateEntry({ path: folder, kind: 'folder' })
+    await moveFileInternal(targetNote, folderNoteOf(folder))
+  }
+  if (dirname(path) === folder) return
+  await moveNote(path, folder)
 }
 
 export async function deleteNote(path: string): Promise<void> {

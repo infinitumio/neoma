@@ -13,6 +13,8 @@ export interface Toast {
   id: string
   kind: 'info' | 'success' | 'warning' | 'error'
   message: string
+  /** optional action button, e.g. Undo */
+  action?: { label: string; run: () => void | Promise<void> }
 }
 
 export interface ConfirmRequest {
@@ -42,6 +44,7 @@ interface UiState {
   paletteOpen: boolean
   paletteMode: 'commands' | 'notes'
   shortcutsHelpOpen: boolean
+  helpOpen: boolean
   settingsOpen: boolean
   confirm: ConfirmRequest | null
   prompt: PromptRequest | null
@@ -57,11 +60,12 @@ interface UiState {
   openPalette: (mode?: 'commands' | 'notes') => void
   closePalette: () => void
   setShortcutsHelpOpen: (open: boolean) => void
+  setHelpOpen: (open: boolean) => void
   setSettingsOpen: (open: boolean) => void
   askConfirm: (request: ConfirmRequest) => void
   askPrompt: (request: PromptRequest) => void
   clearDialogs: () => void
-  toast: (message: string, kind?: Toast['kind']) => void
+  toast: (message: string, kind?: Toast['kind'], action?: Toast['action']) => void
   dismissToast: (id: string) => void
 }
 
@@ -75,6 +79,7 @@ export const useUi = create<UiState>((set) => ({
   paletteOpen: false,
   paletteMode: 'commands',
   shortcutsHelpOpen: false,
+  helpOpen: false,
   settingsOpen: false,
   confirm: null,
   prompt: null,
@@ -95,14 +100,15 @@ export const useUi = create<UiState>((set) => ({
   openPalette: (mode = 'commands') => set({ paletteOpen: true, paletteMode: mode }),
   closePalette: () => set({ paletteOpen: false }),
   setShortcutsHelpOpen: (open) => set({ shortcutsHelpOpen: open }),
+  setHelpOpen: (open) => set({ helpOpen: open }),
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   askConfirm: (request) => set({ confirm: request }),
   askPrompt: (request) => set({ prompt: request }),
   clearDialogs: () => set({ confirm: null, prompt: null }),
-  toast: (message, kind = 'info') =>
+  toast: (message, kind = 'info', action) =>
     set((s) => {
-      const toast: Toast = { id: generateId(), kind, message }
-      setTimeout(() => useUi.getState().dismissToast(toast.id), 5000)
+      const toast: Toast = { id: generateId(), kind, message, action }
+      setTimeout(() => useUi.getState().dismissToast(toast.id), action ? 8000 : 5000)
       return { toasts: [...s.toasts.slice(-3), toast] }
     }),
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),

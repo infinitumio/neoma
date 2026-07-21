@@ -81,6 +81,21 @@ export function Preview({ path, content }: PreviewProps) {
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [html, path])
 
+  // Double-click a rendered equation to copy its LaTeX source (KaTeX keeps
+  // the original TeX in an <annotation> element).
+  const onDoubleClick = (event: React.MouseEvent) => {
+    const katexEl = (event.target as HTMLElement).closest('.katex')
+    if (!katexEl) return
+    const annotation = katexEl.querySelector('annotation[encoding="application/x-tex"]')
+    const tex = annotation?.textContent
+    if (tex) {
+      void navigator.clipboard
+        .writeText(tex)
+        .then(() => useUi.getState().toast('Equation LaTeX copied', 'success'))
+        .catch(() => useUi.getState().toast('Could not copy equation', 'error'))
+    }
+  }
+
   const onClick = (event: React.MouseEvent) => {
     const target = (event.target as HTMLElement).closest('a')
     if (!target) return
@@ -103,7 +118,12 @@ export function Preview({ path, content }: PreviewProps) {
   }
 
   return (
-    <div className="preview-pane print-area" ref={containerRef} onClick={onClick}>
+    <div
+      className="preview-pane print-area"
+      ref={containerRef}
+      onClick={onClick}
+      onDoubleClick={onDoubleClick}
+    >
       <div
         className="preview-content markdown-body"
         // Safe: the pipeline never passes raw HTML through (no rehype-raw).

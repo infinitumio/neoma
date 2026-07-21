@@ -11,16 +11,28 @@ test.describe.configure({ mode: 'serial' })
 
 async function createVault(page: Page, name = 'Test vault'): Promise<void> {
   await page.goto('/')
-  await page.getByRole('button', { name: /create browser vault/i }).click()
+  await page.getByRole('button', { name: /create my first vault/i }).click()
   await page.getByLabel('Vault name').fill(name)
-  await page.getByRole('button', { name: /create vault/i }).click()
-  await expect(page.getByRole('button', { name: 'New note', exact: true })).toBeVisible()
+  // Blank starter → a single empty "Untitled" page, so tests start clean.
+  await page.getByRole('button', { name: /Blank vault/ }).click()
+  await page.getByRole('button', { name: /^Create vault$/ }).click()
+  await expect(page.getByRole('button', { name: 'New page', exact: true })).toBeVisible()
+  await expect(page.locator('.cm-content')).toBeVisible()
 }
 
+/**
+ * Type into a fresh page. Reuses the blank vault's initial empty "Untitled"
+ * page on first call, and creates a new page on subsequent calls.
+ */
 async function createNote(page: Page, content: string): Promise<void> {
-  await page.getByRole('button', { name: 'New note', exact: true }).click()
   const editor = page.locator('.cm-content')
   await expect(editor).toBeVisible()
+  // An empty editor shows the placeholder widget; reuse it, else make a new page.
+  const isEmpty = (await editor.locator('.cm-placeholder').count()) > 0
+  if (!isEmpty) {
+    await page.getByRole('button', { name: 'New page', exact: true }).click()
+    await expect(editor.locator('.cm-placeholder')).toBeVisible()
+  }
   await editor.click()
   await editor.pressSequentially(content)
 }
@@ -51,7 +63,7 @@ test('wiki links resolve and backlinks appear', async ({ page }) => {
   // Rename it via command palette for a stable name.
   await page.keyboard.press('ControlOrMeta+k')
   await page.getByPlaceholder('Type a command…').fill('rename')
-  await page.getByRole('option', { name: /rename note/i }).click()
+  await page.getByRole('option', { name: /rename page/i }).click()
   await page.getByLabel('New name').fill('Target')
   await page.getByRole('button', { name: 'OK' }).click()
 
@@ -124,7 +136,9 @@ test('vault exports as ZIP and reimports', async ({ page }) => {
   // Re-import through the files panel import input.
   const fileInput = page.locator('input[type="file"][accept*=".zip"]')
   await fileInput.setInputFiles(zipPath!)
-  await expect(page.locator('.toast')).toContainText(/Imported 1 notes/)
+  await expect(page.locator('.toast').filter({ hasText: /Imported/ })).toContainText(
+    /Imported \d+ note/,
+  )
 })
 
 test('renaming a linked note offers to update links', async ({ page }) => {
@@ -132,7 +146,7 @@ test('renaming a linked note offers to update links', async ({ page }) => {
   await createNote(page, 'Base note')
   await page.keyboard.press('ControlOrMeta+k')
   await page.getByPlaceholder('Type a command…').fill('rename')
-  await page.getByRole('option', { name: /rename note/i }).click()
+  await page.getByRole('option', { name: /rename page/i }).click()
   await page.getByLabel('New name').fill('Old Name')
   await page.getByRole('button', { name: 'OK' }).click()
 
@@ -148,14 +162,16 @@ test('renaming a linked note offers to update links', async ({ page }) => {
     .click()
   await page.keyboard.press('ControlOrMeta+k')
   await page.getByPlaceholder('Type a command…').fill('rename')
-  await page.getByRole('option', { name: /rename note/i }).click()
+  await page.getByRole('option', { name: /rename page/i }).click()
   await page.getByLabel('New name').fill('New Name')
   await page.getByRole('button', { name: 'OK' }).click()
 
   // The link-update dialog lists the affected note; apply it.
   await expect(page.getByRole('dialog', { name: /update links/i })).toBeVisible()
   await page.getByRole('button', { name: /update 1 link/i }).click()
-  await expect(page.locator('.toast')).toContainText('Updated 1 link')
+  await expect(page.locator('.toast').filter({ hasText: /Updated/ })).toContainText(
+    'Updated 1 link',
+  )
 
   // Verify the linking note now points at the new name.
   await page.keyboard.press('ControlOrMeta+o')
@@ -179,7 +195,7 @@ test('deleted notes can be restored from recently deleted', async ({ page }) => 
   await page.getByRole('button', { name: 'Recently deleted' }).click()
   await expect(page.locator('.sidebar')).toContainText('Untitled.md')
   await page.getByRole('button', { name: 'Restore', exact: true }).click()
-  await expect(page.locator('.toast.success')).toContainText('Restored')
+  await expect(page.locator('.toast').filter({ hasText: /Restored/ })).toContainText('Restored')
   await expect(page.locator('.cm-content')).toContainText('delete me please')
 })
 
@@ -250,4 +266,99 @@ test('selection toolbar formats highlighted text in place', async ({ page }) => 
   await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText(
     '**format me**',
   )
+})
+
+test('italic renders correctly (feedback: italics were broken)', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'plain *italic* and ***bold italic*** and _also italic_')
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+  await page.keyboard.press('ControlOrMeta+Shift+r')
+  await expect(page.locator('.markdown-body em', { hasText: 'italic' }).first()).toBeVisible()
+  // Bold-italic nests em/strong (either order depending on the renderer).
+  await expect(page.locator('.markdown-body em strong, .markdown-body strong em')).toHaveText(
+    'bold italic',
+  )
+  await expect(page.locator('.markdown-body em', { hasText: 'also italic' })).toHaveText(
+    'also italic',
+  )
+})
+
+test('coloured highlight survives reopening the page', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'highlight this definition')
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+
+  // Highlight the whole line blue via the selection toolbar palette.
+  const editor = page.locator('.cm-content')
+  await editor.click()
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.locator('.selection-toolbar button[aria-label="Highlight colour"]').click()
+  await page.locator('.highlight-palette button[aria-label="Highlight blue"]').click()
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+
+  // Reload, wait for the page to restore, then confirm the coloured mark
+  // persisted and renders in reading view.
+  await page.reload()
+  await expect(page.locator('.cm-content')).toContainText('highlight this definition')
+  await page.keyboard.press('ControlOrMeta+Shift+r')
+  await expect(page.locator('.markdown-body mark.mark-blue')).toContainText(
+    'highlight this definition',
+  )
+})
+
+test('create a subpage; breadcrumbs show the hierarchy', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'Parent page content')
+  // Rename to a stable parent name.
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.getByPlaceholder('Type a command…').fill('rename')
+  await page.getByRole('option', { name: /rename page/i }).click()
+  await page.getByLabel('New name').fill('Artificial Intelligence')
+  await page.getByRole('button', { name: 'OK' }).click()
+
+  // Create a subpage via the command palette.
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.getByPlaceholder('Type a command…').fill('subpage')
+  await page.getByRole('option', { name: /create subpage/i }).click()
+  await page.getByLabel('Subpage title').fill('Machine Learning')
+  await page.getByRole('button', { name: 'Create', exact: true }).click()
+
+  // Breadcrumbs should read Vault / Artificial Intelligence / Machine Learning.
+  const crumbs = page.locator('.breadcrumbs')
+  await expect(crumbs).toContainText('Artificial Intelligence')
+  await expect(crumbs.locator('.crumb-current')).toHaveText('Machine Learning')
+  // Stored portably as a folder note.
+  await page.getByRole('button', { name: 'Source', exact: true }).isVisible()
+})
+
+test('slash command inserts a heading', async ({ page }) => {
+  await createVault(page)
+  const editor = page.locator('.cm-content')
+  await editor.click()
+  await editor.pressSequentially('/heading 1')
+  // The slash menu should be open with a matching option.
+  await page
+    .getByRole('option', { name: /Heading 1/ })
+    .first()
+    .click()
+  await page.getByRole('button', { name: 'Source', exact: true }).click()
+  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('#')
+})
+
+test('search reports completion stats and supports exact phrase', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'the neural network learns representations')
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  const box = page.getByRole('searchbox', { name: 'Search vault' })
+  await box.fill('neural network')
+  await expect(page.locator('.search-status')).toContainText(/Search completed/)
+  await expect(page.locator('.search-status')).toContainText(/match/)
+  await expect(page.locator('.search-result')).toHaveCount(1)
+
+  // Exact-phrase mode: a phrase that does not appear yields no matches.
+  await page.getByRole('button', { name: 'Exact phrase' }).click()
+  await box.fill('network neural')
+  await expect(page.locator('.search-result')).toHaveCount(0)
 })

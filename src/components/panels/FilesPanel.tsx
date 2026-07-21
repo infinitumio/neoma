@@ -21,7 +21,10 @@ export function FilesPanel() {
 
   const newNote = async () => {
     const path = await createNote('', 'Untitled')
-    if (path) useTabs.getState().openNote(path)
+    if (path) {
+      useTabs.getState().openNote(path)
+      useUi.getState().toast('Page created', 'success')
+    }
   }
 
   const newFolder = () => {
@@ -72,8 +75,8 @@ export function FilesPanel() {
         <button
           className="icon-btn"
           onClick={() => void newNote()}
-          aria-label="New note"
-          title="New note"
+          aria-label="New page"
+          title="New page"
         >
           <FilePlus size={16} aria-hidden />
         </button>

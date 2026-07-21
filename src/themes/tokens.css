@@ -48,6 +48,15 @@
   --color-mark-bg: rgba(74, 222, 128, 0.25);
   --color-mark-text: #eafff2;
 
+  /* Coloured-highlight palette (translucent so text stays readable) */
+  --hl-yellow: rgba(240, 180, 41, 0.32);
+  --hl-green: rgba(74, 222, 128, 0.28);
+  --hl-blue: rgba(94, 177, 239, 0.3);
+  --hl-purple: rgba(178, 132, 245, 0.32);
+  --hl-red: rgba(239, 100, 97, 0.32);
+  --hl-orange: rgba(247, 146, 58, 0.32);
+  --hl-grey: rgba(152, 163, 157, 0.3);
+
   /* Shape */
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -122,6 +131,14 @@
   --color-selection: rgba(22, 163, 74, 0.18);
   --color-mark-bg: rgba(22, 163, 74, 0.18);
   --color-mark-text: #14321f;
+
+  --hl-yellow: rgba(217, 155, 0, 0.28);
+  --hl-green: rgba(22, 163, 74, 0.22);
+  --hl-blue: rgba(43, 108, 176, 0.22);
+  --hl-purple: rgba(128, 90, 213, 0.24);
+  --hl-red: rgba(197, 48, 48, 0.22);
+  --hl-orange: rgba(221, 107, 32, 0.26);
+  --hl-grey: rgba(92, 104, 98, 0.22);
 
   --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
   --shadow-overlay: 0 8px 32px rgba(30, 40, 35, 0.18);

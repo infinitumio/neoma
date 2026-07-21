@@ -7,6 +7,8 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { Editor } from './Editor'
 import { SourceView } from './SourceView'
 import { ViewModeSwitcher } from './ViewModeSwitcher'
+import { Breadcrumbs } from './Breadcrumbs'
+import { MathSymbolMenu } from './MathSymbolMenu'
 
 // The preview pulls in the markdown pipeline + KaTeX; load it on demand so
 // the initial bundle stays small for people who just want to type.
@@ -62,6 +64,9 @@ export function NotePane({ path }: NotePaneProps) {
   return (
     <div className="note-view">
       <div className="note-header">
+        <Breadcrumbs path={path} />
+        <span style={{ flex: 1 }} />
+        {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
         <ViewModeSwitcher />
       </div>
       <div className={`editor-area ${editorMode}`} data-mode={editorMode}>

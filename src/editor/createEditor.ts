@@ -23,6 +23,7 @@ import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { autocompletion, completionKeymap, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { editorTheme, markdownHighlighting } from './theme'
 import { wikiLinkCompletion, tagCompletion } from './wikiLinkCompletion'
+import { slashCommandCompletion } from './slashCommands'
 import {
   toggleBold,
   toggleItalic,
@@ -60,7 +61,10 @@ export function buildExtensions(callbacks: EditorCallbacks, options: EditorOptio
     markdownHighlighting,
     editorTheme,
     placeholder('Start writing…'),
-    autocompletion({ override: [wikiLinkCompletion, tagCompletion], icons: false }),
+    autocompletion({
+      override: [slashCommandCompletion, wikiLinkCompletion, tagCompletion],
+      icons: false,
+    }),
     options.showLineNumbers ? lineNumbers() : [],
     EditorView.contentAttributes.of({
       spellcheck: options.spellcheck ? 'true' : 'false',

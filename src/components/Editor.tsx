@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { EditorView } from '@codemirror/view'
 import type { EditorState } from '@codemirror/state'
 import { createEditorState } from '@/editor/createEditor'
+import { insertAtCursor } from '@/editor/markdownCommands'
 import { updateNoteContent, saveNoteNow, saveAttachment } from '@/app/vaultStore'
 import { useSettings } from '@/settings/settingsStore'
 import { useUi } from '@/app/uiStore'
@@ -107,11 +108,19 @@ export function Editor({ path, content }: EditorProps) {
     // Keep the floating toolbar glued to the selection while scrolling.
     const onScroll = () => refreshToolbar()
     view.scrollDOM.addEventListener('scroll', onScroll, { passive: true })
+    // Insert requests from outside the editor (math symbol menu, help).
+    const onInsert = (event: Event) => {
+      const { text, cursorOffset } = (event as CustomEvent<{ text: string; cursorOffset?: number }>)
+        .detail
+      insertAtCursor(view, text, cursorOffset)
+    }
+    window.addEventListener('neoma:insert-text', onInsert)
 
     return () => {
       dom.removeEventListener('paste', onPaste)
       dom.removeEventListener('drop', onDrop)
       view.scrollDOM.removeEventListener('scroll', onScroll)
+      window.removeEventListener('neoma:insert-text', onInsert)
       setToolbar(null)
       stateCache.set(pathRef.current, view.state)
       view.destroy()

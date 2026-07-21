@@ -1,20 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * Floating formatting toolbar shown above the current editor selection. It
- * lets the user re-format highlighted text in place (bold, italic,
- * strikethrough, highlight, inline code) or wrap it in a wiki link — without
- * leaving the keyboard flow or hunting for a menu.
+ * Floating formatting toolbar shown above the current editor selection.
+ * Lets the user re-format highlighted text in place — bold, italic,
+ * strikethrough, inline code, wiki link — and apply coloured highlights
+ * from a small palette (stored as portable `==…==` / `<mark data-color>`
+ * syntax, see docs/markdown-compatibility.md).
  */
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Bold, Italic, Strikethrough, Highlighter, Code, Link2 } from 'lucide-react'
+import { Bold, Italic, Strikethrough, Highlighter, Code, Link2, X } from 'lucide-react'
 import type { EditorView } from '@codemirror/view'
 import {
   toggleBold,
   toggleItalic,
   toggleStrikethrough,
-  toggleHighlight,
   toggleCode,
   insertWikiLink,
+  applyHighlight,
+  HIGHLIGHT_COLORS,
+  type HighlightColor,
 } from '@/editor/markdownCommands'
 
 export interface ToolbarPosition {
@@ -39,12 +43,19 @@ const ACTIONS: Action[] = [
   { label: 'Bold', icon: Bold, run: toggleBold },
   { label: 'Italic', icon: Italic, run: toggleItalic },
   { label: 'Strikethrough', icon: Strikethrough, run: toggleStrikethrough },
-  { label: 'Highlight', icon: Highlighter, run: toggleHighlight },
   { label: 'Inline code', icon: Code, run: toggleCode },
   { label: 'Wiki link', icon: Link2, run: insertWikiLink },
 ]
 
 export function SelectionToolbar({ view, position, onAfterCommand }: SelectionToolbarProps) {
+  const [showColors, setShowColors] = useState(false)
+
+  const apply = (fn: (view: EditorView) => boolean) => {
+    fn(view)
+    setShowColors(false)
+    onAfterCommand()
+  }
+
   return createPortal(
     <div
       className="selection-toolbar"
@@ -60,14 +71,42 @@ export function SelectionToolbar({ view, position, onAfterCommand }: SelectionTo
           className="selection-toolbar-btn"
           aria-label={action.label}
           title={action.label}
-          onClick={() => {
-            action.run(view)
-            onAfterCommand()
-          }}
+          onClick={() => apply(action.run)}
         >
           <action.icon size={15} aria-hidden />
         </button>
       ))}
+      <button
+        className="selection-toolbar-btn"
+        aria-label="Highlight colour"
+        aria-expanded={showColors}
+        title="Highlight"
+        onClick={() => setShowColors((s) => !s)}
+      >
+        <Highlighter size={15} aria-hidden />
+      </button>
+      {showColors && (
+        <div className="highlight-palette" role="group" aria-label="Highlight colours">
+          {HIGHLIGHT_COLORS.map((color) => (
+            <button
+              key={color}
+              className="highlight-swatch"
+              style={{ background: `var(--hl-${color})` }}
+              aria-label={`Highlight ${color}`}
+              title={color}
+              onClick={() => apply((v) => applyHighlight(v, color as HighlightColor))}
+            />
+          ))}
+          <button
+            className="highlight-swatch highlight-clear"
+            aria-label="Remove highlight"
+            title="Remove highlight"
+            onClick={() => apply((v) => applyHighlight(v, null))}
+          >
+            <X size={11} aria-hidden />
+          </button>
+        </div>
+      )}
     </div>,
     document.body,
   )

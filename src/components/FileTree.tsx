@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * The vault file tree: collapsible folders, context menus, pinning,
- * drag-and-drop organisation, and inline note/folder creation.
+ * The page tree: collapsible pages and subpages (folder-note convention),
+ * context menus, pinning, and drag-and-drop organisation — drop a page onto
+ * a folder to move it, or onto another page to nest it as a subpage.
  */
 import { useMemo, useState } from 'react'
 import {
@@ -15,25 +16,31 @@ import {
   Trash2,
   FolderInput,
   ExternalLink,
+  FilePlus2,
+  ArrowUpToLine,
 } from 'lucide-react'
 import type { FileEntry } from '@/types'
 import { ContextMenu, type MenuItem } from './ContextMenu'
 import {
   useVault,
   deleteNote,
+  restoreFromTrash,
   deleteFolder,
   duplicateNote,
   moveNote,
-  renameNote,
+  renamePage,
   renameFolder,
   togglePin,
   renameAttachment,
   getAdapter,
+  createSubpage,
+  nestUnder,
+  convertToTopLevel,
 } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 import { useSettings } from '@/settings/settingsStore'
-import { basename, dirname, isMarkdown, stem } from '@/utils/paths'
+import { basename, dirname, folderNoteOf, isMarkdown, stem } from '@/utils/paths'
 import { downloadBlob } from '@/storage/import-export'
 
 interface TreeNode {
@@ -100,22 +107,50 @@ export function FileTree() {
     })
   }
 
+  /** The index note when a folder represents a page, else null. */
+  const indexNoteOf = (folderPath: string): string | null => {
+    const candidate = folderNoteOf(folderPath)
+    return entries.has(candidate) ? candidate : null
+  }
+
   const openEntry = (entry: FileEntry) => {
-    if (entry.kind === 'folder') toggleFolder(entry.path)
-    else if (isMarkdown(entry.path)) openNote(entry.path)
+    if (entry.kind === 'folder') {
+      const indexNote = indexNoteOf(entry.path)
+      if (indexNote) openNote(indexNote)
+      else toggleFolder(entry.path)
+    } else if (isMarkdown(entry.path)) openNote(entry.path)
     else void openAttachment(entry.path)
   }
 
-  const askRename = (entry: FileEntry) => {
+  const askNewSubpage = (notePath: string) => {
     ui.askPrompt({
-      title: entry.kind === 'folder' ? 'Rename folder' : 'Rename note',
+      title: 'New subpage',
+      label: `Subpage of "${stem(notePath)}"`,
+      placeholder: 'Subpage title',
+      confirmLabel: 'Create',
+      onSubmit: async (value) => {
+        const created = await createSubpage(notePath, value.trim() || 'Untitled')
+        if (created) {
+          openNote(created)
+          ui.toast(`Subpage created: ${stem(created)}`, 'success')
+        }
+      },
+    })
+  }
+
+  const askRename = (entry: FileEntry, asPage?: string) => {
+    const target = asPage ?? entry.path
+    ui.askPrompt({
+      title: entry.kind === 'folder' && !asPage ? 'Rename folder' : 'Rename page',
       label: 'New name',
-      initial: entry.kind === 'folder' ? basename(entry.path) : stem(entry.path),
+      initial: asPage || entry.kind !== 'folder' ? stem(target) : basename(entry.path),
       onSubmit: async (value) => {
         try {
-          if (entry.kind === 'folder') await renameFolder(entry.path, value)
-          else if (isMarkdown(entry.path)) await renameNote(entry.path, value)
+          if (asPage) await renamePage(asPage, value)
+          else if (entry.kind === 'folder') await renameFolder(entry.path, value)
+          else if (isMarkdown(entry.path)) await renamePage(entry.path, value)
           else await renameAttachment(entry.path, value + '.' + entry.path.split('.').pop())
+          ui.toast('Renamed', 'success')
         } catch (err) {
           ui.toast(err instanceof Error ? err.message : 'Rename failed', 'error')
         }
@@ -129,12 +164,13 @@ export function FileTree() {
       .map((e) => e.path)
       .sort()
     ui.askPrompt({
-      title: 'Move note',
+      title: 'Move page',
       label: `Target folder (empty for vault root). Existing: ${folders.slice(0, 8).join(', ') || 'none'}`,
       initial: dirname(entry.path),
       onSubmit: async (value) => {
         try {
           await moveNote(entry.path, value.trim())
+          ui.toast('Page moved', 'success')
         } catch (err) {
           ui.toast(err instanceof Error ? err.message : 'Move failed', 'error')
         }
@@ -146,14 +182,27 @@ export function FileTree() {
     const doDelete = async () => {
       if (entry.kind === 'folder') await deleteFolder(entry.path)
       else await deleteNote(entry.path)
-      ui.toast('Moved to recently deleted', 'info')
+      const latest = useVault.getState().trash[0]
+      ui.toast(
+        'Moved to Recently deleted',
+        'info',
+        latest
+          ? {
+              label: 'Undo',
+              run: async () => {
+                const restored = await restoreFromTrash(latest.id)
+                if (restored) ui.toast(`Restored ${restored}`, 'success')
+              },
+            }
+          : undefined,
+      )
     }
     if (!useSettings.getState().settings.confirmBeforeDelete) {
       void doDelete()
       return
     }
     ui.askConfirm({
-      title: entry.kind === 'folder' ? 'Delete folder?' : 'Delete note?',
+      title: entry.kind === 'folder' ? 'Delete page and subpages?' : 'Delete page?',
       message:
         entry.kind === 'folder'
           ? `Delete "${entry.path}" and everything inside it? Files go to Recently deleted first.`
@@ -164,8 +213,62 @@ export function FileTree() {
     })
   }
 
+  const noteMenuItems = (path: string, folderEntry?: FileEntry): MenuItem[] => [
+    {
+      label: 'Open in new tab',
+      icon: <ExternalLink size={14} aria-hidden />,
+      onSelect: () => openNote(path, { newTab: true }),
+    },
+    {
+      label: 'New subpage',
+      icon: <FilePlus2 size={14} aria-hidden />,
+      onSelect: () => askNewSubpage(path),
+    },
+    {
+      label: pinned.includes(path) ? 'Unpin' : 'Pin',
+      icon: <Pin size={14} aria-hidden />,
+      separatorAfter: true,
+      onSelect: () => togglePin(path),
+    },
+    {
+      label: 'Rename…',
+      icon: <Pencil size={14} aria-hidden />,
+      onSelect: () =>
+        askRename(folderEntry ?? { path, kind: 'file' }, folderEntry ? path : undefined),
+    },
+    {
+      label: 'Move…',
+      icon: <FolderInput size={14} aria-hidden />,
+      onSelect: () => askMove({ path, kind: 'file' }),
+    },
+    ...(dirname(path)
+      ? [
+          {
+            label: 'Convert to top-level page',
+            icon: <ArrowUpToLine size={14} aria-hidden />,
+            onSelect: () =>
+              void convertToTopLevel(path).then(() => ui.toast('Moved to top level', 'success')),
+          },
+        ]
+      : []),
+    {
+      label: 'Duplicate',
+      icon: <Copy size={14} aria-hidden />,
+      separatorAfter: true,
+      onSelect: () => void duplicateNote(path),
+    },
+    {
+      label: 'Delete',
+      icon: <Trash2 size={14} aria-hidden />,
+      danger: true,
+      onSelect: () => askDelete(folderEntry ?? { path, kind: 'file' }),
+    },
+  ]
+
   const menuItems = (entry: FileEntry): MenuItem[] => {
     if (entry.kind === 'folder') {
+      const indexNote = indexNoteOf(entry.path)
+      if (indexNote) return noteMenuItems(indexNote, entry)
       return [
         {
           label: 'Rename',
@@ -200,51 +303,24 @@ export function FileTree() {
         },
       ]
     }
-    return [
-      {
-        label: 'Open in new tab',
-        icon: <ExternalLink size={14} aria-hidden />,
-        onSelect: () => openNote(entry.path, { newTab: true }),
-      },
-      {
-        label: pinned.includes(entry.path) ? 'Unpin' : 'Pin',
-        icon: <Pin size={14} aria-hidden />,
-        separatorAfter: true,
-        onSelect: () => togglePin(entry.path),
-      },
-      {
-        label: 'Rename…',
-        icon: <Pencil size={14} aria-hidden />,
-        onSelect: () => askRename(entry),
-      },
-      {
-        label: 'Move…',
-        icon: <FolderInput size={14} aria-hidden />,
-        onSelect: () => askMove(entry),
-      },
-      {
-        label: 'Duplicate',
-        icon: <Copy size={14} aria-hidden />,
-        separatorAfter: true,
-        onSelect: () => void duplicateNote(entry.path),
-      },
-      {
-        label: 'Delete',
-        icon: <Trash2 size={14} aria-hidden />,
-        danger: true,
-        onSelect: () => askDelete(entry),
-      },
-    ]
+    return noteMenuItems(entry.path)
   }
 
-  const onDropInto = async (targetFolder: string, event: React.DragEvent) => {
+  const onDropOnEntry = async (target: FileEntry, event: React.DragEvent) => {
     event.preventDefault()
+    event.stopPropagation()
     setDropTarget(null)
     const sourcePath = event.dataTransfer.getData('application/x-neoma-path')
-    if (!sourcePath || sourcePath === targetFolder) return
-    if (dirname(sourcePath) === targetFolder) return
+    if (!sourcePath || sourcePath === target.path) return
     try {
-      await moveNote(sourcePath, targetFolder)
+      if (target.kind === 'folder') {
+        if (dirname(sourcePath) === target.path) return
+        await moveNote(sourcePath, target.path)
+        ui.toast('Page moved', 'success')
+      } else if (isMarkdown(target.path)) {
+        await nestUnder(sourcePath, target.path)
+        ui.toast(`Nested under "${stem(target.path)}"`, 'success')
+      }
     } catch (err) {
       ui.toast(err instanceof Error ? err.message : 'Move failed', 'error')
     }
@@ -253,8 +329,16 @@ export function FileTree() {
   const renderNode = (node: TreeNode) => {
     const { entry } = node
     const isFolder = entry.kind === 'folder'
+    const indexNote = isFolder ? indexNoteOf(entry.path) : null
+    const isPageFolder = indexNote !== null
     const isOpen = !collapsed.has(entry.path)
-    const isActive = activeTab?.type === 'note' && activeTab.path === entry.path
+    const isActive =
+      activeTab?.type === 'note' &&
+      (activeTab.path === entry.path || (isPageFolder && activeTab.path === indexNote))
+    const children = isPageFolder
+      ? node.children.filter((child) => child.entry.path !== indexNote)
+      : node.children
+    const droppable = isFolder || isMarkdown(entry.path)
     return (
       <li key={entry.path} role="treeitem" aria-expanded={isFolder ? isOpen : undefined}>
         <button
@@ -264,21 +348,25 @@ export function FileTree() {
             e.preventDefault()
             setMenu({ x: e.clientX, y: e.clientY, entry })
           }}
-          draggable={!isFolder}
+          draggable={!isFolder || isPageFolder}
           onDragStart={(e) => {
-            e.dataTransfer.setData('application/x-neoma-path', entry.path)
+            e.dataTransfer.setData(
+              'application/x-neoma-path',
+              isPageFolder ? indexNote! : entry.path,
+            )
             e.dataTransfer.effectAllowed = 'move'
           }}
           onDragOver={
-            isFolder
+            droppable
               ? (e) => {
                   e.preventDefault()
+                  e.stopPropagation()
                   setDropTarget(entry.path)
                 }
               : undefined
           }
-          onDragLeave={isFolder ? () => setDropTarget(null) : undefined}
-          onDrop={isFolder ? (e) => void onDropInto(entry.path, e) : undefined}
+          onDragLeave={droppable ? () => setDropTarget(null) : undefined}
+          onDrop={droppable ? (e) => void onDropOnEntry(entry, e) : undefined}
           title={entry.path}
         >
           {isFolder ? (
@@ -287,8 +375,16 @@ export function FileTree() {
                 size={14}
                 className={`tree-chevron${isOpen ? ' open' : ''}`}
                 aria-hidden
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleFolder(entry.path)
+                }}
               />
-              <FolderIcon size={14} aria-hidden />
+              {isPageFolder ? (
+                <FileText size={14} aria-hidden />
+              ) : (
+                <FolderIcon size={14} aria-hidden />
+              )}
             </>
           ) : isMarkdown(entry.path) ? (
             <FileText size={14} aria-hidden style={{ marginLeft: 14, flexShrink: 0 }} />
@@ -296,12 +392,12 @@ export function FileTree() {
             <Paperclip size={14} aria-hidden style={{ marginLeft: 14, flexShrink: 0 }} />
           )}
           <span className="tree-label">{isFolder ? basename(entry.path) : stem(entry.path)}</span>
-          {pinned.includes(entry.path) && (
+          {pinned.includes(isPageFolder ? indexNote! : entry.path) && (
             <Pin size={12} className="pin-indicator" aria-label="Pinned" />
           )}
         </button>
-        {isFolder && isOpen && node.children.length > 0 && (
-          <ul role="group">{node.children.map((child) => renderNode(child))}</ul>
+        {isFolder && isOpen && children.length > 0 && (
+          <ul role="group">{children.map((child) => renderNode(child))}</ul>
         )}
       </li>
     )
@@ -322,13 +418,13 @@ export function FileTree() {
               </li>
             ))}
           </ul>
-          <div className="sidebar-section-label">Files</div>
+          <div className="sidebar-section-label">Pages</div>
         </>
       )}
       <ul
         className="file-tree"
         role="tree"
-        aria-label="Vault files"
+        aria-label="Vault pages"
         onDragOver={(e) => {
           if (e.target === e.currentTarget) {
             e.preventDefault()
@@ -336,14 +432,17 @@ export function FileTree() {
           }
         }}
         onDrop={(e) => {
-          if (dropTarget === '') void onDropInto('', e)
+          if (dropTarget === '') {
+            void onDropOnEntry({ path: '', kind: 'folder' }, e)
+          }
         }}
       >
         {tree.map((node) => renderNode(node))}
       </ul>
       {tree.length === 0 && (
         <p className="text-small text-faint" style={{ padding: 'var(--space-2)' }}>
-          No notes yet. Create one with the button above.
+          No pages yet. Create your first page with the button above — pages are ordinary Markdown
+          files stored in this vault.
         </p>
       )}
       {menu && (

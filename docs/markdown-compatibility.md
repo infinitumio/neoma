@@ -11,17 +11,21 @@ code blocks, tables, horizontal rules, footnotes, links and images.
 
 ## Extensions neoma understands
 
-| Syntax                      | Meaning           | Compatibility notes                                                 |
-| --------------------------- | ----------------- | ------------------------------------------------------------------- |
-| `[[Note Name]]`             | Wiki link         | Understood by Obsidian, Logseq, and most PKM tools                  |
-| `[[Note Name\|Shown text]]` | Aliased wiki link | Same                                                                |
-| `[[Note Name#Heading]]`     | Heading link      | Same                                                                |
-| `![[file.png]]`             | Embed             | Obsidian-style; falls back to visible text elsewhere                |
-| `#tag`                      | Tag               | Common convention; plain text elsewhere                             |
-| `==text==`                  | Highlight         | Obsidian/Typora convention                                          |
-| `> [!note] Title`           | Callout           | Obsidian/GitHub alert convention; renders as a blockquote elsewhere |
-| `$…$`, `$$…$$`              | Math (KaTeX)      | Pandoc/Obsidian convention                                          |
-| `[@citekey]`                | Pandoc citation   | Preserved verbatim; searchable in neoma                             |
+| Syntax                                      | Meaning             | Compatibility notes                                                 |
+| ------------------------------------------- | ------------------- | ------------------------------------------------------------------- |
+| `[[Note Name]]`                             | Wiki link           | Understood by Obsidian, Logseq, and most PKM tools                  |
+| `[[Note Name\|Shown text]]`                 | Aliased wiki link   | Same                                                                |
+| `[[Note Name#Heading]]`                     | Heading link        | Same                                                                |
+| `![[file.png]]`                             | Embed               | Obsidian-style; falls back to visible text elsewhere                |
+| `#tag`                                      | Tag                 | Common convention; plain text elsewhere                             |
+| `==text==`                                  | Highlight (yellow)  | Obsidian/Typora convention                                          |
+| `<mark data-color="blue">…</mark>`          | Coloured highlight  | Documented HTML subset; shows as normal text elsewhere              |
+| `> [!note] Title`                           | Callout             | Obsidian/GitHub alert convention; renders as a blockquote elsewhere |
+| `> [!toggle]- Title`                        | Collapsible section | Renders as a blockquote elsewhere (content stays visible)           |
+| `> [!theorem]`, `[!definition]`, `[!proof]` | Academic blocks     | Blockquote fallback elsewhere                                       |
+| `Question:: …` / `Answer:: …`               | Flashcard           | Plain text elsewhere (LogSeq-compatible field syntax)               |
+| `$…$`, `$$…$$`                              | Math (KaTeX)        | Pandoc/Obsidian convention                                          |
+| `[@citekey]`                                | Pandoc citation     | Preserved verbatim; searchable in neoma                             |
 
 Everything degrades gracefully: in tools that don't know an extension, the note is still
 readable plain text.
@@ -52,10 +56,32 @@ opaque text and refuses to rewrite it.
 Academic-workflow fields recognised as note properties: `doi`, `bibtex-key`,
 `zotero-uri`. Pasting BibTeX into a fenced code block is preserved without alteration.
 
+## Coloured highlights
+
+Yellow highlights use the portable `==text==` syntax. Other colours use a **documented,
+minimal HTML subset** — `<mark data-color="green">…</mark>` with one of seven named colours
+(yellow, green, blue, purple, red, orange, grey) and no other attributes. neoma's renderer
+recognises exactly this shape; any other raw HTML in a note is dropped for safety. In tools
+that don't style it, the text still shows normally. Highlights are preserved on export.
+
+## Page hierarchy (folder notes)
+
+A page that has subpages is stored as a folder plus an index note of the same name:
+
+```text
+Machine Learning/
+├── Machine Learning.md     ← the page itself
+├── Regression.md           ← a subpage
+└── Neural Networks.md      ← a subpage
+```
+
+This is an ordinary folder layout — no database, no hidden index. Other Markdown tools see
+plain folders and files.
+
 ## What neoma never writes into your files
 
 - No random IDs or hidden markers
-- No proprietary syntax
+- No proprietary syntax (page hierarchy is plain folders; highlights are documented HTML)
 - No rewriting of notes you didn't edit (except the explicit, user-approved link update
   after a rename — and then only the link targets change)
 

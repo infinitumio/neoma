@@ -43,15 +43,22 @@ readable in any text editor.
 
 - **Markdown editor** (CodeMirror 6) with edit, split, reading and read-only **source**
   views, plus a floating toolbar to format highlighted text in place
-- **Wiki links** — `[[Note]]`, `[[Note|Alias]]`, `[[Note#Heading]]` — with autocompletion
+- **Slash commands** (`/`) — a searchable menu of block inserts: headings, lists, callouts,
+  toggles, code, and academic blocks (equations, theorems, proofs, flashcards, exam
+  questions, lecture summaries), all inserting portable Markdown
+- **Pages and subpages** — nest pages (stored as ordinary folders + files), with
+  breadcrumbs and drag-to-nest
+- **Wiki links** — `[[Page]]`, `[[Page|Alias]]`, `[[Page#Heading]]` — with autocompletion
 - **Backlinks**, linked/unlinked mentions, broken-link and orphan detection
 - **Tags** (`#tag` and frontmatter), with a tag browser
+- **Coloured highlights** (7 colours) stored as portable, documented syntax
+- **Mathematics** (KaTeX, offline): inline/display, a symbol menu, copy-LaTeX, numbered
+  equations, theorem/definition/proof blocks
 - **YAML frontmatter**, preserved verbatim — unknown fields are never deleted
-- **Full-text search** in a Web Worker: phrases, exclusions, `tag:` / `path:` / `type:`
-  filters, date filters, highlighted context
+- **Full-text search** in a Web Worker: broad / exact-word / exact-phrase modes, scope,
+  case-sensitivity, `tag:` / `path:` / `type:` and date filters, with completion stats
 - **Daily notes** with calendar picker, configurable folder/format/template
-- **Research templates**: daily journal, literature note, experiment log, supervisor
-  meeting, research question — plus your own template notes
+- **Research & study templates** and **starter vaults** (University, Research, Personal)
 - **Graph view** (lazy-loaded): whole-vault or local, zoom/pan, filters, depth limit
 - **Tabs** with pinning, reopen-closed, and session restore
 - **Attachments**: paste or drag images and PDFs, stored with relative paths
