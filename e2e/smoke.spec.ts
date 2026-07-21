@@ -415,3 +415,54 @@ test('slash menu shows icons and section labels', async ({ page }) => {
   await expect(page.locator('.cm-tooltip-autocomplete .cm-slash-icon').first()).toBeVisible()
   await expect(page.locator('.cm-tooltip-autocomplete')).toContainText('Academic')
 })
+
+test('attach a PDF: nests under the page, previews, and opens in-app', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'My lecture notes')
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+
+  // Insert an attachment via the command, uploading a file (adds under page).
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.getByPlaceholder('Type a command…').fill('insert attachment')
+  await page.getByRole('option', { name: /insert attachment/i }).click()
+  await page.getByRole('button', { name: /Add a file/ }).click()
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: /Choose a file/ }).click()
+  await (await chooser).setFiles(new URL('./fixtures/lecture.pdf', import.meta.url).pathname)
+
+  // The file is nested under the page (the note became a folder-note).
+  await expect(page.locator('.file-tree')).toContainText('lecture')
+  // The embed was inserted; reading view shows a PDF preview card.
+  await page.keyboard.press('ControlOrMeta+Shift+r')
+  await expect(page.locator('.pdf-embed-card')).toHaveCount(1)
+
+  // Clicking the card opens the in-app viewer (not a download) with pages.
+  await page.locator('.pdf-embed-card').first().click()
+  await expect(page.locator('[data-testid="pdf-viewer"]')).toBeVisible()
+  await expect(page.locator('.pdf-page canvas').first()).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('.pdf-toolbar')).toContainText('/ 6')
+})
+
+test('pinned item shows a context menu so it can be unpinned', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'pin me')
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+
+  // Pin via the page's context menu.
+  await page
+    .locator('.file-tree .tree-item', { hasText: 'Untitled' })
+    .first()
+    .click({ button: 'right' })
+  await page.getByRole('menuitem', { name: /^Pin$/ }).click()
+  await expect(page.locator('.sidebar')).toContainText('Pinned')
+
+  // Right-click the pinned entry (top) → menu appears with Unpin.
+  await page
+    .locator('.sidebar-section-label', { hasText: 'Pinned' })
+    .locator('xpath=following-sibling::ul[1]')
+    .locator('.tree-item')
+    .first()
+    .click({ button: 'right' })
+  await page.getByRole('menuitem', { name: /Unpin/ }).click()
+  await expect(page.locator('.sidebar')).not.toContainText('Pinned')
+})

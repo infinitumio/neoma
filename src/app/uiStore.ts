@@ -46,6 +46,7 @@ interface UiState {
   shortcutsHelpOpen: boolean
   helpOpen: boolean
   vaultSwitcherOpen: boolean
+  attachmentPickerFor: string | null
   settingsOpen: boolean
   confirm: ConfirmRequest | null
   prompt: PromptRequest | null
@@ -63,6 +64,7 @@ interface UiState {
   setShortcutsHelpOpen: (open: boolean) => void
   setHelpOpen: (open: boolean) => void
   setVaultSwitcherOpen: (open: boolean) => void
+  setAttachmentPickerFor: (notePath: string | null) => void
   setSettingsOpen: (open: boolean) => void
   askConfirm: (request: ConfirmRequest) => void
   askPrompt: (request: PromptRequest) => void
@@ -83,6 +85,7 @@ export const useUi = create<UiState>((set) => ({
   shortcutsHelpOpen: false,
   helpOpen: false,
   vaultSwitcherOpen: false,
+  attachmentPickerFor: null,
   settingsOpen: false,
   confirm: null,
   prompt: null,
@@ -105,6 +108,7 @@ export const useUi = create<UiState>((set) => ({
   setShortcutsHelpOpen: (open) => set({ shortcutsHelpOpen: open }),
   setHelpOpen: (open) => set({ helpOpen: open }),
   setVaultSwitcherOpen: (open) => set({ vaultSwitcherOpen: open }),
+  setAttachmentPickerFor: (notePath) => set({ attachmentPickerFor: notePath }),
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   askConfirm: (request) => set({ confirm: request }),
   askPrompt: (request) => set({ prompt: request }),

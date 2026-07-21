@@ -16,6 +16,7 @@ interface TabsStore {
 
   openNote: (path: string, options?: { newTab?: boolean }) => void
   openSpecial: (type: 'graph' | 'settings') => void
+  openPdf: (path: string) => void
   close: (id: string) => void
   closeOthers: (id: string) => void
   closeActive: () => void
@@ -81,6 +82,17 @@ export const useTabs = create<TabsStore>((set, get) => {
         return
       }
       const tab: TabState = { id: generateId(), type, pinned: false }
+      apply({ tabs: [...tabs, tab], activeId: tab.id })
+    },
+
+    openPdf: (path) => {
+      const { tabs } = get()
+      const existing = tabs.find((t) => t.type === 'pdf' && t.path === path)
+      if (existing) {
+        apply({ activeId: existing.id })
+        return
+      }
+      const tab: TabState = { id: generateId(), type: 'pdf', path, pinned: false }
       apply({ tabs: [...tabs, tab], activeId: tab.id })
     },
 

@@ -13,6 +13,7 @@ import { CommandPalette } from '@/components/CommandPalette'
 import { SettingsModal } from '@/components/SettingsModal'
 import { HelpModal } from '@/components/HelpModal'
 import { VaultSwitcher } from '@/components/VaultSwitcher'
+import { AttachmentPicker } from '@/components/AttachmentPicker'
 import { Dialogs } from '@/components/Dialogs'
 import { Toasts } from '@/components/Toasts'
 import { useVault, flushAllSaves, openVault } from './vaultStore'
@@ -28,6 +29,9 @@ import { useIsMobile } from '@/hooks/useMediaQuery'
 
 // The graph loads only when opened, keeping it out of the initial bundle.
 const GraphView = lazy(() => import('@/graph/GraphView'))
+const PdfViewer = lazy(() =>
+  import('@/components/PdfViewer').then((m) => ({ default: m.PdfViewer })),
+)
 
 function EmptyWorkspace() {
   return (
@@ -87,6 +91,17 @@ function Workspace() {
             <GraphView />
           </Suspense>
         )}
+        {activeTab?.type === 'pdf' && activeTab.path && (
+          <Suspense
+            fallback={
+              <div className="empty-state" aria-busy="true">
+                <p>Loading PDF viewer…</p>
+              </div>
+            }
+          >
+            <PdfViewer key={`${vaultId}:${activeTab.path}`} path={activeTab.path} />
+          </Suspense>
+        )}
         <StatusBar />
       </div>
       <RightSidebar />
@@ -143,6 +158,7 @@ export default function App() {
       <SettingsModal />
       <HelpModal />
       <VaultSwitcher />
+      <AttachmentPicker />
       <Dialogs />
       <Toasts />
     </>

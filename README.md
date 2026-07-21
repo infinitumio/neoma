@@ -64,7 +64,10 @@ readable in any text editor.
 - **Research & study templates** and **starter vaults** (University, Research, Personal)
 - **Graph view** (lazy-loaded): whole-vault or local, zoom/pan, filters, depth limit
 - **Tabs** with pinning, reopen-closed, and session restore
-- **Attachments**: paste or drag images and PDFs, stored with relative paths
+- **Attachments**: paste or drag images and PDFs, or use the attachment picker (choose from
+  the vault or add a file under the page); stored with relative paths
+- **In-app PDF viewer** (offline, bundled pdf.js): open PDFs in a tab with page nav, zoom
+  and fit-width; PDF embeds/links show a first-page preview card
 - **Command palette** (`Ctrl/Cmd+K`) and customisable keyboard shortcuts
 - **Import/export**: whole-vault ZIP, single-note Markdown/HTML, print-to-PDF
 - **Recently deleted** with restore; conflict detection for external file edits

@@ -50,6 +50,16 @@ export function buildDefaultCommands(): Command[] {
       },
     },
     {
+      id: 'attachment.insert',
+      title: 'Insert attachment (choose or add a file)…',
+      category: 'Pages',
+      isAvailable: hasActiveNote,
+      run: () => {
+        const path = activeNotePath()
+        if (path) useUi.getState().setAttachmentPickerFor(path)
+      },
+    },
+    {
       id: 'page.new-subpage',
       title: 'Create subpage of current page',
       category: 'Pages',

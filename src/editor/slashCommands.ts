@@ -211,19 +211,26 @@ const COMMANDS: SlashCommand[] = [
 
   // ---- Media ----
   {
-    label: 'Image',
-    description: 'Embed an image (or paste/drag one directly)',
-    icon: 'image',
-    section: 'Media',
-    template: '![${alt text}](${Attachments/image.png})',
-  },
-  {
-    label: 'PDF / file link',
-    description: 'Link a file stored in the vault',
+    label: 'Attachment',
+    description: 'Choose a file from the vault or add a new one',
     icon: 'file',
     section: 'Media',
-    keywords: 'attachment document',
-    template: '[${lecture.pdf}](${Attachments/lecture.pdf})',
+    keywords: 'image pdf file document upload attach',
+    apply: (view, from, to) => {
+      view.dispatch({ changes: { from, to, insert: '' } })
+      runCommand('attachment.insert')
+    },
+  },
+  {
+    label: 'Image or PDF',
+    description: 'Insert an image or PDF from the vault (or add one)',
+    icon: 'image',
+    section: 'Media',
+    keywords: 'picture photo document',
+    apply: (view, from, to) => {
+      view.dispatch({ changes: { from, to, insert: '' } })
+      runCommand('attachment.insert')
+    },
   },
   {
     label: 'Table',

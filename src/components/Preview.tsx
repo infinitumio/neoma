@@ -10,12 +10,35 @@ import { getAdapter, getLinkGraph, useVault } from '@/app/vaultStore'
 import { useUi } from '@/app/uiStore'
 import { useTabs } from '@/app/tabsStore'
 import { openNoteByTarget } from '@/app/navigation'
-import { dirname, isImage, joinPath, normalizePath } from '@/utils/paths'
+import { pdfThumbnail } from './pdfThumbnail'
+import { basename, dirname, isImage, isPdf, joinPath, normalizePath } from '@/utils/paths'
 import 'katex/dist/katex.min.css'
 
 interface PreviewProps {
   path: string
   content: string
+}
+
+/** Build a PDF preview card that opens the in-app viewer, with a lazily
+ *  rendered first-page thumbnail. */
+function makePdfCard(resolvedPath: string, label: string): HTMLButtonElement {
+  const card = document.createElement('button')
+  card.className = 'pdf-embed-card'
+  card.type = 'button'
+  card.dataset.pdf = resolvedPath
+  const thumb = document.createElement('span')
+  thumb.className = 'pdf-embed-thumb'
+  const body = document.createElement('span')
+  body.className = 'pdf-embed-body'
+  body.innerHTML = `<span class="pdf-embed-name"><span class="pdf-embed-icon">PDF</span>${basename(
+    label,
+  )}</span><span class="pdf-embed-hint">Open in viewer</span>`
+  card.append(thumb, body)
+  void pdfThumbnail(resolvedPath).then((url) => {
+    if (url) thumb.style.backgroundImage = `url(${url})`
+    else thumb.classList.add('pdf-embed-thumb-empty')
+  })
+  return card
 }
 
 export function Preview({ path, content }: PreviewProps) {
@@ -68,15 +91,24 @@ export function Preview({ path, content }: PreviewProps) {
     }
     for (const embed of container.querySelectorAll<HTMLElement>('.embed[data-embed]')) {
       const target = embed.dataset.embed ?? ''
-      if (!isImage(target)) continue
-      void resolveTo(target).then((url) => {
-        if (!url) return
-        const img = document.createElement('img')
-        img.src = url
-        img.alt = target
-        img.className = 'embed-image'
-        embed.replaceWith(img)
-      })
+      if (isImage(target)) {
+        void resolveTo(target).then((url) => {
+          if (!url) return
+          const img = document.createElement('img')
+          img.src = url
+          img.alt = target
+          img.className = 'embed-image'
+          embed.replaceWith(img)
+        })
+      } else if (isPdf(target)) {
+        embed.replaceWith(makePdfCard(getLinkGraph().resolve(target, path) ?? target, target))
+      }
+    }
+    // PDF links (`[label](file.pdf)`) also get a preview card.
+    for (const link of container.querySelectorAll<HTMLElement>('a[data-internal]')) {
+      const internal = decodeURIComponent(link.dataset.internal ?? '')
+      if (!isPdf(internal)) continue
+      link.replaceWith(makePdfCard(getLinkGraph().resolve(internal, path) ?? internal, internal))
     }
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [html, path])
@@ -97,6 +129,13 @@ export function Preview({ path, content }: PreviewProps) {
   }
 
   const onClick = (event: React.MouseEvent) => {
+    // Embedded-PDF card → open the in-app viewer.
+    const pdfCard = (event.target as HTMLElement).closest<HTMLElement>('.pdf-embed-card')
+    if (pdfCard?.dataset.pdf) {
+      event.preventDefault()
+      useTabs.getState().openPdf(pdfCard.dataset.pdf)
+      return
+    }
     const target = (event.target as HTMLElement).closest('a')
     if (!target) return
     if (target.classList.contains('wiki-link')) {
@@ -112,7 +151,13 @@ export function Preview({ path, content }: PreviewProps) {
       }
     } else if (target.dataset.internal) {
       event.preventDefault()
-      const resolved = getLinkGraph().resolve(target.dataset.internal.replace(/\.md$/i, ''), path)
+      const internal = decodeURIComponent(target.dataset.internal)
+      if (isPdf(internal)) {
+        const resolved = getLinkGraph().resolve(internal, path) ?? internal
+        useTabs.getState().openPdf(resolved)
+        return
+      }
+      const resolved = getLinkGraph().resolve(internal.replace(/\.md$/i, ''), path)
       if (resolved) useTabs.getState().openNote(resolved)
     }
   }

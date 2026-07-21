@@ -6,6 +6,24 @@ All notable changes to neoma are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (PDF & attachments round)
+
+- **In-app PDF viewer** — PDFs open in a viewer tab (never a silent download): continuous
+  scroll with stable page sizing, page navigation, zoom, fit-width, current-page indicator,
+  plus download / open-externally. pdf.js is bundled and lazy-loaded (no CDN, works offline).
+  _(Delivers the core of roadmap issue #13.)_
+- **PDF preview cards** — `![[file.pdf]]` embeds **and** `[label](file.pdf)` links render as a
+  card with a first-page thumbnail in the reading/split view; click to open the viewer.
+- **Attachment picker** — an "Insert attachment" command/slash-command lets you **choose an
+  existing file from the vault or add a new one**. Added files are imported *under* the
+  current page (the page becomes their parent in the sidebar) and inserted.
+- Site-wide: keyboard shortcuts now render with spacing (⌘ ⇧ F instead of ⌘⇧F), and the
+  slash-command menu has roomier, clearer spacing.
+
+### Fixed (PDF & attachments round)
+
+- Right-clicking a **pinned** item now shows its context menu, so it can be unpinned.
+
 ### Added (second feedback round)
 
 - **Vault switcher** — see all your vaults and jump between them from the sidebar vault

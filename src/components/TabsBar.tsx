@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Editor tabs: switch, close, pin, middle-click close, context menu. */
 import { useState } from 'react'
-import { X, Pin, Waypoints, Settings, FileText } from 'lucide-react'
+import { X, Pin, Waypoints, Settings, FileText, FileType2 } from 'lucide-react'
 import { useTabs } from '@/app/tabsStore'
 import { useVault } from '@/app/vaultStore'
 import { ContextMenu } from './ContextMenu'
-import { stem } from '@/utils/paths'
+import { stem, basename } from '@/utils/paths'
 import type { TabState } from '@/types'
 
 export function TabsBar() {
@@ -20,6 +20,7 @@ export function TabsBar() {
   const label = (tab: TabState): string => {
     if (tab.type === 'graph') return 'Graph'
     if (tab.type === 'settings') return 'Settings'
+    if (tab.type === 'pdf') return tab.path ? basename(tab.path) : 'PDF'
     return tab.path ? stem(tab.path) : 'Untitled'
   }
 
@@ -55,6 +56,8 @@ export function TabsBar() {
               <Waypoints size={13} aria-hidden />
             ) : tab.type === 'settings' ? (
               <Settings size={13} aria-hidden />
+            ) : tab.type === 'pdf' ? (
+              <FileType2 size={13} aria-hidden />
             ) : (
               <FileText size={13} aria-hidden />
             )}

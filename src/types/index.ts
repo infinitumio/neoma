@@ -228,7 +228,7 @@ export interface ApplicationSettings {
 
 export interface TabState {
   id: string
-  type: 'note' | 'graph' | 'settings'
+  type: 'note' | 'graph' | 'settings' | 'pdf'
   path?: string
   pinned: boolean
 }

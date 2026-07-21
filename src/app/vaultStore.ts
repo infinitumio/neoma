@@ -493,21 +493,55 @@ export async function createFolder(parent: string, name: string): Promise<string
  * hierarchy stays visible to any Markdown tool as ordinary folders.
  * Returns the new subpage's path.
  */
+/**
+ * Ensure a page owns a folder (the folder-note convention), promoting a
+ * plain note `A/B.md` to `A/B/B.md` if needed. Returns the folder and the
+ * page's (possibly new) path.
+ */
+async function ensurePageFolder(notePath: string): Promise<{ folder: string; notePath: string }> {
+  const existing = pageFolderOf(notePath)
+  if (existing) return { folder: existing, notePath }
+  const folder = notePath.replace(/\.md$/i, '')
+  const promoted = folderNoteOf(folder)
+  if (!adapter || useVault.getState().entries.has(promoted)) return { folder, notePath }
+  await adapter.createFolder(folder)
+  updateEntry({ path: folder, kind: 'folder' })
+  await moveFileInternal(notePath, promoted)
+  return { folder, notePath: promoted }
+}
+
 export async function createSubpage(parentPath: string, name = 'Untitled'): Promise<string | null> {
   if (!adapter) return null
-  let folder = pageFolderOf(parentPath)
-  if (!folder) {
-    folder = parentPath.replace(/\.md$/i, '')
-    const promoted = folderNoteOf(folder)
-    if (useVault.getState().entries.has(promoted)) {
-      // Folder + index note already exist (e.g. re-created).
-    } else {
-      await adapter.createFolder(folder)
-      updateEntry({ path: folder, kind: 'folder' })
-      await moveFileInternal(parentPath, promoted)
-    }
-  }
+  const { folder } = await ensurePageFolder(parentPath)
   return createNote(folder, name)
+}
+
+/**
+ * Import a file and attach it under `notePath` — the note is promoted to a
+ * page-folder (so it becomes the attachment's parent in the tree) and the
+ * file lands inside. Returns the attachment's vault path.
+ */
+export async function attachToPage(
+  notePath: string,
+  file: Blob,
+  name: string,
+): Promise<string | null> {
+  if (!adapter) return null
+  const { folder } = await ensurePageFolder(notePath)
+  const path = uniquePath(joinPath(folder, sanitizeName(stem(name)) + extOf(name)), (p) =>
+    useVault.getState().entries.has(p),
+  )
+  await adapter.writeBinary(path, file)
+  const statEntry = await adapter.stat(path)
+  updateEntry(statEntry ?? { path, kind: 'file', size: file.size, modifiedAt: Date.now() })
+  return path
+}
+
+/** All attachment (non-Markdown) files in the vault. */
+export function listAttachments(): FileEntry[] {
+  return [...useVault.getState().entries.values()]
+    .filter((e) => e.kind === 'file' && !isMarkdown(e.path))
+    .sort((a, b) => a.path.localeCompare(b.path))
 }
 
 /** All direct subpages of a page (folder-note children, excluding itself). */

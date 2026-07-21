@@ -46,7 +46,7 @@ import {
 import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 import { useSettings } from '@/settings/settingsStore'
-import { basename, dirname, folderNoteOf, isMarkdown, stem } from '@/utils/paths'
+import { basename, dirname, folderNoteOf, isMarkdown, isPdf, stem } from '@/utils/paths'
 import { downloadBlob, importFiles } from '@/storage/import-export'
 
 interface TreeNode {
@@ -126,6 +126,7 @@ export function FileTree() {
       if (indexNote) openNote(indexNote)
       else toggleFolder(entry.path)
     } else if (isMarkdown(entry.path)) openNote(entry.path)
+    else if (isPdf(entry.path)) useTabs.getState().openPdf(entry.path)
     else void openAttachment(entry.path)
   }
 
@@ -300,7 +301,10 @@ export function FileTree() {
         {
           label: 'Open',
           icon: <ExternalLink size={14} aria-hidden />,
-          onSelect: () => void openAttachment(entry.path),
+          onSelect: () =>
+            isPdf(entry.path)
+              ? useTabs.getState().openPdf(entry.path)
+              : void openAttachment(entry.path),
         },
         {
           label: 'Set colour…',
@@ -456,7 +460,15 @@ export function FileTree() {
           <ul className="file-tree" role="list">
             {pinnedEntries.map((entry) => (
               <li key={`pin-${entry.path}`}>
-                <button className="tree-item" onClick={() => openEntry(entry)} title={entry.path}>
+                <button
+                  className="tree-item"
+                  onClick={() => openEntry(entry)}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    setMenu({ x: e.clientX, y: e.clientY, entry })
+                  }}
+                  title={entry.path}
+                >
                   <Pin size={12} className="pin-indicator" aria-hidden />
                   <span className="tree-label">{stem(entry.path)}</span>
                 </button>
