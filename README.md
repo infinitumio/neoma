@@ -65,11 +65,27 @@ readable in any text editor.
 
 ## Installation
 
-neoma is a web application — nothing to install to try it:
+### Quick start (one command)
+
+If you just want to run neoma, clone the repo and run the bootstrap script for your OS.
+It checks Node, installs dependencies, builds the app, opens your browser and serves it —
+no other steps needed.
 
 ```bash
 git clone https://github.com/infinitumio/neoma.git
 cd neoma
+```
+
+- **macOS / Linux:** `./start.sh`
+- **Windows:** double-click `start.bat` (or run it from a terminal)
+
+Then open **http://localhost:4173** (the script opens it for you). Press `Ctrl+C` to stop.
+The only prerequisite is [Node.js 20+](https://nodejs.org/); the script tells you if it's
+missing.
+
+### Manual setup
+
+```bash
 npm ci
 npm run dev          # http://localhost:5173
 ```
