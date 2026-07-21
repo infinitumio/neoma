@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Application root: welcome flow or workspace, plus global chrome. */
 import { lazy, Suspense, useEffect } from 'react'
+import { Columns2 } from 'lucide-react'
+import type { TabState } from '@/types'
 import { WelcomeScreen } from '@/components/WelcomeScreen'
 import { ActivityRail } from '@/components/ActivityRail'
 import { Sidebar } from '@/components/Sidebar'
@@ -17,7 +19,8 @@ import { AttachmentPicker } from '@/components/AttachmentPicker'
 import { SlashMenu } from '@/components/SlashMenu'
 import { Dialogs } from '@/components/Dialogs'
 import { Toasts } from '@/components/Toasts'
-import { useVault, flushAllSaves, openVault } from './vaultStore'
+import { useVault, flushAllSaves, openVault, createNote } from './vaultStore'
+import { basename, dirname, joinPath } from '@/utils/paths'
 import { listVaults } from '@/storage/VaultManager'
 import { useTabs } from './tabsStore'
 import { useUi } from './uiStore'
@@ -33,6 +36,57 @@ const GraphView = lazy(() => import('@/graph/GraphView'))
 const PdfViewer = lazy(() =>
   import('@/components/PdfViewer').then((m) => ({ default: m.PdfViewer })),
 )
+
+/** A PDF tab, optionally split with a companion note for paraphrasing. */
+function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }) {
+  const setSplit = useTabs((s) => s.setPdfSplitNote)
+  const path = tab.path as string
+
+  const toggleSplit = async () => {
+    if (tab.pdfSplitNote) {
+      setSplit(tab.id, undefined)
+      return
+    }
+    const folder = dirname(path)
+    const stem = basename(path).replace(/\.pdf$/i, '')
+    const desired = joinPath(folder, `${stem} — notes.md`)
+    const existing = useVault.getState().entries.has(desired)
+    const notePath = existing
+      ? desired
+      : await createNote(
+          folder,
+          `${stem} — notes`,
+          `# ${stem} — notes\n\nParaphrasing [[${basename(path)}]]\n\n`,
+        )
+    if (notePath) setSplit(tab.id, notePath)
+  }
+
+  const splitButton = (
+    <button
+      className={`icon-btn${tab.pdfSplitNote ? ' active' : ''}`}
+      aria-label={tab.pdfSplitNote ? 'Close split note' : 'Open note beside PDF'}
+      aria-pressed={!!tab.pdfSplitNote}
+      title={tab.pdfSplitNote ? 'Close split note' : 'Open note beside PDF'}
+      onClick={() => void toggleSplit()}
+    >
+      <Columns2 size={16} aria-hidden />
+    </button>
+  )
+
+  if (tab.pdfSplitNote) {
+    return (
+      <div className="pdf-split">
+        <div className="pdf-split-pane">
+          <PdfViewer path={path} initialPage={tab.pdfPage} toolbarExtra={splitButton} />
+        </div>
+        <div className="pdf-split-pane pdf-split-note">
+          <NotePane key={`${vaultId}:${tab.pdfSplitNote}`} path={tab.pdfSplitNote} />
+        </div>
+      </div>
+    )
+  }
+  return <PdfViewer path={path} initialPage={tab.pdfPage} toolbarExtra={splitButton} />
+}
 
 function EmptyWorkspace() {
   return (
@@ -100,7 +154,7 @@ function Workspace() {
               </div>
             }
           >
-            <PdfViewer key={`${vaultId}:${activeTab.path}`} path={activeTab.path} />
+            <PdfTab key={`${vaultId}:${activeTab.id}`} tab={activeTab} vaultId={vaultId} />
           </Suspense>
         )}
         <StatusBar />

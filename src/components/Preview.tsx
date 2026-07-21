@@ -19,6 +19,13 @@ interface PreviewProps {
   content: string
 }
 
+/** Split a PDF reference like `lecture.pdf#page=12` into its path and page. */
+export function parsePdfRef(ref: string): { path: string; page?: number } {
+  const match = /^(.*?)#page=(\d+)$/i.exec(ref)
+  if (match) return { path: match[1], page: Number(match[2]) }
+  return { path: ref }
+}
+
 /** Build a PDF preview card that opens the in-app viewer, with a lazily
  *  rendered first-page thumbnail. */
 function makePdfCard(resolvedPath: string, label: string): HTMLButtonElement {
@@ -141,7 +148,16 @@ export function Preview({ path, content }: PreviewProps) {
     if (target.classList.contains('wiki-link')) {
       event.preventDefault()
       const name = target.dataset.resolved ?? target.dataset.target
-      if (name) void openNoteByTarget(name, target.dataset.heading)
+      if (!name) return
+      // `[[lecture.pdf#page=12]]` → open the PDF at that page.
+      if (isPdf(name)) {
+        const resolved = getLinkGraph().resolve(name, path) ?? name
+        const heading = target.dataset.heading
+        const page = heading ? parsePdfRef(`x#${heading}`).page : undefined
+        useTabs.getState().openPdf(resolved, { page })
+        return
+      }
+      void openNoteByTarget(name, target.dataset.heading)
     } else if (target.classList.contains('tag')) {
       event.preventDefault()
       const tag = target.dataset.tag
@@ -152,9 +168,10 @@ export function Preview({ path, content }: PreviewProps) {
     } else if (target.dataset.internal) {
       event.preventDefault()
       const internal = decodeURIComponent(target.dataset.internal)
-      if (isPdf(internal)) {
-        const resolved = getLinkGraph().resolve(internal, path) ?? internal
-        useTabs.getState().openPdf(resolved)
+      const { path: refPath, page } = parsePdfRef(internal)
+      if (isPdf(refPath)) {
+        const resolved = getLinkGraph().resolve(refPath, path) ?? refPath
+        useTabs.getState().openPdf(resolved, { page })
         return
       }
       const resolved = getLinkGraph().resolve(internal.replace(/\.md$/i, ''), path)

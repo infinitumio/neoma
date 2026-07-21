@@ -231,6 +231,10 @@ export interface TabState {
   type: 'note' | 'graph' | 'settings' | 'pdf'
   path?: string
   pinned: boolean
+  /** For PDF tabs: the page to jump to (e.g. from a `#page=12` link). */
+  pdfPage?: number
+  /** For PDF tabs: a note opened beside the PDF in split view. */
+  pdfSplitNote?: string
 }
 
 export type SaveState = 'saved' | 'unsaved' | 'saving' | 'error'

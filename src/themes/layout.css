@@ -892,6 +892,7 @@
 /* Each page reserves its height via aspect-ratio, so nothing jumps as pages
    render lazily. */
 .pdf-page {
+  position: relative;
   flex-shrink: 0;
   background: #ffffff;
   border-radius: var(--radius-sm);
@@ -903,6 +904,155 @@
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* Page input + navigation */
+.pdf-page-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: auto;
+}
+.pdf-page-input {
+  width: 3rem;
+  padding: 2px 4px;
+  text-align: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.pdf-page-input::-webkit-outer-spin-button,
+.pdf-page-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Body = optional thumbnail strip + the pages column */
+.pdf-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.pdf-thumbs {
+  width: 148px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-sidebar);
+}
+.pdf-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-1);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+.pdf-thumb:hover {
+  background: var(--color-bg-hover);
+}
+.pdf-thumb.active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.pdf-thumb-canvas {
+  display: block;
+  width: 100%;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.pdf-thumb-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pdf-thumb-num {
+  font-size: 11px;
+}
+
+/* Find-in-document bar */
+.pdf-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-sidebar);
+  color: var(--color-text-secondary);
+}
+.pdf-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+.pdf-search-count {
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+/* Selectable text layer overlaid on the canvas (pdf.js) */
+.pdf-page .textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 1;
+  line-height: 1;
+  text-align: initial;
+  z-index: 2;
+}
+.pdf-page .textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0 0;
+}
+.pdf-page .textLayer ::selection {
+  background: rgba(120, 170, 255, 0.4);
+}
+.pdf-hl {
+  background: rgba(255, 214, 0, 0.4);
+  color: transparent;
+  border-radius: 2px;
+}
+.pdf-hl.active {
+  background: rgba(255, 145, 0, 0.6);
+}
+
+/* Split view: PDF left, note editor right */
+.pdf-split {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.pdf-split-pane {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.pdf-split-note {
+  border-left: 1px solid var(--color-border);
 }
 
 /* PDF preview card (embeds and links) in the reading view */

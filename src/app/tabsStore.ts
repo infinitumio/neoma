@@ -7,6 +7,8 @@
 import { create } from 'zustand'
 import type { TabState } from '@/types'
 import { generateId } from '@/utils/misc'
+import { recordRecentPdf } from '@/utils/recentPdfs'
+import { useVault } from './vaultStore'
 
 interface TabsStore {
   vaultId: string | null
@@ -16,7 +18,8 @@ interface TabsStore {
 
   openNote: (path: string, options?: { newTab?: boolean }) => void
   openSpecial: (type: 'graph' | 'settings') => void
-  openPdf: (path: string) => void
+  openPdf: (path: string, options?: { page?: number; splitNote?: string }) => void
+  setPdfSplitNote: (id: string, note: string | undefined) => void
   close: (id: string) => void
   closeOthers: (id: string) => void
   closeActive: () => void
@@ -85,16 +88,38 @@ export const useTabs = create<TabsStore>((set, get) => {
       apply({ tabs: [...tabs, tab], activeId: tab.id })
     },
 
-    openPdf: (path) => {
+    openPdf: (path, options = {}) => {
+      recordRecentPdf(useVault.getState().vault?.id, path)
       const { tabs } = get()
       const existing = tabs.find((t) => t.type === 'pdf' && t.path === path)
       if (existing) {
-        apply({ activeId: existing.id })
+        apply({
+          activeId: existing.id,
+          tabs: tabs.map((t) =>
+            t.id === existing.id ? { ...t, pdfPage: options.page ?? t.pdfPage } : t,
+          ),
+        })
+        // Nudge an already-open viewer to the requested page.
+        if (options.page) {
+          window.dispatchEvent(
+            new CustomEvent('neoma:pdf-goto', { detail: { path, page: options.page } }),
+          )
+        }
         return
       }
-      const tab: TabState = { id: generateId(), type: 'pdf', path, pinned: false }
+      const tab: TabState = {
+        id: generateId(),
+        type: 'pdf',
+        path,
+        pinned: false,
+        pdfPage: options.page,
+        pdfSplitNote: options.splitNote,
+      }
       apply({ tabs: [...tabs, tab], activeId: tab.id })
     },
+
+    setPdfSplitNote: (id, note) =>
+      apply({ tabs: get().tabs.map((t) => (t.id === id ? { ...t, pdfSplitNote: note } : t)) }),
 
     close: (id) => {
       const { tabs, activeId, recentlyClosed } = get()

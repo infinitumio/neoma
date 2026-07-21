@@ -486,6 +486,47 @@ test('attach a PDF: nests under the page, previews, and opens in-app', async ({ 
   await expect(page.locator('.pdf-toolbar')).toContainText('/ 6')
 })
 
+test('PDF viewer: text layer, find, thumbnails and split-with-note', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'lecture material')
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.getByPlaceholder('Type a command…').fill('insert attachment')
+  await page.getByRole('option', { name: /insert attachment/i }).click()
+  await page.getByRole('button', { name: /Add a file/ }).click()
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: /Choose a file/ }).click()
+  await (await chooser).setFiles(new URL('./fixtures/lecture.pdf', import.meta.url).pathname)
+  await expect(page.locator('.file-tree')).toContainText('lecture')
+  await page.keyboard.press('ControlOrMeta+Shift+r')
+  await expect(page.locator('.pdf-embed-card')).toHaveCount(1)
+  await page.locator('.pdf-embed-card').first().click()
+
+  const viewer = page.locator('[data-testid="pdf-viewer"]')
+  await expect(viewer).toBeVisible()
+  await expect(page.locator('.pdf-page canvas').first()).toBeVisible({ timeout: 10_000 })
+
+  // The text layer is present and selectable (enables copy).
+  await expect(page.locator('.pdf-page[data-page="1"] .textLayer')).toContainText('Page 1 of 6', {
+    timeout: 10_000,
+  })
+
+  // Thumbnails list every page.
+  await page.getByRole('button', { name: 'Toggle thumbnails' }).click()
+  await expect(page.locator('.pdf-thumb')).toHaveCount(6)
+
+  // Find-in-document reports matches (one "Page" per page).
+  await page.getByRole('button', { name: 'Find in document' }).click()
+  await page.locator('.pdf-search-input').fill('Page')
+  await expect(page.locator('.pdf-search-count')).toContainText('/ 6', { timeout: 10_000 })
+  await expect(page.locator('.pdf-hl').first()).toBeVisible()
+  await page.locator('.pdf-search-input').press('Escape')
+
+  // Split with a companion note for paraphrasing.
+  await page.getByRole('button', { name: 'Open note beside PDF' }).click()
+  await expect(page.locator('.pdf-split-pane')).toHaveCount(2)
+  await expect(page.locator('.pdf-split-note')).toContainText('lecture')
+})
+
 test('pinned item shows a context menu so it can be unpinned', async ({ page }) => {
   await createVault(page)
   await createNote(page, 'pin me')
