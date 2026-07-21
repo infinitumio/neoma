@@ -206,4 +206,4 @@ developers and anyone who wants complete ownership of their notes.
 - Contact: Discord `panda2187`
 
 _neoma is an independent, community-driven project. It is not affiliated with Obsidian,
-Modrinth, or any other organisation._
+Notion, or any other organisation._

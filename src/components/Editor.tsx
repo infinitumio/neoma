@@ -9,6 +9,7 @@ import { EditorView } from '@codemirror/view'
 import type { EditorState } from '@codemirror/state'
 import { createEditorState } from '@/editor/createEditor'
 import { insertAtCursor } from '@/editor/markdownCommands'
+import { setActiveView } from '@/editor/activeView'
 import { updateNoteContent, saveNoteNow, saveAttachment } from '@/app/vaultStore'
 import { useSettings } from '@/settings/settingsStore'
 import { useUi } from '@/app/uiStore'
@@ -77,6 +78,7 @@ export function Editor({ path, content }: EditorProps) {
         : createEditorState(content, callbacks, options)
     const view = new EditorView({ state, parent: container.current })
     viewRef.current = view
+    setActiveView(view)
     view.focus()
 
     const dom = view.dom
@@ -125,6 +127,7 @@ export function Editor({ path, content }: EditorProps) {
       view.scrollDOM.removeEventListener('scroll', onScroll)
       window.removeEventListener('neoma:insert-text', onInsert)
       setToolbar(null)
+      setActiveView(null)
       stateCache.set(pathRef.current, view.state)
       view.destroy()
       viewRef.current = null

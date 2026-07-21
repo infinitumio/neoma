@@ -14,6 +14,7 @@ import { SettingsModal } from '@/components/SettingsModal'
 import { HelpModal } from '@/components/HelpModal'
 import { VaultSwitcher } from '@/components/VaultSwitcher'
 import { AttachmentPicker } from '@/components/AttachmentPicker'
+import { SlashMenu } from '@/components/SlashMenu'
 import { Dialogs } from '@/components/Dialogs'
 import { Toasts } from '@/components/Toasts'
 import { useVault, flushAllSaves, openVault } from './vaultStore'
@@ -159,6 +160,7 @@ export default function App() {
       <HelpModal />
       <VaultSwitcher />
       <AttachmentPicker />
+      <SlashMenu />
       <Dialogs />
       <Toasts />
     </>

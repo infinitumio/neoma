@@ -51,33 +51,55 @@ const HIGHLIGHT_RE = /==([^=\n](?:[^\n]*?[^=\n])?)==/g
 const TAG_RE = /(^|[\s(])#([\p{L}\p{N}/_-]*[\p{L}/_-][\p{L}\p{N}/_-]*)/gu
 const CITATION_RE = /\[(@[\w:.#$%&+?<>~/-]+(?:[^\]]*)?)\]/g
 // Coloured highlight extension: only this exact shape (a documented, safe
-// subset of HTML — a known colour, no other attributes) is recognised.
-// Anything else stays subject to the default raw-HTML dropping.
+// subset of HTML — a known colour, or a bare u/sup/sub tag, no other
+// attributes — is recognised. Anything else stays subject to the default
+// raw-HTML dropping. Each entry maps an opening tag to the rendered element.
 const COLOR_MARK_OPEN_RE = /^<mark data-color="(yellow|green|blue|purple|red|orange|grey)">$/
-const COLOR_MARK_CLOSE_RE = /^<\/mark>$/
+
+interface SafeTag {
+  test: (open: string) => { tag: string; className?: string } | null
+  close: RegExp
+}
+
+const SAFE_TAGS: SafeTag[] = [
+  {
+    test: (open) => {
+      const m = COLOR_MARK_OPEN_RE.exec(open)
+      return m ? { tag: 'mark', className: `mark-${m[1]}` } : null
+    },
+    close: /^<\/mark>$/,
+  },
+  { test: (o) => (o === '<u>' ? { tag: 'u' } : null), close: /^<\/u>$/ },
+  { test: (o) => (o === '<sup>' ? { tag: 'sup' } : null), close: /^<\/sup>$/ },
+  { test: (o) => (o === '<sub>' ? { tag: 'sub' } : null), close: /^<\/sub>$/ },
+]
 
 /**
  * remark parses inline HTML into `html` nodes around ordinary children, e.g.
- * [html(<mark…>), text(…), html(</mark>)]. Find matching pairs of the safe
- * colour-mark shape and wrap the children between them in a <mark> element.
- * Unrecognised HTML is left alone (and dropped later, as always).
+ * [html(<mark…>), text(…), html(</mark>)]. Find matching pairs of a safe tag
+ * shape and wrap the children between them in the target element. Unknown
+ * HTML is left alone (and dropped later, as always).
  */
-function transformColorMarks(tree: Root): void {
+function transformSafeHtml(tree: Root): void {
   visit(tree, (node) => {
     const parent = node as Parent
     if (!('children' in parent) || !Array.isArray(parent.children)) return
     for (let i = 0; i < parent.children.length; i++) {
       const open = parent.children[i] as { type: string; value?: string }
       if (open.type !== 'html' || !open.value) continue
-      const match = COLOR_MARK_OPEN_RE.exec(open.value)
-      if (!match) continue
+      const safe = SAFE_TAGS.find((t) => t.test(open.value!))
+      const spec = safe?.test(open.value)
+      if (!safe || !spec) continue
       for (let j = i + 1; j < parent.children.length; j++) {
         const close = parent.children[j] as { type: string; value?: string }
-        if (close.type === 'html' && close.value && COLOR_MARK_CLOSE_RE.test(close.value)) {
+        if (close.type === 'html' && close.value && safe.close.test(close.value)) {
           const inner = parent.children.slice(i + 1, j) as PhrasingContent[]
           const wrapper = {
             type: 'strong', // phrasing container; hName below overrides the tag
-            data: { hName: 'mark', hProperties: { className: [`mark-${match[1]}`] } },
+            data: {
+              hName: spec.tag,
+              ...(spec.className ? { hProperties: { className: [spec.className] } } : {}),
+            },
             children: inner,
           } as unknown as PhrasingContent
           parent.children.splice(i, j - i + 1, wrapper)
@@ -136,7 +158,7 @@ export function remarkInlineExtensions(options: InlineExtensionOptions = {}) {
       } as PhrasingContent
     })
 
-    transformColorMarks(tree)
+    transformSafeHtml(tree)
 
     splitTextNodes(tree, CITATION_RE, (m) => {
       return {

@@ -23,8 +23,8 @@ import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { autocompletion, completionKeymap, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { editorTheme, markdownHighlighting } from './theme'
 import { wikiLinkCompletion, tagCompletion } from './wikiLinkCompletion'
-import { slashCommandCompletion } from './slashCommands'
-import { slashIconSvg, type SlashIcon } from './slashIcons'
+import { slashMenuExtension } from './slash/plugin'
+import { registerSlashCommands } from './slash/commands'
 import {
   toggleBold,
   toggleItalic,
@@ -33,6 +33,9 @@ import {
   toggleCode,
   insertWikiLink,
 } from './markdownCommands'
+
+// Populate the slash + palette registries once, at module load.
+registerSlashCommands()
 
 export interface EditorCallbacks {
   onChange: (content: string) => void
@@ -62,24 +65,10 @@ export function buildExtensions(callbacks: EditorCallbacks, options: EditorOptio
     markdownHighlighting,
     editorTheme,
     placeholder('Start writing…'),
-    autocompletion({
-      override: [slashCommandCompletion, wikiLinkCompletion, tagCompletion],
-      icons: false,
-      // Render a leading icon for slash-command options (others have none).
-      addToOptions: [
-        {
-          position: 10,
-          render(completion) {
-            const name = (completion as { slashIcon?: SlashIcon }).slashIcon
-            if (!name) return null
-            const wrap = document.createElement('div')
-            wrap.className = 'cm-slash-icon'
-            wrap.innerHTML = slashIconSvg(name)
-            return wrap
-          },
-        },
-      ],
-    }),
+    autocompletion({ override: [wikiLinkCompletion, tagCompletion], icons: false }),
+    // The `/` command menu (custom overlay, keyboard-driven, shares the
+    // registry with the command palette).
+    slashMenuExtension(),
     options.showLineNumbers ? lineNumbers() : [],
     EditorView.contentAttributes.of({
       spellcheck: options.spellcheck ? 'true' : 'false',

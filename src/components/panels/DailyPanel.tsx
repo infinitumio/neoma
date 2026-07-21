@@ -100,15 +100,26 @@ export function DailyPanel() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
-          <button className="btn" onClick={() => void openDaily(addDays(new Date(), -1))}>
-            <ChevronLeft size={14} aria-hidden /> Yesterday
+        <div className="daily-quicknav">
+          <button
+            className="btn daily-quicknav-arrow"
+            title="Open yesterday's journal"
+            aria-label="Open yesterday's journal"
+            onClick={() => void openDaily(addDays(new Date(), -1))}
+          >
+            <ChevronLeft size={16} aria-hidden />
           </button>
-          <button className="btn btn-primary" onClick={() => void openDaily(new Date())}>
-            <CalendarDays size={14} aria-hidden /> Today
+          <button className="btn btn-primary daily-quicknav-today" onClick={() => void openDaily(new Date())}>
+            <CalendarDays size={14} aria-hidden />
+            <span>Today</span>
           </button>
-          <button className="btn" onClick={() => void openDaily(addDays(new Date(), 1))}>
-            Tomorrow <ChevronRight size={14} aria-hidden />
+          <button
+            className="btn daily-quicknav-arrow"
+            title="Open tomorrow's journal"
+            aria-label="Open tomorrow's journal"
+            onClick={() => void openDaily(addDays(new Date(), 1))}
+          >
+            <ChevronRight size={16} aria-hidden />
           </button>
         </div>
         <p className="text-small text-faint" style={{ marginTop: 'var(--space-3)' }}>

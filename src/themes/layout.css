@@ -347,6 +347,230 @@
   padding: var(--space-2) 0;
 }
 
+/* ---- Slash command menu ---- */
+.slash-menu {
+  position: fixed;
+  z-index: 260;
+  display: flex;
+  width: 420px;
+  max-width: calc(100vw - 16px);
+  max-height: 460px;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+  overflow: hidden;
+  animation: slash-in 120ms ease;
+}
+
+@keyframes slash-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slash-menu {
+    animation: none;
+  }
+}
+
+.slash-list {
+  flex: 1 1 58%;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.slash-group + .slash-group {
+  margin-top: var(--space-1);
+}
+
+.slash-group-label {
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-raised);
+  font-size: var(--font-size-xs);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-faint);
+  padding: 0.35rem 0.5rem 0.2rem;
+}
+
+.slash-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.slash-item.selected {
+  background: var(--color-accent-subtle);
+}
+
+.slash-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slash-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-accent);
+}
+
+.slash-item.selected .slash-item-icon {
+  border-color: var(--color-accent-muted);
+}
+
+.slash-item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.slash-item-title {
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slash-item-title .slash-hl {
+  background: transparent;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.slash-item-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slash-item-shortcut {
+  flex-shrink: 0;
+}
+
+.slash-fav {
+  flex-shrink: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-faint);
+  opacity: 0;
+}
+
+.slash-item:hover .slash-fav,
+.slash-item.selected .slash-fav,
+.slash-fav.on {
+  opacity: 1;
+}
+
+.slash-fav.on {
+  color: var(--color-warning);
+}
+
+.slash-fav:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-warning);
+}
+
+.slash-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-faint);
+  font-size: var(--font-size-sm);
+}
+
+/* Preview panel */
+.slash-preview {
+  flex: 0 0 42%;
+  border-left: 1px solid var(--color-border);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--color-bg-sidebar);
+  overflow-y: auto;
+}
+
+.slash-preview-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.slash-preview-title {
+  display: block;
+  font-weight: 650;
+}
+
+.slash-preview-cat {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+}
+
+.slash-preview-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.slash-preview-example {
+  margin: 0;
+  padding: var(--space-2);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.slash-preview-hint {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+  padding-top: var(--space-2);
+}
+
+@media (max-width: 560px) {
+  .slash-preview {
+    display: none;
+  }
+  .slash-menu {
+    width: 320px;
+  }
+}
+
 /* Math symbol menu */
 .math-menu {
   position: absolute;
@@ -1515,6 +1739,22 @@
   height: 4px;
   border-radius: 50%;
   background: var(--color-accent);
+}
+
+/* Compact prev/next arrows flanking a wide "Today" — never clips. */
+.daily-quicknav {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.daily-quicknav-arrow {
+  flex: none;
+  padding-inline: var(--space-2);
+}
+.daily-quicknav-today {
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: var(--space-1);
 }
 
 /* ---- Welcome screen ---- */

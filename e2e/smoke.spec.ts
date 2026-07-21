@@ -331,18 +331,56 @@ test('create a subpage; breadcrumbs show the hierarchy', async ({ page }) => {
   await page.getByRole('button', { name: 'Source', exact: true }).isVisible()
 })
 
-test('slash command inserts a heading', async ({ page }) => {
+test('slash menu: fuzzy search, keyboard insert, categories', async ({ page }) => {
   await createVault(page)
   const editor = page.locator('.cm-content')
   await editor.click()
-  await editor.pressSequentially('/heading 1')
-  // The slash menu should be open with a matching option.
+
+  // Typing `/` opens the menu with category groups.
+  await page.keyboard.type('/')
+  const menu = page.locator('.slash-menu')
+  await expect(menu).toBeVisible()
+  await expect(menu.locator('.slash-group-label').first()).toBeVisible()
+
+  // Fuzzy search: `/hea` surfaces headings; Enter inserts the top result.
+  await page.keyboard.type('hea')
+  await expect(menu.locator('.slash-item-title', { hasText: 'Heading 1' })).toBeVisible()
+  await page.keyboard.press('Enter')
+  await expect(menu).toBeHidden()
+  await page.getByRole('button', { name: 'Source', exact: true }).click()
+  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('#')
+})
+
+test('slash menu: click inserts, and AI commands are disabled', async ({ page }) => {
+  await createVault(page)
+  const editor = page.locator('.cm-content')
+  await editor.click()
+  await page.keyboard.type('/matrix')
+  const menu = page.locator('.slash-menu')
+  await menu.locator('.slash-item', { hasText: 'Matrix' }).first().click()
+  await page.getByRole('button', { name: 'Source', exact: true }).click()
+  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('bmatrix')
+
+  // AI commands appear but are disabled (no fake features).
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Edit', exact: true }).click()
+  await editor.click()
+  await page.keyboard.type('\n/rewrite')
+  await expect(page.locator('.slash-item.disabled', { hasText: 'Rewrite' })).toBeVisible()
+})
+
+test('slash menu shares the registry with the command palette', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'palette shares slash')
+  // The palette (Ctrl+K) can run an insert command from the shared registry.
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.getByPlaceholder('Type a command…').fill('Divider')
   await page
-    .getByRole('option', { name: /Heading 1/ })
+    .getByRole('option', { name: /Divider/ })
     .first()
     .click()
   await page.getByRole('button', { name: 'Source', exact: true }).click()
-  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('#')
+  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('---')
 })
 
 test('search reports completion stats and supports exact phrase', async ({ page }) => {
@@ -410,10 +448,15 @@ test('slash menu shows icons and section labels', async ({ page }) => {
   await createVault(page)
   const editor = page.locator('.cm-content')
   await editor.click()
-  await editor.pressSequentially('/theo')
-  // The completion tooltip renders with a custom icon and academic section.
-  await expect(page.locator('.cm-tooltip-autocomplete .cm-slash-icon').first()).toBeVisible()
-  await expect(page.locator('.cm-tooltip-autocomplete')).toContainText('Academic')
+  await page.keyboard.type('/')
+  const menu = page.locator('.slash-menu')
+  await expect(menu).toBeVisible()
+  // Each command renders an inline SVG icon …
+  await expect(menu.locator('.slash-item-icon svg').first()).toBeVisible()
+  // … grouped under category section labels.
+  await expect(menu.locator('.slash-group-label').first()).toBeVisible()
+  // The preview panel shows the selected command's details.
+  await expect(menu.locator('.slash-preview')).toBeVisible()
 })
 
 test('attach a PDF: nests under the page, previews, and opens in-app', async ({ page }) => {
