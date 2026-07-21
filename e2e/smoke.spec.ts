@@ -134,10 +134,10 @@ test('vault exports as ZIP and reimports', async ({ page }) => {
   expect(zipPath).toBeTruthy()
 
   // Re-import through the files panel import input.
-  const fileInput = page.locator('input[type="file"][accept*=".zip"]')
+  const fileInput = page.locator('[data-testid="import-input"]')
   await fileInput.setInputFiles(zipPath!)
   await expect(page.locator('.toast').filter({ hasText: /Imported/ })).toContainText(
-    /Imported \d+ note/,
+    /Imported \d+ page/,
   )
 })
 
@@ -361,4 +361,57 @@ test('search reports completion stats and supports exact phrase', async ({ page 
   await page.getByRole('button', { name: 'Exact phrase' }).click()
   await box.fill('network neural')
   await expect(page.locator('.search-result')).toHaveCount(0)
+})
+
+test('vault switcher lists vaults and switches between them', async ({ page }) => {
+  await createVault(page, 'First vault')
+  await createNote(page, 'in the first vault')
+
+  // Make a second vault via the switcher's "New vault" (→ welcome), so we
+  // don't re-navigate and trigger the auto-reopen of the last vault.
+  await page.locator('.vault-name-btn').click()
+  await page.getByRole('button', { name: /New vault/ }).click()
+  await page.getByRole('button', { name: /create my first vault/i }).click()
+  await page.getByLabel('Vault name').fill('Second vault')
+  await page.getByRole('button', { name: /Blank vault/ }).click()
+  await page.getByRole('button', { name: /^Create vault$/ }).click()
+  await expect(page.locator('.cm-content')).toBeVisible()
+
+  // Open the switcher from the vault name; both vaults are listed.
+  await page.locator('.vault-name-btn').click()
+  const dialog = page.getByRole('dialog', { name: 'Your vaults' })
+  await expect(dialog).toContainText('First vault')
+  await expect(dialog).toContainText('Second vault')
+
+  // Switch back to the first vault; its open tabs are restored, so its note
+  // reappears without any further navigation.
+  await dialog.getByRole('button', { name: /First vault/ }).click()
+  await expect(page.locator('.cm-content')).toContainText('in the first vault', { timeout: 10_000 })
+})
+
+test('page colour is saved to frontmatter and shows a tree dot', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, 'colour me')
+  await expect(page.locator('.status-bar')).toContainText('Saved')
+
+  // Set a colour from the note-header colour button.
+  await page.getByRole('button', { name: 'Page colour' }).click()
+  await page.locator('.color-picker button[aria-label="blue"]').click()
+  await expect(page.locator('.toast').filter({ hasText: /colour/i })).toBeVisible()
+
+  // The colour is written to frontmatter (portable) …
+  await page.getByRole('button', { name: 'Source', exact: true }).click()
+  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('color: blue')
+  // … and a colour dot appears in the page tree.
+  await expect(page.locator('.file-tree .tree-color-dot')).toHaveCount(1)
+})
+
+test('slash menu shows icons and section labels', async ({ page }) => {
+  await createVault(page)
+  const editor = page.locator('.cm-content')
+  await editor.click()
+  await editor.pressSequentially('/theo')
+  // The completion tooltip renders with a custom icon and academic section.
+  await expect(page.locator('.cm-tooltip-autocomplete .cm-slash-icon').first()).toBeVisible()
+  await expect(page.locator('.cm-tooltip-autocomplete')).toContainText('Academic')
 })

@@ -45,6 +45,7 @@ interface UiState {
   paletteMode: 'commands' | 'notes'
   shortcutsHelpOpen: boolean
   helpOpen: boolean
+  vaultSwitcherOpen: boolean
   settingsOpen: boolean
   confirm: ConfirmRequest | null
   prompt: PromptRequest | null
@@ -61,6 +62,7 @@ interface UiState {
   closePalette: () => void
   setShortcutsHelpOpen: (open: boolean) => void
   setHelpOpen: (open: boolean) => void
+  setVaultSwitcherOpen: (open: boolean) => void
   setSettingsOpen: (open: boolean) => void
   askConfirm: (request: ConfirmRequest) => void
   askPrompt: (request: PromptRequest) => void
@@ -80,6 +82,7 @@ export const useUi = create<UiState>((set) => ({
   paletteMode: 'commands',
   shortcutsHelpOpen: false,
   helpOpen: false,
+  vaultSwitcherOpen: false,
   settingsOpen: false,
   confirm: null,
   prompt: null,
@@ -101,6 +104,7 @@ export const useUi = create<UiState>((set) => ({
   closePalette: () => set({ paletteOpen: false }),
   setShortcutsHelpOpen: (open) => set({ shortcutsHelpOpen: open }),
   setHelpOpen: (open) => set({ helpOpen: open }),
+  setVaultSwitcherOpen: (open) => set({ vaultSwitcherOpen: open }),
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   askConfirm: (request) => set({ confirm: request }),
   askPrompt: (request) => set({ prompt: request }),

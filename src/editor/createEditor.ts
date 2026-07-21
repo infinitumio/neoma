@@ -24,6 +24,7 @@ import { autocompletion, completionKeymap, closeBracketsKeymap } from '@codemirr
 import { editorTheme, markdownHighlighting } from './theme'
 import { wikiLinkCompletion, tagCompletion } from './wikiLinkCompletion'
 import { slashCommandCompletion } from './slashCommands'
+import { slashIconSvg, type SlashIcon } from './slashIcons'
 import {
   toggleBold,
   toggleItalic,
@@ -64,6 +65,20 @@ export function buildExtensions(callbacks: EditorCallbacks, options: EditorOptio
     autocompletion({
       override: [slashCommandCompletion, wikiLinkCompletion, tagCompletion],
       icons: false,
+      // Render a leading icon for slash-command options (others have none).
+      addToOptions: [
+        {
+          position: 10,
+          render(completion) {
+            const name = (completion as { slashIcon?: SlashIcon }).slashIcon
+            if (!name) return null
+            const wrap = document.createElement('div')
+            wrap.className = 'cm-slash-icon'
+            wrap.innerHTML = slashIconSvg(name)
+            return wrap
+          },
+        },
+      ],
     }),
     options.showLineNumbers ? lineNumbers() : [],
     EditorView.contentAttributes.of({

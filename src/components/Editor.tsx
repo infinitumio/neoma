@@ -14,7 +14,7 @@ import { useSettings } from '@/settings/settingsStore'
 import { useUi } from '@/app/uiStore'
 import { SelectionToolbar, type ToolbarPosition } from './SelectionToolbar'
 
-/** Position the toolbar above the top of the current (non-empty) selection. */
+/** Position the toolbar above the current selection, capturing its range. */
 function toolbarPositionFor(view: EditorView): ToolbarPosition | null {
   if (!view.hasFocus) return null
   const sel = view.state.selection.main
@@ -25,7 +25,10 @@ function toolbarPositionFor(view: EditorView): ToolbarPosition | null {
   // Anchor above the topmost edge; clamp so it stays on screen.
   const top = Math.max(8, Math.min(from.top, to.top) - 44)
   const left = Math.min(Math.max(from.left, 120), window.innerWidth - 120)
-  return { top, left }
+  // Capture the range now so formatting applies to it even if the live
+  // selection later drifts (the reliability fix for "highlight sometimes
+  // doesn't work", especially in split mode).
+  return { top, left, from: sel.from, to: sel.to }
 }
 
 // Session cache of editor states so switching tabs keeps cursor + undo.

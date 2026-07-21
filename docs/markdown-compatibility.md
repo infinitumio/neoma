@@ -56,6 +56,10 @@ opaque text and refuses to rewrite it.
 Academic-workflow fields recognised as note properties: `doi`, `bibtex-key`,
 `zotero-uri`. Pasting BibTeX into a fenced code block is preserved without alteration.
 
+A page's colour is stored as a `color:` frontmatter field (one of yellow, green, blue,
+purple, red, orange, grey) — portable, and ignored by tools that don't use it. Attachment
+colours are a neoma-only convenience stored per-vault in the browser, not in the files.
+
 ## Coloured highlights
 
 Yellow highlights use the portable `==text==` syntax. Other colours use a **documented,

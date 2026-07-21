@@ -6,6 +6,28 @@ All notable changes to neoma are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (second feedback round)
+
+- **Vault switcher** — see all your vaults and jump between them from the sidebar vault
+  name, the command palette, or `Mod+Shift+O`; open tabs are remembered per vault.
+- **Page & file colours** — colour-code pages (saved to portable frontmatter `color:`) and
+  attachments; colour dots show in the tree, and the **graph nodes take each page's
+  colour** (falling back to a per-folder colour), with a colour **legend**. _(Delivers
+  the graph-colour part of roadmap issue #16.)_
+- **Import any file as an attachment** — the file import now accepts every file type and
+  routes loose files into the attachment folder; **drop files from your computer** onto the
+  page tree to import them (onto a folder to place them there).
+- **Polished slash menu** — icon badges, section headers, bold labels with descriptions,
+  and a clearer selected state.
+
+### Fixed (second feedback round)
+
+- **Highlighting reliability** — the selection toolbar now captures the selected range when
+  it appears and applies formatting to exactly that text, fixing cases (notably in **split
+  view**) where a highlight/format could land on the wrong text or be lost.
+- Switching between two vaults that both have a same-named open page (e.g. `Untitled.md`)
+  no longer leaves the editor stuck or leaks content between vaults.
+
 ### Phase 1 — reliability and core usability (from user feedback)
 
 #### Fixed

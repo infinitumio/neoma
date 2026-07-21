@@ -11,6 +11,8 @@ import { useTabs } from '@/app/tabsStore'
 import { useActiveNotePath } from '@/components/panels/BacklinksPanel'
 import { createSimulation, type GraphEdge, type GraphNode } from './forceLayout'
 import { isWithin } from '@/utils/paths'
+import { getEntryColor } from '@/app/vaultStore'
+import { folderColor, pageColorHex, type PageColor } from '@/utils/colors'
 
 interface ViewTransform {
   x: number
@@ -85,6 +87,7 @@ export default function GraphView() {
     }
     if (hideOrphans) metas = metas.filter((m) => (degree.get(m.path) ?? 0) > 0)
 
+    const topFolder = (path: string) => (path.includes('/') ? path.split('/')[0] : '')
     const index = new Map<string, number>()
     const nodes: GraphNode[] = metas.map((meta, i) => {
       index.set(meta.path, i)
@@ -96,6 +99,7 @@ export default function GraphView() {
         vx: 0,
         vy: 0,
         degree: degree.get(meta.path) ?? 0,
+        color: getEntryColor(meta.path) ?? folderColor(topFolder(meta.path)),
       }
     })
     const edges: GraphEdge[] = []
@@ -185,15 +189,19 @@ export default function GraphView() {
       context.globalAlpha = 1
 
       const accent = css('--color-accent') || '#4ade80'
-      const nodeColor = css('--color-text-secondary') || '#98a39d'
       const q = query.trim().toLowerCase()
       for (const node of simulation.nodes) {
         const radius = 3.5 + Math.min(node.degree, 8) * 0.8
         const isActive = node.id === activePath
         const matches = q && node.label.toLowerCase().includes(q)
+        const highlighted = isActive || matches || node.id === hoveredId
         context.beginPath()
         context.arc(node.x, node.y, radius, 0, Math.PI * 2)
-        context.fillStyle = isActive || matches || node.id === hoveredId ? accent : nodeColor
+        context.fillStyle = highlighted
+          ? accent
+          : node.color
+            ? pageColorHex(node.color as PageColor)
+            : css('--color-text-secondary') || '#98a39d'
         context.fill()
       }
 
@@ -358,6 +366,38 @@ export default function GraphView() {
           {nodes.length} notes · {edges.length} links{hovered ? ` · ${hovered}` : ''}
         </span>
       </div>
+      <GraphLegend nodes={nodes} />
+    </div>
+  )
+}
+
+/** Legend mapping the colours shown in the graph to folders/page colours. */
+function GraphLegend({ nodes }: { nodes: GraphNode[] }) {
+  const groups = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const node of nodes) {
+      const key = node.color ?? 'grey'
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])
+  }, [nodes])
+
+  if (groups.length <= 1) return null
+  return (
+    <div className="graph-legend" aria-label="Graph colour legend">
+      <div className="sidebar-section-label" style={{ padding: '0 0 var(--space-1)' }}>
+        Colours
+      </div>
+      {groups.map(([color, count]) => (
+        <div key={color} className="graph-legend-row">
+          <span className="graph-legend-dot" style={{ background: `var(--pc-${color})` }} />
+          <span className="graph-legend-label">{color}</span>
+          <span className="tag-count">{count}</span>
+        </div>
+      ))}
+      <p className="text-small text-faint" style={{ marginTop: 'var(--space-1)' }}>
+        Set a page's colour from its header or the page menu.
+      </p>
     </div>
   )
 }

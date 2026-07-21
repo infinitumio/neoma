@@ -9,6 +9,7 @@ import { SourceView } from './SourceView'
 import { ViewModeSwitcher } from './ViewModeSwitcher'
 import { Breadcrumbs } from './Breadcrumbs'
 import { MathSymbolMenu } from './MathSymbolMenu'
+import { PageColorButton } from './PageColorButton'
 
 // The preview pulls in the markdown pipeline + KaTeX; load it on demand so
 // the initial bundle stays small for people who just want to type.
@@ -66,6 +67,7 @@ export function NotePane({ path }: NotePaneProps) {
       <div className="note-header">
         <Breadcrumbs path={path} />
         <span style={{ flex: 1 }} />
+        <PageColorButton path={path} />
         {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
         <ViewModeSwitcher />
       </div>

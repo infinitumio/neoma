@@ -6,11 +6,13 @@ import { ActivityRail } from '@/components/ActivityRail'
 import { Sidebar } from '@/components/Sidebar'
 import { TabsBar } from '@/components/TabsBar'
 import { NotePane } from '@/components/NotePane'
+import { clearEditorStateCache } from '@/components/Editor'
 import { RightSidebar } from '@/components/RightSidebar'
 import { StatusBar } from '@/components/StatusBar'
 import { CommandPalette } from '@/components/CommandPalette'
 import { SettingsModal } from '@/components/SettingsModal'
 import { HelpModal } from '@/components/HelpModal'
+import { VaultSwitcher } from '@/components/VaultSwitcher'
 import { Dialogs } from '@/components/Dialogs'
 import { Toasts } from '@/components/Toasts'
 import { useVault, flushAllSaves, openVault } from './vaultStore'
@@ -45,7 +47,14 @@ function EmptyWorkspace() {
 
 function Workspace() {
   const activeTab = useTabs((s) => s.tabs.find((t) => t.id === s.activeId))
+  const vaultId = useVault((s) => s.vault?.id)
   const isMobile = useIsMobile()
+
+  // Editor state is cached by path; two vaults can share a path (e.g.
+  // Untitled.md), so clear the cache whenever the vault changes.
+  useEffect(() => {
+    clearEditorStateCache()
+  }, [vaultId])
 
   // On small screens the sidebar is a drawer: start closed, and close it
   // whenever a note is opened so the editor gets the full width.
@@ -65,7 +74,7 @@ function Workspace() {
         <TabsBar />
         {!activeTab && <EmptyWorkspace />}
         {activeTab?.type === 'note' && activeTab.path && (
-          <NotePane key={activeTab.path} path={activeTab.path} />
+          <NotePane key={`${vaultId}:${activeTab.path}`} path={activeTab.path} />
         )}
         {activeTab?.type === 'graph' && (
           <Suspense
@@ -133,6 +142,7 @@ export default function App() {
       <CommandPalette />
       <SettingsModal />
       <HelpModal />
+      <VaultSwitcher />
       <Dialogs />
       <Toasts />
     </>

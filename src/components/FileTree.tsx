@@ -18,9 +18,12 @@ import {
   ExternalLink,
   FilePlus2,
   ArrowUpToLine,
+  Palette,
 } from 'lucide-react'
 import type { FileEntry } from '@/types'
 import { ContextMenu, type MenuItem } from './ContextMenu'
+import { ColorPicker } from './ColorPicker'
+import type { PageColor } from '@/utils/colors'
 import {
   useVault,
   deleteNote,
@@ -36,12 +39,15 @@ import {
   createSubpage,
   nestUnder,
   convertToTopLevel,
+  getEntryColor,
+  setEntryColor,
+  refreshEntries,
 } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 import { useSettings } from '@/settings/settingsStore'
 import { basename, dirname, folderNoteOf, isMarkdown, stem } from '@/utils/paths'
-import { downloadBlob } from '@/storage/import-export'
+import { downloadBlob, importFiles } from '@/storage/import-export'
 
 interface TreeNode {
   entry: FileEntry
@@ -89,6 +95,7 @@ export function FileTree() {
   const openNote = useTabs((s) => s.openNote)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [menu, setMenu] = useState<MenuState | null>(null)
+  const [colorFor, setColorFor] = useState<{ x: number; y: number; path: string } | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
   const ui = useUi()
 
@@ -225,6 +232,11 @@ export function FileTree() {
       onSelect: () => askNewSubpage(path),
     },
     {
+      label: 'Set colour…',
+      icon: <Palette size={14} aria-hidden />,
+      onSelect: () => setColorFor({ x: menu?.x ?? 200, y: menu?.y ?? 200, path }),
+    },
+    {
       label: pinned.includes(path) ? 'Unpin' : 'Pin',
       icon: <Pin size={14} aria-hidden />,
       separatorAfter: true,
@@ -291,6 +303,11 @@ export function FileTree() {
           onSelect: () => void openAttachment(entry.path),
         },
         {
+          label: 'Set colour…',
+          icon: <Palette size={14} aria-hidden />,
+          onSelect: () => setColorFor({ x: menu?.x ?? 200, y: menu?.y ?? 200, path: entry.path }),
+        },
+        {
           label: 'Rename',
           icon: <Pencil size={14} aria-hidden />,
           onSelect: () => askRename(entry),
@@ -310,6 +327,24 @@ export function FileTree() {
     event.preventDefault()
     event.stopPropagation()
     setDropTarget(null)
+    // External files dropped from the OS → import as attachments.
+    if (event.dataTransfer.files.length > 0) {
+      const adapter = getAdapter()
+      if (!adapter) return
+      const folder =
+        target.kind === 'folder' ? target.path : useSettings.getState().settings.attachmentFolder
+      const summary = await importFiles(adapter, [...event.dataTransfer.files], {
+        attachmentsFolder: folder,
+      })
+      await refreshEntries()
+      ui.toast(
+        `Imported ${summary.attachments + summary.notes} file${
+          summary.attachments + summary.notes === 1 ? '' : 's'
+        }`,
+        'success',
+      )
+      return
+    }
     const sourcePath = event.dataTransfer.getData('application/x-neoma-path')
     if (!sourcePath || sourcePath === target.path) return
     try {
@@ -392,6 +427,16 @@ export function FileTree() {
             <Paperclip size={14} aria-hidden style={{ marginLeft: 14, flexShrink: 0 }} />
           )}
           <span className="tree-label">{isFolder ? basename(entry.path) : stem(entry.path)}</span>
+          {(() => {
+            const color = getEntryColor(isPageFolder ? indexNote! : entry.path)
+            return color ? (
+              <span
+                className="tree-color-dot"
+                style={{ background: `var(--pc-${color})` }}
+                aria-label={`Colour: ${color}`}
+              />
+            ) : null
+          })()}
           {pinned.includes(isPageFolder ? indexNote! : entry.path) && (
             <Pin size={12} className="pin-indicator" aria-label="Pinned" />
           )}
@@ -452,6 +497,22 @@ export function FileTree() {
           items={menuItems(menu.entry)}
           onClose={() => setMenu(null)}
         />
+      )}
+      {colorFor && (
+        <div
+          style={{ position: 'fixed', left: colorFor.x, top: colorFor.y, zIndex: 300 }}
+          className="color-picker-anchor"
+        >
+          <ColorPicker
+            current={getEntryColor(colorFor.path)}
+            onClose={() => setColorFor(null)}
+            onPick={(color: PageColor | null) => {
+              void setEntryColor(colorFor.path, color).then(() =>
+                ui.toast(color ? 'Colour set' : 'Colour removed', 'success'),
+              )
+            }}
+          />
+        </div>
       )}
     </>
   )

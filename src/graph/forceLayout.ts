@@ -13,6 +13,8 @@ export interface GraphNode {
   vx: number
   vy: number
   degree: number
+  /** page-colour name (explicit or folder-derived) */
+  color?: string
 }
 
 export interface GraphEdge {

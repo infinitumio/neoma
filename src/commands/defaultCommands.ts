@@ -316,8 +316,16 @@ export function buildDefaultCommands(): Command[] {
       run: () => useUi.getState().setHelpOpen(true),
     },
     {
+      id: 'vault.switch',
+      title: 'Switch vault…',
+      category: 'Application',
+      shortcut: 'Mod+Shift+O',
+      isAvailable: hasVault,
+      run: () => useUi.getState().setVaultSwitcherOpen(true),
+    },
+    {
       id: 'vault.close',
-      title: 'Close vault',
+      title: 'Close vault (back to welcome)',
       category: 'Application',
       isAvailable: hasVault,
       run: () => closeVault(),

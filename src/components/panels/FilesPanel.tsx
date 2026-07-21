@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** File explorer panel: vault header, new note/folder, sort, import/export. */
 import { useRef, useState } from 'react'
-import { FilePlus, FolderPlus, ArrowUpDown, MoreHorizontal, Download, Upload } from 'lucide-react'
+import {
+  FilePlus,
+  FolderPlus,
+  ArrowUpDown,
+  MoreHorizontal,
+  Download,
+  Upload,
+  Paperclip,
+  ChevronsUpDown,
+} from 'lucide-react'
 import { FileTree } from '../FileTree'
 import { ContextMenu } from '../ContextMenu'
 import { createNote, createFolder, refreshEntries, useVault, getAdapter } from '@/app/vaultStore'
@@ -18,6 +27,7 @@ export function FilesPanel() {
   const sortOrder = useSettings((s) => s.settings.fileSortOrder)
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const attachInput = useRef<HTMLInputElement>(null)
 
   const newNote = async () => {
     const path = await createNote('', 'Untitled')
@@ -58,20 +68,34 @@ export function FilesPanel() {
     }
   }
 
-  const onImportFiles = async (files: FileList | null) => {
+  const attachmentFolder = useSettings((s) => s.settings.attachmentFolder)
+
+  const onImportFiles = async (files: FileList | null, attachmentsOnly = false) => {
     const adapter = getAdapter()
     if (!adapter || !files?.length) return
-    const summary = await importFiles(adapter, [...files])
+    const summary = await importFiles(adapter, [...files], {
+      attachmentsFolder: attachmentFolder,
+      attachmentsOnly,
+    })
     await refreshEntries()
-    ui.toast(`Imported ${summary.notes} notes, ${summary.attachments} attachments`, 'success')
+    const parts: string[] = []
+    if (summary.notes) parts.push(`${summary.notes} page${summary.notes === 1 ? '' : 's'}`)
+    if (summary.attachments)
+      parts.push(`${summary.attachments} attachment${summary.attachments === 1 ? '' : 's'}`)
+    ui.toast(`Imported ${parts.join(' and ') || 'nothing'}`, 'success')
   }
 
   return (
     <>
       <div className="sidebar-header">
-        <span className="sidebar-title" title={vault?.name}>
+        <button
+          className="sidebar-title vault-name-btn"
+          title="Switch vault"
+          onClick={() => ui.setVaultSwitcherOpen(true)}
+        >
           {vault?.name ?? 'Vault'}
-        </span>
+          <ChevronsUpDown size={13} aria-hidden style={{ flexShrink: 0, opacity: 0.6 }} />
+        </button>
         <button
           className="icon-btn"
           onClick={() => void newNote()}
@@ -107,12 +131,24 @@ export function FilesPanel() {
         ref={fileInput}
         type="file"
         multiple
-        accept=".md,.zip,image/*,application/pdf"
+        data-testid="import-input"
         className="visually-hidden"
         aria-hidden
         tabIndex={-1}
         onChange={(e) => {
           void onImportFiles(e.target.files)
+          e.target.value = ''
+        }}
+      />
+      <input
+        ref={attachInput}
+        type="file"
+        multiple
+        className="visually-hidden"
+        aria-hidden
+        tabIndex={-1}
+        onChange={(e) => {
+          void onImportFiles(e.target.files, true)
           e.target.value = ''
         }}
       />
@@ -126,6 +162,11 @@ export function FilesPanel() {
               label: 'Import files or ZIP…',
               icon: <Upload size={14} aria-hidden />,
               onSelect: () => fileInput.current?.click(),
+            },
+            {
+              label: `Import files as attachments (${attachmentFolder}/)…`,
+              icon: <Paperclip size={14} aria-hidden />,
+              onSelect: () => attachInput.current?.click(),
             },
             {
               label: 'Export vault as ZIP',

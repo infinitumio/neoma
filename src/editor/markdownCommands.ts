@@ -115,13 +115,38 @@ export function computeSymmetricToggle(
   }
 }
 
+export interface ExplicitRange {
+  from: number
+  to: number
+}
+
+/**
+ * Apply an inline toggle. When `range` is given (e.g. from the floating
+ * toolbar, which captured the selection when it appeared) the edit is applied
+ * to exactly that range — even if focus or the live selection has since
+ * drifted. Otherwise every current selection range is toggled.
+ */
 function applyToggle(
   view: EditorView,
   compute: (doc: string, from: number, to: number) => InlineToggleResult,
+  range?: ExplicitRange,
 ): boolean {
   const doc = view.state.doc.toString()
-  const changes = view.state.changeByRange((range) => {
-    const result = compute(doc, range.from, range.to)
+  if (range) {
+    const from = Math.min(Math.max(range.from, 0), doc.length)
+    const to = Math.min(Math.max(range.to, 0), doc.length)
+    const result = compute(doc, from, to)
+    view.dispatch({
+      changes: result.changes,
+      selection: EditorSelection.range(result.rangeFrom, result.rangeTo),
+      scrollIntoView: true,
+      userEvent: 'input',
+    })
+    view.focus()
+    return true
+  }
+  const changes = view.state.changeByRange((r) => {
+    const result = compute(doc, r.from, r.to)
     return {
       changes: result.changes,
       range: EditorSelection.range(result.rangeFrom, result.rangeTo),
@@ -132,19 +157,32 @@ function applyToggle(
   return true
 }
 
-export const toggleBold = (view: EditorView) =>
-  applyToggle(view, (d, f, t) => computeEmphasisToggle(d, f, t, 2))
-export const toggleItalic = (view: EditorView) =>
-  applyToggle(view, (d, f, t) => computeEmphasisToggle(d, f, t, 1))
-export const toggleStrikethrough = (view: EditorView) =>
-  applyToggle(view, (d, f, t) => computeSymmetricToggle(d, f, t, '~~'))
-export const toggleHighlight = (view: EditorView) =>
-  applyToggle(view, (d, f, t) => computeSymmetricToggle(d, f, t, '=='))
-export const toggleCode = (view: EditorView) =>
-  applyToggle(view, (d, f, t) => computeSymmetricToggle(d, f, t, '`'))
+export const toggleBold = (view: EditorView, range?: ExplicitRange) =>
+  applyToggle(view, (d, f, t) => computeEmphasisToggle(d, f, t, 2), range)
+export const toggleItalic = (view: EditorView, range?: ExplicitRange) =>
+  applyToggle(view, (d, f, t) => computeEmphasisToggle(d, f, t, 1), range)
+export const toggleStrikethrough = (view: EditorView, range?: ExplicitRange) =>
+  applyToggle(view, (d, f, t) => computeSymmetricToggle(d, f, t, '~~'), range)
+export const toggleHighlight = (view: EditorView, range?: ExplicitRange) =>
+  applyToggle(view, (d, f, t) => computeSymmetricToggle(d, f, t, '=='), range)
+export const toggleCode = (view: EditorView, range?: ExplicitRange) =>
+  applyToggle(view, (d, f, t) => computeSymmetricToggle(d, f, t, '`'), range)
 
 /** Insert a wiki link around the selection (cursor lands inside). */
-export function insertWikiLink(view: EditorView): boolean {
+export function insertWikiLink(view: EditorView, explicit?: ExplicitRange): boolean {
+  if (explicit) {
+    const selected = view.state.sliceDoc(explicit.from, explicit.to)
+    view.dispatch({
+      changes: { from: explicit.from, to: explicit.to, insert: `[[${selected}]]` },
+      selection: selected
+        ? EditorSelection.range(explicit.from + 2, explicit.to + 2)
+        : EditorSelection.cursor(explicit.from + 2),
+      scrollIntoView: true,
+      userEvent: 'input',
+    })
+    view.focus()
+    return true
+  }
   const changes = view.state.changeByRange((range) => {
     const selected = view.state.sliceDoc(range.from, range.to)
     return {
@@ -248,6 +286,10 @@ export function computeHighlight(
   }
 }
 
-export function applyHighlight(view: EditorView, color: HighlightColor | null): boolean {
-  return applyToggle(view, (d, f, t) => computeHighlight(d, f, t, color))
+export function applyHighlight(
+  view: EditorView,
+  color: HighlightColor | null,
+  range?: ExplicitRange,
+): boolean {
+  return applyToggle(view, (d, f, t) => computeHighlight(d, f, t, color), range)
 }

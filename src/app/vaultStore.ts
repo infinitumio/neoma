@@ -12,6 +12,8 @@ import { ConflictError, PermissionError } from '@/storage/errors'
 import { SearchClient } from '@/search/SearchClient'
 import { LinkGraph } from '@/links/LinkGraph'
 import { rewriteLinks } from '@/links/rewriteLinks'
+import { updateFrontmatter } from '@/markdown/frontmatter'
+import { isPageColor, type PageColor } from '@/utils/colors'
 import { debounce } from '@/utils/misc'
 import {
   basename,
@@ -64,6 +66,8 @@ interface VaultState {
   linkUpdatePlan: LinkUpdatePlan | null
   /** bumped whenever metas change, so panels can recompute cheaply */
   metaVersion: number
+  /** colour-code for non-note files (pages use frontmatter `color`) */
+  fileColors: Record<string, PageColor>
 }
 
 // Non-serialisable singletons live at module scope, not in the store.
@@ -89,6 +93,67 @@ function pinnedKey(vaultId: string): string {
   return `neoma.pinned.${vaultId}`
 }
 
+function colorsKey(vaultId: string): string {
+  return `neoma.colors.${vaultId}`
+}
+
+function readFileColors(vaultId: string): Record<string, PageColor> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(colorsKey(vaultId)) ?? '{}')
+    const out: Record<string, PageColor> = {}
+    for (const [path, color] of Object.entries(raw)) {
+      if (isPageColor(color)) out[path] = color
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
+/** The colour of a page (frontmatter) or file (stored map), or null. */
+export function getEntryColor(path: string): PageColor | null {
+  const meta = useVault.getState().metas.get(path)
+  if (meta && isPageColor(meta.frontmatter.color)) return meta.frontmatter.color
+  const stored = useVault.getState().fileColors[path]
+  return stored ?? null
+}
+
+/**
+ * Set (or clear, with color === null) a page/file colour. Pages store the
+ * colour in portable frontmatter; other files use a per-vault local map.
+ */
+export async function setEntryColor(path: string, color: PageColor | null): Promise<void> {
+  const vault = useVault.getState().vault
+  if (!vault) return
+  if (isMarkdown(path) && adapter && search) {
+    let text = useVault.getState().notes.get(path)?.content
+    if (text === undefined) text = await adapter.readText(path).catch(() => undefined)
+    if (text === undefined) return
+    const updated = updateFrontmatter(text, { color: color ?? undefined })
+    await adapter.writeText(path, updated)
+    const open = useVault.getState().notes.get(path)
+    if (open) setNote(path, { content: updated, saveState: 'saved' })
+    const statEntry = await adapter.stat(path)
+    const prev = useVault.getState().metas.get(path)
+    const metas = await search.upsertWithMeta([
+      {
+        path,
+        text: updated,
+        createdAt: prev?.createdAt ?? Date.now(),
+        modifiedAt: statEntry?.modifiedAt ?? Date.now(),
+      },
+    ])
+    bumpMetas(metas)
+    updateEntry(statEntry ?? { path, kind: 'file' })
+  } else {
+    const fileColors = { ...useVault.getState().fileColors }
+    if (color) fileColors[path] = color
+    else delete fileColors[path]
+    localStorage.setItem(colorsKey(vault.id), JSON.stringify(fileColors))
+    setState({ fileColors, metaVersion: useVault.getState().metaVersion + 1 })
+  }
+}
+
 export const useVault = create<VaultState>(() => ({
   vault: null,
   status: 'closed',
@@ -102,6 +167,7 @@ export const useVault = create<VaultState>(() => ({
   conflict: null,
   linkUpdatePlan: null,
   metaVersion: 0,
+  fileColors: {},
 }))
 
 function setState(partial: Partial<VaultState>): void {
@@ -154,6 +220,7 @@ export async function openVault(vault: Vault): Promise<void> {
     linkUpdatePlan: null,
     indexProgress: null,
     pinned: JSON.parse(localStorage.getItem(pinnedKey(vault.id)) ?? '[]'),
+    fileColors: readFileColors(vault.id),
   })
 
   localStorage.setItem('neoma.lastVault', vault.id)

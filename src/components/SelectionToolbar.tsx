@@ -24,6 +24,9 @@ import {
 export interface ToolbarPosition {
   top: number
   left: number
+  /** the selection range captured when the toolbar appeared */
+  from: number
+  to: number
 }
 
 interface SelectionToolbarProps {
@@ -36,7 +39,7 @@ interface SelectionToolbarProps {
 interface Action {
   label: string
   icon: typeof Bold
-  run: (view: EditorView) => boolean
+  run: (view: EditorView, range: { from: number; to: number }) => boolean
 }
 
 const ACTIONS: Action[] = [
@@ -50,8 +53,9 @@ const ACTIONS: Action[] = [
 export function SelectionToolbar({ view, position, onAfterCommand }: SelectionToolbarProps) {
   const [showColors, setShowColors] = useState(false)
 
-  const apply = (fn: (view: EditorView) => boolean) => {
-    fn(view)
+  const range = { from: position.from, to: position.to }
+  const apply = (fn: (view: EditorView, range: { from: number; to: number }) => boolean) => {
+    fn(view, range)
     setShowColors(false)
     onAfterCommand()
   }
@@ -94,14 +98,14 @@ export function SelectionToolbar({ view, position, onAfterCommand }: SelectionTo
               style={{ background: `var(--hl-${color})` }}
               aria-label={`Highlight ${color}`}
               title={color}
-              onClick={() => apply((v) => applyHighlight(v, color as HighlightColor))}
+              onClick={() => apply((v, r) => applyHighlight(v, color as HighlightColor, r))}
             />
           ))}
           <button
             className="highlight-swatch highlight-clear"
             aria-label="Remove highlight"
             title="Remove highlight"
-            onClick={() => apply((v) => applyHighlight(v, null))}
+            onClick={() => apply((v, r) => applyHighlight(v, null, r))}
           >
             <X size={11} aria-hidden />
           </button>

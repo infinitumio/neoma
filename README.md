@@ -52,6 +52,9 @@ readable in any text editor.
 - **Backlinks**, linked/unlinked mentions, broken-link and orphan detection
 - **Tags** (`#tag` and frontmatter), with a tag browser
 - **Coloured highlights** (7 colours) stored as portable, documented syntax
+- **Page & file colours** — colour-code pages (portable frontmatter) and files; the graph
+  colours nodes to match, with a legend
+- **Multiple vaults** with a quick switcher (open tabs remembered per vault)
 - **Mathematics** (KaTeX, offline): inline/display, a symbol menu, copy-LaTeX, numbered
   equations, theorem/definition/proof blocks
 - **YAML frontmatter**, preserved verbatim — unknown fields are never deleted

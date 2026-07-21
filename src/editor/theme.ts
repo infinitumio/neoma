@@ -43,9 +43,63 @@ export const editorTheme = EditorView.theme({
     color: 'var(--color-text)',
     boxShadow: 'var(--shadow-overlay)',
   },
+  '.cm-tooltip.cm-tooltip-autocomplete': {
+    borderRadius: 'var(--radius-lg)',
+    padding: '5px',
+    maxWidth: '22rem',
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul': {
+    maxHeight: '20rem',
+    fontFamily: 'var(--font-ui)',
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    columnGap: '0.6rem',
+    padding: '0.4rem 0.55rem',
+    borderRadius: 'var(--radius-md)',
+    lineHeight: '1.3',
+  },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
     backgroundColor: 'var(--color-accent-subtle)',
     color: 'var(--color-text)',
+  },
+  '.cm-slash-icon': {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '1.75rem',
+    height: '1.75rem',
+    flexShrink: '0',
+    borderRadius: 'var(--radius-sm)',
+    background: 'var(--color-bg-raised)',
+    border: '1px solid var(--color-border)',
+    color: 'var(--color-accent)',
+  },
+  '.cm-tooltip-autocomplete li[aria-selected] .cm-slash-icon': {
+    background: 'var(--color-bg)',
+    borderColor: 'var(--color-accent-muted)',
+  },
+  '.cm-completionLabel': {
+    flex: '1',
+    fontWeight: '550',
+  },
+  // Description drops onto its own line, aligned under the label (past the icon).
+  '.cm-completionDetail': {
+    flexBasis: '100%',
+    paddingLeft: '2.35rem',
+    fontStyle: 'normal',
+    fontSize: 'var(--font-size-xs)',
+    color: 'var(--color-text-secondary)',
+  },
+  '.cm-completionSection': {
+    fontSize: 'var(--font-size-xs)',
+    fontWeight: '650',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    color: 'var(--color-text-faint)',
+    padding: '0.4rem 0.55rem 0.15rem',
   },
   '.cm-panels': {
     backgroundColor: 'var(--color-bg-raised)',

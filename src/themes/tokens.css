@@ -57,6 +57,15 @@
   --hl-orange: rgba(247, 146, 58, 0.32);
   --hl-grey: rgba(152, 163, 157, 0.3);
 
+  /* Solid page-colour palette (tree dots, graph nodes, accents) */
+  --pc-yellow: #f0b429;
+  --pc-green: #4ade80;
+  --pc-blue: #5eb1ef;
+  --pc-purple: #b284f5;
+  --pc-red: #ef6461;
+  --pc-orange: #f7923a;
+  --pc-grey: #98a39d;
+
   /* Shape */
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -139,6 +148,14 @@
   --hl-red: rgba(197, 48, 48, 0.22);
   --hl-orange: rgba(221, 107, 32, 0.26);
   --hl-grey: rgba(92, 104, 98, 0.22);
+
+  --pc-yellow: #b7791f;
+  --pc-green: #16a34a;
+  --pc-blue: #2b6cb0;
+  --pc-purple: #805ad5;
+  --pc-red: #c53030;
+  --pc-orange: #dd6b20;
+  --pc-grey: #5c6862;
 
   --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
   --shadow-overlay: 0 8px 32px rgba(30, 40, 35, 0.18);

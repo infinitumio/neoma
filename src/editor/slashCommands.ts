@@ -14,11 +14,13 @@ import {
 import type { EditorView } from '@codemirror/view'
 import { isoDate } from '@/utils/dates'
 import { runCommand, getCommand } from '@/commands/registry'
+import type { SlashIcon } from './slashIcons'
 
 interface SlashCommand {
   label: string
   description: string
   section: string
+  icon: SlashIcon
   keywords?: string
   /** snippet template (uses ${placeholder} fields) … */
   template?: string
@@ -28,56 +30,88 @@ interface SlashCommand {
 
 const COMMANDS: SlashCommand[] = [
   // ---- Text ----
-  { label: 'Text', description: 'Plain paragraph', section: 'Text', template: '${}' },
+  { label: 'Text', icon: 'text', description: 'Plain paragraph', section: 'Text', template: '${}' },
   {
     label: 'Heading 1',
     description: 'Large section heading',
+    icon: 'heading',
     section: 'Text',
     template: '# ${Heading}',
   },
   {
     label: 'Heading 2',
     description: 'Medium section heading',
+    icon: 'heading',
     section: 'Text',
     template: '## ${Heading}',
   },
   {
     label: 'Heading 3',
     description: 'Small section heading',
+    icon: 'heading',
     section: 'Text',
     template: '### ${Heading}',
   },
-  { label: 'Bulleted list', description: 'Simple list', section: 'Text', template: '- ${item}' },
-  { label: 'Numbered list', description: 'Ordered list', section: 'Text', template: '1. ${item}' },
+  {
+    label: 'Bulleted list',
+    icon: 'list',
+    description: 'Simple list',
+    section: 'Text',
+    template: '- ${item}',
+  },
+  {
+    label: 'Numbered list',
+    icon: 'ordered',
+    description: 'Ordered list',
+    section: 'Text',
+    template: '1. ${item}',
+  },
   {
     label: 'Task list',
     description: 'Checkboxes for to-dos',
+    icon: 'task',
     section: 'Text',
     template: '- [ ] ${task}',
   },
   {
     label: 'Toggle section',
     description: 'Collapsible section (click to fold)',
+    icon: 'toggle',
     section: 'Text',
     template: '> [!toggle]- ${Title}\n> ${content}',
   },
-  { label: 'Quote', description: 'Blockquote', section: 'Text', template: '> ${quote}' },
+  {
+    label: 'Quote',
+    icon: 'quote',
+    description: 'Blockquote',
+    section: 'Text',
+    template: '> ${quote}',
+  },
   {
     label: 'Callout',
     description: 'Highlighted note box (note/tip/warning…)',
+    icon: 'callout',
     section: 'Text',
     template: '> [!note] ${Title}\n> ${content}',
   },
-  { label: 'Divider', description: 'Horizontal rule', section: 'Text', template: '---\n${}' },
+  {
+    label: 'Divider',
+    icon: 'divider',
+    description: 'Horizontal rule',
+    section: 'Text',
+    template: '---\n${}',
+  },
   {
     label: 'Code block',
     description: 'Fenced code with syntax highlighting',
+    icon: 'code',
     section: 'Text',
     template: '```${language}\n${code}\n```',
   },
   {
     label: 'Highlight',
     description: 'Highlighted text',
+    icon: 'highlight',
     section: 'Text',
     template: '==${highlighted text}==',
   },
@@ -86,6 +120,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Equation',
     description: 'Display equation (LaTeX, rendered offline)',
+    icon: 'math',
     section: 'Academic',
     keywords: 'math latex display',
     template: '$$\n${e = mc^2}\n$$',
@@ -93,6 +128,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Inline equation',
     description: 'Maths inside a sentence',
+    icon: 'math',
     section: 'Academic',
     keywords: 'math latex',
     template: '$${x}$',
@@ -100,30 +136,35 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Theorem',
     description: 'Theorem block',
+    icon: 'book',
     section: 'Academic',
     template: '> [!theorem] ${Name}\n> ${statement}',
   },
   {
     label: 'Definition',
     description: 'Definition block',
+    icon: 'book',
     section: 'Academic',
     template: '> [!definition] ${Term}\n> ${definition}',
   },
   {
     label: 'Worked example',
     description: 'Step-by-step example block',
+    icon: 'book',
     section: 'Academic',
     template: '> [!example] ${Problem}\n> ${solution steps}',
   },
   {
     label: 'Proof',
     description: 'Collapsible proof block',
+    icon: 'book',
     section: 'Academic',
     template: '> [!proof]- Proof\n> ${proof} $\\blacksquare$',
   },
   {
     label: 'Citation',
     description: 'Pandoc citation key (searchable)',
+    icon: 'book',
     section: 'Academic',
     keywords: 'reference bibtex',
     template: '[@${citekey}]',
@@ -131,12 +172,14 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Footnote',
     description: 'Footnote reference + definition',
+    icon: 'text',
     section: 'Academic',
     template: '[^${1}]\n\n[^${1}]: ${footnote text}',
   },
   {
     label: 'Flashcard',
     description: 'Question/answer pair for revision',
+    icon: 'flashcard',
     section: 'Academic',
     keywords: 'study revision',
     template: 'Question:: ${question}\nAnswer:: ${answer}',
@@ -144,12 +187,14 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Exam question',
     description: 'Practice question with hidden answer',
+    icon: 'check',
     section: 'Academic',
     template: '**Q ${1}.** ${question} *(${marks} marks)*\n\n> [!toggle]- Answer\n> ${answer}',
   },
   {
     label: 'Lecture summary',
     description: 'Key concepts + own-words explanation sections',
+    icon: 'book',
     section: 'Academic',
     keywords: 'paraphrase study',
     template:
@@ -158,6 +203,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Literature note section',
     description: 'Citation, findings, interpretation sections',
+    icon: 'book',
     section: 'Academic',
     template:
       '## Citation\n\n> ${authors, title, venue, year} [@${citekey}]\n\n## Main findings\n\n- ${finding}\n\n## Personal interpretation\n\n- ${interpretation}',
@@ -167,12 +213,14 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Image',
     description: 'Embed an image (or paste/drag one directly)',
+    icon: 'image',
     section: 'Media',
     template: '![${alt text}](${Attachments/image.png})',
   },
   {
     label: 'PDF / file link',
     description: 'Link a file stored in the vault',
+    icon: 'file',
     section: 'Media',
     keywords: 'attachment document',
     template: '[${lecture.pdf}](${Attachments/lecture.pdf})',
@@ -180,6 +228,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Table',
     description: 'Markdown table',
+    icon: 'table',
     section: 'Media',
     template:
       '| ${Column A} | ${Column B} |\n| ----------- | ----------- |\n| ${cell}     | ${cell}     |',
@@ -187,6 +236,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Link to page',
     description: 'Wiki link with autocompletion',
+    icon: 'link',
     section: 'Media',
     apply: (view, from, to) => {
       view.dispatch({ changes: { from, to, insert: '[[' }, selection: { anchor: from + 2 } })
@@ -195,12 +245,14 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Link to heading',
     description: 'Link to a heading in a page',
+    icon: 'link',
     section: 'Media',
     template: '[[${Page}#${Heading}]]',
   },
   {
     label: 'Embed page',
     description: 'Embed another page or attachment',
+    icon: 'subpage',
     section: 'Media',
     apply: (view, from, to) => {
       view.dispatch({ changes: { from, to, insert: '![[' }, selection: { anchor: from + 3 } })
@@ -211,6 +263,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'New subpage',
     description: 'Create a page inside this page',
+    icon: 'subpage',
     section: 'Organisation',
     apply: (view, from, to) => {
       view.dispatch({ changes: { from, to, insert: '' } })
@@ -220,6 +273,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Properties',
     description: 'YAML frontmatter fields (type, course, due…)',
+    icon: 'properties',
     section: 'Organisation',
     keywords: 'frontmatter metadata',
     template: '---\ntype: ${note}\ncourse: ${course}\ntags:\n  - ${tag}\n---\n${}',
@@ -227,6 +281,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Date',
     description: "Insert today's date",
+    icon: 'calendar',
     section: 'Organisation',
     apply: (view, from, to) => {
       const date = isoDate()
@@ -239,6 +294,7 @@ const COMMANDS: SlashCommand[] = [
   {
     label: 'Study checklist',
     description: 'Revision checklist for a topic',
+    icon: 'task',
     section: 'Organisation',
     template:
       '## ${Topic} — revision checklist\n\n- [ ] Re-read lecture notes\n- [ ] Summarise in my own words\n- [ ] Work through examples\n- [ ] Practice questions\n- [ ] Review weak points\n',
@@ -261,7 +317,8 @@ export function slashCommandCompletion(context: CompletionContext): CompletionRe
     label: command.label,
     detail: command.description,
     section: command.section,
-    type: 'keyword',
+    // Carried through for the custom icon renderer (see createEditor.ts).
+    slashIcon: command.icon,
     apply: (view, _completion, applyFrom, applyTo) => {
       const start = Math.min(from, applyFrom)
       if (command.apply) command.apply(view as EditorView, start, applyTo)
