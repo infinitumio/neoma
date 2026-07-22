@@ -4,7 +4,7 @@
  * context menus, pinning, and drag-and-drop organisation — drop a page onto
  * a folder to move it, or onto another page to nest it as a subpage.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ChevronRight,
   FileText,
@@ -20,6 +20,7 @@ import {
   ArrowUpToLine,
   Palette,
   Lock,
+  Home,
 } from 'lucide-react'
 import type { FileEntry } from '@/types'
 import { ContextMenu, type MenuItem } from './ContextMenu'
@@ -47,8 +48,10 @@ import {
 import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 import { useSettings } from '@/settings/settingsStore'
-import { basename, dirname, folderNoteOf, isMarkdown, isPdf, stem } from '@/utils/paths'
+import { basename, dirname, folderNoteOf, isMarkdown, isPdf, isWithin, joinPath, stem } from '@/utils/paths'
 import { isReservedCalendarFolder } from '@/templates/dailyNotes'
+import { loadOrder, saveFolderOrder } from '@/app/fileOrder'
+import { Modal } from './Modal'
 import { downloadBlob, importFiles } from '@/storage/import-export'
 
 export interface TreeNode {
@@ -56,7 +59,11 @@ export interface TreeNode {
   children: TreeNode[]
 }
 
-export function buildTree(entries: Map<string, FileEntry>, sort: string): TreeNode[] {
+export function buildTree(
+  entries: Map<string, FileEntry>,
+  sort: string,
+  order: Record<string, string[]> = {},
+): TreeNode[] {
   const byFolder = new Map<string, TreeNode[]>()
   const nodes = new Map<string, TreeNode>()
   for (const entry of entries.values()) {
@@ -77,6 +84,20 @@ export function buildTree(entries: Map<string, FileEntry>, sort: string): TreeNo
   }
   for (const [folder, children] of byFolder) {
     children.sort(compare)
+    // Apply a manual drag-order for this folder: listed items first (in order),
+    // the rest keep the default sort after them.
+    const manual = order[folder]
+    if (manual?.length) {
+      const rank = new Map(manual.map((p, i) => [p, i]))
+      children.sort((a, b) => {
+        const ra = rank.get(a.entry.path)
+        const rb = rank.get(b.entry.path)
+        if (ra !== undefined && rb !== undefined) return ra - rb
+        if (ra !== undefined) return -1
+        if (rb !== undefined) return 1
+        return 0 // both unranked: keep prior (name) order
+      })
+    }
     const parentNode = nodes.get(folder)
     if (parentNode) parentNode.children = children
   }
@@ -97,7 +118,9 @@ export function buildTree(entries: Map<string, FileEntry>, sort: string): TreeNo
     const idx = siblings.indexOf(node)
     if (idx >= 0) siblings.splice(idx, 1)
   }
-  return (byFolder.get('') ?? []).sort(compare)
+  // Root children were already sorted (name/manual) in the loop above; don't
+  // re-sort here or the manual order would be lost.
+  return byFolder.get('') ?? []
 }
 
 interface MenuState {
@@ -109,6 +132,7 @@ interface MenuState {
 export function FileTree() {
   const entries = useVault((s) => s.entries)
   const pinned = useVault((s) => s.pinned)
+  const vaultId = useVault((s) => s.vault?.id)
   const sortOrder = useSettings((s) => s.settings.fileSortOrder)
   const activeTab = useTabs((s) => s.tabs.find((t) => t.id === s.activeId))
   const openNote = useTabs((s) => s.openNote)
@@ -118,9 +142,15 @@ export function FileTree() {
   const [dropTarget, setDropTarget] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [anchor, setAnchor] = useState<string | null>(null)
+  const [movePaths, setMovePaths] = useState<string[] | null>(null)
+  const [order, setOrder] = useState<Record<string, string[]>>(() => loadOrder(vaultId))
+  // { path, before } — the row a dragged item would be inserted before/after.
+  const [dropLine, setDropLine] = useState<{ path: string; before: boolean } | null>(null)
   const ui = useUi()
 
-  const tree = useMemo(() => buildTree(entries, sortOrder), [entries, sortOrder])
+  useEffect(() => setOrder(loadOrder(vaultId)), [vaultId])
+
+  const tree = useMemo(() => buildTree(entries, sortOrder, order), [entries, sortOrder, order])
 
   // Flat list of visible paths in render order, for shift-range selection.
   const flatVisible = useMemo(() => {
@@ -263,26 +293,20 @@ export function FileTree() {
     })
   }
 
+  // Open the interactive folder picker to move one or more items.
   const askMove = (entry: FileEntry, paths?: string[]) => {
-    const targets = paths ?? [entry.path]
-    const folders = [...entries.values()]
-      .filter((e) => e.kind === 'folder')
-      .map((e) => e.path)
-      .sort()
-    ui.askPrompt({
-      title: targets.length > 1 ? `Move ${targets.length} items` : 'Move page',
-      label: `Target folder (empty for vault root). Existing: ${folders.slice(0, 8).join(', ') || 'none'}`,
-      initial: dirname(entry.path),
-      onSubmit: async (value) => {
-        try {
-          for (const p of targets) await moveNote(p, value.trim())
-          setSelected(new Set())
-          ui.toast(targets.length > 1 ? `Moved ${targets.length} items` : 'Page moved', 'success')
-        } catch (err) {
-          ui.toast(err instanceof Error ? err.message : 'Move failed', 'error')
-        }
-      },
-    })
+    setMovePaths(paths ?? [entry.path])
+  }
+
+  const doMove = async (targets: string[], folder: string) => {
+    try {
+      for (const p of targets) if (dirname(p) !== folder) await moveNote(p, folder)
+      setSelected(new Set())
+      setMovePaths(null)
+      ui.toast(targets.length > 1 ? `Moved ${targets.length} items` : 'Page moved', 'success')
+    } catch (err) {
+      ui.toast(err instanceof Error ? err.message : 'Move failed', 'error')
+    }
   }
 
   const askDelete = (entry: FileEntry) => {
@@ -499,6 +523,39 @@ export function FileTree() {
     }
   }
 
+  const findNode = (nodes: TreeNode[], path: string): TreeNode | null => {
+    for (const n of nodes) {
+      if (n.entry.path === path) return n
+      const found = findNode(n.children, path)
+      if (found) return found
+    }
+    return null
+  }
+
+  /** Drop `sourcePath` before/after `targetPath` in that row's folder,
+   *  persisting a manual order for the folder. */
+  const reorder = async (sourcePath: string, targetPath: string, before: boolean) => {
+    if (sourcePath === targetPath) return
+    const folder = dirname(targetPath)
+    let src = sourcePath
+    try {
+      if (dirname(src) !== folder) {
+        await moveNote(src, folder)
+        src = joinPath(folder, basename(src))
+      }
+    } catch (err) {
+      ui.toast(err instanceof Error ? err.message : 'Move failed', 'error')
+      return
+    }
+    const parent = folder === '' ? { children: tree } : findNode(tree, folder)
+    const sibs = (parent?.children ?? []).map((n) => n.entry.path).filter((p) => p !== src)
+    const idx = sibs.indexOf(targetPath)
+    if (idx === -1) return
+    const insertAt = before ? idx : idx + 1
+    const next = [...sibs.slice(0, insertAt), src, ...sibs.slice(insertAt)]
+    setOrder(saveFolderOrder(vaultId, folder, next))
+  }
+
   const renderNode = (node: TreeNode) => {
     const { entry } = node
     const isFolder = entry.kind === 'folder'
@@ -520,7 +577,9 @@ export function FileTree() {
     return (
       <li key={entry.path} role="treeitem" aria-expanded={expandable ? isOpen : undefined}>
         <button
-          className={`tree-item${isActive ? ' active' : ''}${dropTarget === entry.path ? ' drop-target' : ''}${selected.has(entry.path) ? ' multi-selected' : ''}`}
+          className={`tree-item${isActive ? ' active' : ''}${dropTarget === entry.path ? ' drop-target' : ''}${selected.has(entry.path) ? ' multi-selected' : ''}${
+            dropLine?.path === entry.path ? (dropLine.before ? ' drop-before' : ' drop-after') : ''
+          }`}
           onClick={(e) => openEntry(entry, e)}
           onContextMenu={(e) => {
             e.preventDefault()
@@ -534,17 +593,38 @@ export function FileTree() {
             )
             e.dataTransfer.effectAllowed = 'move'
           }}
-          onDragOver={
-            droppable
-              ? (e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  setDropTarget(entry.path)
-                }
-              : undefined
-          }
-          onDragLeave={droppable ? () => setDropTarget(null) : undefined}
-          onDrop={droppable ? (e) => void onDropOnEntry(entry, e) : undefined}
+          onDragOver={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            // Top/bottom edge → reorder (show a line); middle of a folder/page
+            // → nest into it. Reserved date folders can still be nested into.
+            const r = e.currentTarget.getBoundingClientRect()
+            const rel = (e.clientY - r.top) / r.height
+            if (droppable && rel > 0.28 && rel < 0.72) {
+              setDropTarget(entry.path)
+              setDropLine(null)
+            } else {
+              setDropLine({ path: entry.path, before: rel <= 0.5 })
+              setDropTarget(null)
+            }
+          }}
+          onDragLeave={() => {
+            setDropTarget(null)
+            setDropLine(null)
+          }}
+          onDrop={(e) => {
+            const line = dropLine
+            setDropLine(null)
+            setDropTarget(null)
+            const source = e.dataTransfer.getData('application/x-neoma-path')
+            if (line?.path === entry.path && source && e.dataTransfer.files.length === 0) {
+              e.preventDefault()
+              e.stopPropagation()
+              void reorder(source, entry.path, line.before)
+            } else {
+              void onDropOnEntry(entry, e)
+            }
+          }}
           title={entry.path}
         >
           {isFolder ? (
@@ -693,7 +773,80 @@ export function FileTree() {
           />
         </div>
       )}
+      {movePaths && (
+        <MovePicker
+          paths={movePaths}
+          entries={entries}
+          onClose={() => setMovePaths(null)}
+          onPick={(folder) => void doMove(movePaths, folder)}
+        />
+      )}
     </>
+  )
+}
+
+/** Interactive destination picker for moving pages — a searchable folder list
+ *  plus the vault root, instead of typing a path. */
+function MovePicker({
+  paths,
+  entries,
+  onClose,
+  onPick,
+}: {
+  paths: string[]
+  entries: Map<string, FileEntry>
+  onClose: () => void
+  onPick: (folder: string) => void
+}) {
+  const [query, setQuery] = useState('')
+  const moving = new Set(paths)
+  const folders = [...entries.values()]
+    .filter(
+      (e) =>
+        e.kind === 'folder' &&
+        !isReservedCalendarFolder(e.path) &&
+        // Can't move an item into itself or its own subtree.
+        ![...moving].some((p) => e.path === p || isWithin(p, e.path)),
+    )
+    .map((e) => e.path)
+    .sort((a, b) => a.localeCompare(b))
+  const q = query.toLowerCase().trim()
+  const shown = folders.filter((f) => !q || f.toLowerCase().includes(q))
+  const label = paths.length > 1 ? `Move ${paths.length} items to…` : `Move “${stem(paths[0])}” to…`
+
+  return (
+    <Modal title={label} onClose={onClose}>
+      <input
+        className="input"
+        type="search"
+        placeholder="Find a folder…"
+        aria-label="Find a folder"
+        value={query}
+        autoFocus
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ marginBottom: 'var(--space-2)' }}
+      />
+      <div className="move-picker-list">
+        {(!q || 'vault root'.includes(q)) && (
+          <button className="attachment-row" onClick={() => onPick('')}>
+            <Home size={15} aria-hidden />
+            <span className="attachment-name">Vault root</span>
+          </button>
+        )}
+        {shown.map((folder) => (
+          <button key={folder} className="attachment-row" title={folder} onClick={() => onPick(folder)}>
+            <FolderIcon size={15} aria-hidden />
+            <span className="attachment-name">{basename(folder)}</span>
+            <span className="attachment-path text-faint text-small">{folder}</span>
+          </button>
+        ))}
+        {shown.length === 0 && (
+          <p className="text-small text-faint" style={{ padding: 'var(--space-2)' }}>
+            No matching folders. Create a folder first, or choose Vault root.
+          </p>
+        )}
+      </div>
+    </Modal>
   )
 }
 

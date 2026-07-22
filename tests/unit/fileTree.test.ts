@@ -35,6 +35,20 @@ describe('buildTree PDF nesting', () => {
     expect(pdf.children).toHaveLength(0)
   })
 
+  it('applies a manual folder order, appending unranked items after', () => {
+    const tree = buildTree(
+      entries([
+        ['a.md', 'file'],
+        ['b.md', 'file'],
+        ['c.md', 'file'],
+      ]),
+      'name',
+      { '': ['c.md', 'a.md'] },
+    )
+    // c, a are ranked (in that order); b is unranked → after.
+    expect(tree.map((n) => n.entry.path)).toEqual(['c.md', 'a.md', 'b.md'])
+  })
+
   it('does not nest a folder that only shares a prefix with the PDF', () => {
     const tree = buildTree(
       entries([

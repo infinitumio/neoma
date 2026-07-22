@@ -3254,3 +3254,31 @@
   border-radius: var(--radius-sm);
   background: var(--color-accent-subtle);
 }
+
+/* Move picker (choose a destination folder) */
+.move-picker-list {
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+/* Drag-to-reorder insertion line between file-tree rows */
+.tree-item {
+  position: relative;
+}
+.tree-item.drop-before::before,
+.tree-item.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-accent);
+  border-radius: 1px;
+  pointer-events: none;
+}
+.tree-item.drop-before::before {
+  top: -1px;
+}
+.tree-item.drop-after::after {
+  bottom: -1px;
+}
