@@ -3237,3 +3237,20 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
+
+/* Multi-selected file-tree items (shift/⌘-click) */
+.tree-item.multi-selected {
+  background: var(--color-accent-subtle);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+/* Root drop zone: dragging an item onto the tree's empty area moves it to the
+   vault root (out of its folder). */
+.file-tree-root {
+  min-height: 4rem;
+}
+.file-tree-root.root-drop {
+  border: 1px dashed var(--color-accent-muted);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-subtle);
+}

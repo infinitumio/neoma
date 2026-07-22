@@ -116,9 +116,30 @@ export function FileTree() {
   const [menu, setMenu] = useState<MenuState | null>(null)
   const [colorFor, setColorFor] = useState<{ x: number; y: number; path: string } | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [anchor, setAnchor] = useState<string | null>(null)
   const ui = useUi()
 
   const tree = useMemo(() => buildTree(entries, sortOrder), [entries, sortOrder])
+
+  // Flat list of visible paths in render order, for shift-range selection.
+  const flatVisible = useMemo(() => {
+    const out: string[] = []
+    const walk = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        out.push(node.entry.path)
+        const index = folderNoteOf(node.entry.path)
+        const isPage = node.entry.kind === 'folder' && entries.has(index)
+        const kids = isPage
+          ? node.children.filter((c) => c.entry.path !== index)
+          : node.children
+        const expandable = node.entry.kind === 'folder' || kids.length > 0
+        if (expandable && !collapsed.has(node.entry.path)) walk(kids)
+      }
+    }
+    walk(tree)
+    return out
+  }, [tree, collapsed, entries])
   const pinnedEntries = useMemo(
     () => pinned.map((p) => entries.get(p)).filter((e): e is FileEntry => !!e),
     [pinned, entries],
@@ -139,7 +160,30 @@ export function FileTree() {
     return entries.has(candidate) ? candidate : null
   }
 
-  const openEntry = (entry: FileEntry) => {
+  const openEntry = (entry: FileEntry, e?: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }) => {
+    // Modifier-clicks build a multi-selection instead of opening.
+    if (e && (e.metaKey || e.ctrlKey)) {
+      setSelected((prev) => {
+        const next = new Set(prev)
+        if (next.has(entry.path)) next.delete(entry.path)
+        else next.add(entry.path)
+        return next
+      })
+      setAnchor(entry.path)
+      return
+    }
+    if (e?.shiftKey && anchor) {
+      const a = flatVisible.indexOf(anchor)
+      const b = flatVisible.indexOf(entry.path)
+      if (a !== -1 && b !== -1) {
+        const [lo, hi] = a < b ? [a, b] : [b, a]
+        setSelected(new Set(flatVisible.slice(lo, hi + 1)))
+        return
+      }
+    }
+    // Plain click: clear any multi-selection and open.
+    setSelected(new Set())
+    setAnchor(entry.path)
     if (entry.kind === 'folder') {
       const indexNote = indexNoteOf(entry.path)
       if (indexNote) openNote(indexNote)
@@ -147,6 +191,40 @@ export function FileTree() {
     } else if (isMarkdown(entry.path)) openNote(entry.path)
     else if (isPdf(entry.path)) useTabs.getState().openPdf(entry.path)
     else void openAttachment(entry.path)
+  }
+
+  /** Delete every selected entry after one confirmation. */
+  const deleteSelected = (paths: string[]) => {
+    const run = async () => {
+      for (const p of paths) {
+        const entry = entries.get(p)
+        if (!entry) continue
+        if (entry.kind === 'folder') await deleteFolder(p)
+        else await deleteNote(p)
+      }
+      setSelected(new Set())
+      ui.toast(`Moved ${paths.length} items to Recently deleted`, 'success')
+    }
+    if (!useSettings.getState().settings.confirmBeforeDelete) return void run()
+    ui.askConfirm({
+      title: `Delete ${paths.length} items?`,
+      message: `Delete the ${paths.length} selected items? They can be restored from Recently deleted.`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: run,
+    })
+  }
+
+  /** Move every selected note into a chosen folder. */
+  const moveSelected = (paths: string[]) => {
+    askMove({ path: paths[0], kind: 'file' }, paths)
+  }
+
+  /** Duplicate every selected note (copy). */
+  const duplicateSelected = async (paths: string[]) => {
+    for (const p of paths) if (isMarkdown(p)) await duplicateNote(p)
+    setSelected(new Set())
+    ui.toast(`Duplicated ${paths.filter(isMarkdown).length} notes`, 'success')
   }
 
   const askNewSubpage = (notePath: string) => {
@@ -185,19 +263,21 @@ export function FileTree() {
     })
   }
 
-  const askMove = (entry: FileEntry) => {
+  const askMove = (entry: FileEntry, paths?: string[]) => {
+    const targets = paths ?? [entry.path]
     const folders = [...entries.values()]
       .filter((e) => e.kind === 'folder')
       .map((e) => e.path)
       .sort()
     ui.askPrompt({
-      title: 'Move page',
+      title: targets.length > 1 ? `Move ${targets.length} items` : 'Move page',
       label: `Target folder (empty for vault root). Existing: ${folders.slice(0, 8).join(', ') || 'none'}`,
       initial: dirname(entry.path),
       onSubmit: async (value) => {
         try {
-          await moveNote(entry.path, value.trim())
-          ui.toast('Page moved', 'success')
+          for (const p of targets) await moveNote(p, value.trim())
+          setSelected(new Set())
+          ui.toast(targets.length > 1 ? `Moved ${targets.length} items` : 'Page moved', 'success')
         } catch (err) {
           ui.toast(err instanceof Error ? err.message : 'Move failed', 'error')
         }
@@ -298,6 +378,28 @@ export function FileTree() {
   ]
 
   const menuItems = (entry: FileEntry): MenuItem[] => {
+    // A right-click on any member of a multi-selection acts on the whole set.
+    if (selected.size > 1 && selected.has(entry.path)) {
+      const paths = [...selected]
+      return [
+        {
+          label: `Move ${paths.length} items…`,
+          icon: <FolderInput size={14} aria-hidden />,
+          onSelect: () => moveSelected(paths),
+        },
+        {
+          label: `Duplicate ${paths.length}`,
+          icon: <Copy size={14} aria-hidden />,
+          onSelect: () => void duplicateSelected(paths),
+        },
+        {
+          label: `Delete ${paths.length}`,
+          icon: <Trash2 size={14} aria-hidden />,
+          danger: true,
+          onSelect: () => deleteSelected(paths),
+        },
+      ]
+    }
     if (entry.kind === 'folder') {
       const indexNote = indexNoteOf(entry.path)
       // Reserved calendar folders (Calendar/ and its day folders) can't be
@@ -380,13 +482,16 @@ export function FileTree() {
     }
     const sourcePath = event.dataTransfer.getData('application/x-neoma-path')
     if (!sourcePath || sourcePath === target.path) return
+    // Dragging a member of a multi-selection moves the whole set.
+    const sources = selected.has(sourcePath) && selected.size > 1 ? [...selected] : [sourcePath]
     try {
       if (target.kind === 'folder') {
-        if (dirname(sourcePath) === target.path) return
-        await moveNote(sourcePath, target.path)
-        ui.toast('Page moved', 'success')
+        for (const s of sources) if (dirname(s) !== target.path) await moveNote(s, target.path)
+        setSelected(new Set())
+        ui.toast(sources.length > 1 ? `Moved ${sources.length} items` : 'Page moved', 'success')
       } else if (isMarkdown(target.path)) {
-        await nestUnder(sourcePath, target.path)
+        for (const s of sources) await nestUnder(s, target.path)
+        setSelected(new Set())
         ui.toast(`Nested under "${stem(target.path)}"`, 'success')
       }
     } catch (err) {
@@ -415,8 +520,8 @@ export function FileTree() {
     return (
       <li key={entry.path} role="treeitem" aria-expanded={expandable ? isOpen : undefined}>
         <button
-          className={`tree-item${isActive ? ' active' : ''}${dropTarget === entry.path ? ' drop-target' : ''}`}
-          onClick={() => openEntry(entry)}
+          className={`tree-item${isActive ? ' active' : ''}${dropTarget === entry.path ? ' drop-target' : ''}${selected.has(entry.path) ? ' multi-selected' : ''}`}
+          onClick={(e) => openEntry(entry, e)}
           onContextMenu={(e) => {
             e.preventDefault()
             if (menuItems(entry).length) setMenu({ x: e.clientX, y: e.clientY, entry })
@@ -539,19 +644,21 @@ export function FileTree() {
         </>
       )}
       <ul
-        className="file-tree"
+        className={`file-tree file-tree-root${dropTarget === '' ? ' root-drop' : ''}`}
         role="tree"
         aria-label="Vault pages"
         onDragOver={(e) => {
+          // Dropping on the empty area moves the item out to the vault root.
           if (e.target === e.currentTarget) {
             e.preventDefault()
             setDropTarget('')
           }
         }}
+        onDragLeave={(e) => {
+          if (e.target === e.currentTarget) setDropTarget(null)
+        }}
         onDrop={(e) => {
-          if (dropTarget === '') {
-            void onDropOnEntry({ path: '', kind: 'folder' }, e)
-          }
+          if (dropTarget === '') void onDropOnEntry({ path: '', kind: 'folder' }, e)
         }}
       >
         {tree.map((node) => renderNode(node))}
