@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Tag-driven DESKTOP releases: build Tauri installers for Windows/macOS/Linux,
+# publish them with SHA-256 checksums. Runs only for `desktop-v*` tags so it is
+# independent of the PWA release. NOTE: installers are currently UNSIGNED — see
+# INSTALL.md for the honest explanation shown to users.
+name: Desktop release
+
+on:
+  push:
+    tags:
+      - 'desktop-v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: universal-apple-darwin
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build deps
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf libayatana-appindicator3-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm i -D @tauri-apps/cli
+
+      # Requires src-tauri/icons/ to exist. Generate them from a source PNG
+      # locally (see DESKTOP.md) and commit them, or add an icon step here.
+      - name: Build desktop app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }}
+
+      - name: Compute SHA-256 checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="src-tauri/target"
+          [ -d "$root/${{ matrix.target }}/release/bundle" ] && \
+            base="$root/${{ matrix.target }}/release/bundle" || base="$root/release/bundle"
+          : > SHA256SUMS-${{ matrix.target }}.txt
+          find "$base" -type f \
+            \( -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o -name '*.AppImage' -o -name '*.deb' \) \
+            -print0 | while IFS= read -r -d '' f; do
+              if command -v sha256sum >/dev/null; then sha256sum "$f"; else shasum -a 256 "$f"; fi \
+                | sed "s#$base/##" >> SHA256SUMS-${{ matrix.target }}.txt
+            done
+          cat SHA256SUMS-${{ matrix.target }}.txt
+
+      - name: Upload checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: sha256-${{ matrix.target }}
+          path: SHA256SUMS-${{ matrix.target }}.txt

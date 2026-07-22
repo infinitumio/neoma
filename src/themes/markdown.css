@@ -61,6 +61,7 @@
 .markdown-body li.task-list-item input[type='checkbox'] {
   margin-right: 0.45em;
   accent-color: var(--color-accent-strong);
+  cursor: pointer;
 }
 
 .markdown-body blockquote {
@@ -128,6 +129,44 @@
   color: var(--color-mark-text);
   border-radius: 3px;
   padding: 0 0.15em;
+}
+
+/* Coloured highlights (see docs/markdown-compatibility.md).
+   Backgrounds are translucent so text stays readable in both themes. */
+.markdown-body mark.mark-yellow,
+mark.mark-yellow {
+  background: var(--hl-yellow);
+  color: inherit;
+}
+.markdown-body mark.mark-green,
+mark.mark-green {
+  background: var(--hl-green);
+  color: inherit;
+}
+.markdown-body mark.mark-blue,
+mark.mark-blue {
+  background: var(--hl-blue);
+  color: inherit;
+}
+.markdown-body mark.mark-purple,
+mark.mark-purple {
+  background: var(--hl-purple);
+  color: inherit;
+}
+.markdown-body mark.mark-red,
+mark.mark-red {
+  background: var(--hl-red);
+  color: inherit;
+}
+.markdown-body mark.mark-orange,
+mark.mark-orange {
+  background: var(--hl-orange);
+  color: inherit;
+}
+.markdown-body mark.mark-grey,
+mark.mark-grey {
+  background: var(--hl-grey);
+  color: inherit;
 }
 
 .markdown-body .wiki-link {
@@ -233,6 +272,53 @@
 .callout-example {
   --callout-color: var(--color-text-secondary);
 }
+.callout-theorem,
+.callout-lemma {
+  --callout-color: var(--color-accent-muted);
+}
+.callout-definition {
+  --callout-color: var(--color-info);
+}
+.callout-proof,
+.callout-toggle {
+  --callout-color: var(--color-text-secondary);
+}
+
+/* Foldable callouts render as <details>/<summary> */
+details.callout > summary.callout-title {
+  cursor: pointer;
+  list-style: none;
+}
+details.callout > summary.callout-title::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.4em;
+  transition: transform var(--transition-fast);
+}
+details.callout[open] > summary.callout-title::before {
+  transform: rotate(90deg);
+}
+details.callout > summary.callout-title::-webkit-details-marker {
+  display: none;
+}
+
+/* Numbered display equations */
+.markdown-body {
+  counter-reset: neoma-equation;
+}
+.markdown-body .katex-display {
+  position: relative;
+}
+.markdown-body .katex-display::after {
+  counter-increment: neoma-equation;
+  content: '(' counter(neoma-equation) ')';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-faint);
+  font-size: 0.85em;
+}
 
 /* KaTeX sizing inside notes */
 .markdown-body .katex-display {
@@ -259,4 +345,58 @@
   .markdown-body a {
     color: inherit;
   }
+}
+
+/* Real tasks (marked with #task / date / priority) read differently from
+   plain checklist items. */
+.markdown-body li.task-list-item.is-task {
+  padding: 2px 8px 2px 6px;
+  border-left: 2px solid var(--color-accent-muted);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-secondary, rgba(127, 127, 127, 0.06));
+}
+.markdown-body li.task-list-item.is-task input[type='checkbox'] {
+  accent-color: var(--color-accent);
+}
+/* Completed checkboxes read as done: greyed and struck through. */
+.markdown-body li.task-list-item:has(input[type='checkbox']:checked) {
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}
+.markdown-body li.task-list-item.is-task:has(input[type='checkbox']:checked) {
+  opacity: 0.7;
+}
+
+/* Calendar references as chips (dates / events / exams) in the reader */
+.markdown-body .cal-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.02em 0.5em;
+  border-radius: 999px;
+  border-bottom: none;
+  font-size: 0.9em;
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.markdown-body .cal-ref::before {
+  font-size: 0.9em;
+  line-height: 1;
+}
+.markdown-body .cal-ref-date::before {
+  content: '📅';
+}
+.markdown-body .cal-ref-event::before {
+  content: '📌';
+}
+.markdown-body .cal-ref-exam {
+  background: color-mix(in srgb, #e5484d 16%, transparent);
+  color: #e5484d;
+}
+.markdown-body .cal-ref-exam::before {
+  content: '🎓';
+}
+.markdown-body .cal-ref:hover {
+  filter: brightness(1.1);
 }

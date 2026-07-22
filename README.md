@@ -16,7 +16,7 @@ It works in your browser, runs offline and keeps your knowledge in portable Mark
 [![PWA](https://img.shields.io/badge/PWA-installable-4ade80.svg)](#installation)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-2f9e6e.svg)](CONTRIBUTING.md)
 
-<img src="docs/assets/screenshot-reading-dark.png" alt="neoma reading view with backlinks sidebar" width="800" />
+<img src="docs/screenshots/reading-text.png" alt="neoma reading view: formatting, coloured highlights, callouts and side-by-side columns" width="820" />
 
 </div>
 
@@ -43,18 +43,39 @@ readable in any text editor.
 
 - **Markdown editor** (CodeMirror 6) with edit, split, reading and read-only **source**
   views, plus a floating toolbar to format highlighted text in place
-- **Wiki links** — `[[Note]]`, `[[Note|Alias]]`, `[[Note#Heading]]` — with autocompletion
+- **Slash commands** (`/`) — a Notion-style inline menu that opens beneath the cursor:
+  fuzzy search, category groups, favourites/recents, context-aware ranking and a rich
+  preview panel. ~90 commands (headings, lists, callouts, toggles, code, equations,
+  theorems, proofs, flashcards, exam questions, lecture summaries) sharing one registry
+  with the command palette; all insert portable Markdown
+- **Pages and subpages** — nest pages (stored as ordinary folders + files), with
+  breadcrumbs and drag-to-nest
+- **Wiki links** — `[[Page]]`, `[[Page|Alias]]`, `[[Page#Heading]]` — with autocompletion
 - **Backlinks**, linked/unlinked mentions, broken-link and orphan detection
 - **Tags** (`#tag` and frontmatter), with a tag browser
+- **Coloured highlights** (7 colours) stored as portable, documented syntax
+- **Page & file colours** — colour-code pages (portable frontmatter) and files; the graph
+  colours nodes to match, with a legend
+- **Multiple vaults** with a quick switcher (open tabs remembered per vault)
+- **Mathematics** (KaTeX, offline): inline/display, a symbol menu, copy-LaTeX, numbered
+  equations, theorem/definition/proof blocks
 - **YAML frontmatter**, preserved verbatim — unknown fields are never deleted
-- **Full-text search** in a Web Worker: phrases, exclusions, `tag:` / `path:` / `type:`
-  filters, date filters, highlighted context
+- **Full-text search** in a Web Worker: broad / exact-word / exact-phrase modes, scope,
+  case-sensitivity, `tag:` / `path:` / `type:` and date filters, with completion stats
 - **Daily notes** with calendar picker, configurable folder/format/template
-- **Research templates**: daily journal, literature note, experiment log, supervisor
-  meeting, research question — plus your own template notes
+- **Research & study templates** and **starter vaults** (University, Research, Personal)
 - **Graph view** (lazy-loaded): whole-vault or local, zoom/pan, filters, depth limit
 - **Tabs** with pinning, reopen-closed, and session restore
-- **Attachments**: paste or drag images and PDFs, stored with relative paths
+- **Attachments**: paste or drag images and PDFs, or use the attachment picker (choose from
+  the vault or add a file under the page); stored with relative paths
+- **In-app PDF viewer** (offline, bundled pdf.js): selectable text layer (copy + find with
+  highlights), thumbnails, page nav, zoom, fit-width/fit-page, rotate, fullscreen and print;
+  `[[lecture.pdf#page=12]]` links jump to a page; optional split view (PDF + a companion
+  note for paraphrasing); PDF embeds/links show a first-page preview card
+- **Study workflow**: a Study dashboard (upcoming exams with days-until, recent lecture PDFs
+  and notes), an exam-prep template, a **flashcard review** for `Question:: / Answer::` (and
+  `front :: back`) cards — reveal, rate confidence, shuffle, hard-only filter, all offline —
+  and a distraction-free **study mode**
 - **Command palette** (`Ctrl/Cmd+K`) and customisable keyboard shortcuts
 - **Import/export**: whole-vault ZIP, single-note Markdown/HTML, print-to-PDF
 - **Recently deleted** with restore; conflict detection for external file edits
@@ -63,13 +84,79 @@ readable in any text editor.
 - **neoma Dark & neoma Light** themes, built entirely on CSS variables
 - **Installable PWA** with full offline operation and update notifications
 
+## Screenshots
+
+All captured from the **Feature tour** starter vault — create it yourself from the
+welcome screen to click through everything below.
+
+### Slash commands
+
+Type `/` on a blank line for a Notion-style inline menu: fuzzy search, grouped
+categories, favourites/recents and a live preview panel. The same commands power the
+`Ctrl/Cmd+K` palette, and every one inserts portable Markdown.
+
+<img src="docs/screenshots/slash-menu.png" alt="The slash-command menu open beneath the cursor, showing grouped commands and a preview panel" width="820" />
+
+### Reading view — maths, callouts and the planner
+
+KaTeX renders inline and display maths offline (double-click an equation to copy its
+LaTeX). Callouts, theorem blocks and side-by-side columns all render from plain
+Markdown. The left rail's **Planner** group holds a mini-calendar, journal and tasks;
+day dots mark journal entries, events and exams.
+
+<img src="docs/screenshots/calendar.png" alt="The calendar panel beside a note rendering KaTeX equations, a matrix, and a Bayes' theorem callout" width="820" />
+
+### Flashcards
+
+`Question:: / Answer::` (and inline `front :: back`) pairs stay as plain text in the
+file but render as flip cards in reading view, tagged by topic.
+
+<img src="docs/screenshots/reading-flashcards.png" alt="Flashcards rendered as flip cards with topic labels in reading view" width="820" />
+
+### Study & flashcard review
+
+The Study dashboard tracks upcoming exams and recent lecture PDFs. Review your cards
+one at a time — reveal, rate confidence, shuffle, hard-only — entirely offline.
+
+<img src="docs/screenshots/flashcard-review.png" alt="The flashcard review overlay showing a single card to rate" width="620" />
+
+### Tasks with due dates
+
+Tasks live in your notes and roll up into one panel — Today, Upcoming and Completed —
+with per-task due dates that land on the calendar.
+
+<img src="docs/screenshots/tasks.png" alt="The tasks panel grouped into Today, Upcoming and Completed with due dates" width="620" />
+
+### Graph view
+
+A lazy-loaded force graph of the whole vault (or a local neighbourhood), with node
+colours matching page/file colours, zoom/pan, filters and a depth limit.
+
+<img src="docs/screenshots/graph.png" alt="The vault graph view with colour-coded nodes and links" width="820" />
+
 ## Installation
 
-neoma is a web application — nothing to install to try it:
+### Quick start (one command)
+
+If you just want to run neoma, clone the repo and run the bootstrap script for your OS.
+It checks Node, installs dependencies, builds the app, opens your browser and serves it —
+no other steps needed.
 
 ```bash
 git clone https://github.com/infinitumio/neoma.git
 cd neoma
+```
+
+- **macOS / Linux:** `./start.sh`
+- **Windows:** double-click `start.bat` (or run it from a terminal)
+
+Then open **http://localhost:4173** (the script opens it for you). Press `Ctrl+C` to stop.
+The only prerequisite is [Node.js 20+](https://nodejs.org/); the script tells you if it's
+missing.
+
+### Manual setup
+
+```bash
 npm ci
 npm run dev          # http://localhost:5173
 ```
@@ -177,4 +264,4 @@ developers and anyone who wants complete ownership of their notes.
 - Contact: Discord `panda2187`
 
 _neoma is an independent, community-driven project. It is not affiliated with Obsidian,
-Modrinth, or any other organisation._
+Notion, or any other organisation._

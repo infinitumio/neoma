@@ -8,12 +8,14 @@ import { useEffect, useRef, useState } from 'react'
 import { EditorView } from '@codemirror/view'
 import type { EditorState } from '@codemirror/state'
 import { createEditorState } from '@/editor/createEditor'
+import { insertAtCursor } from '@/editor/markdownCommands'
+import { setActiveView } from '@/editor/activeView'
 import { updateNoteContent, saveNoteNow, saveAttachment } from '@/app/vaultStore'
 import { useSettings } from '@/settings/settingsStore'
 import { useUi } from '@/app/uiStore'
 import { SelectionToolbar, type ToolbarPosition } from './SelectionToolbar'
 
-/** Position the toolbar above the top of the current (non-empty) selection. */
+/** Position the toolbar above the current selection, capturing its range. */
 function toolbarPositionFor(view: EditorView): ToolbarPosition | null {
   if (!view.hasFocus) return null
   const sel = view.state.selection.main
@@ -24,7 +26,10 @@ function toolbarPositionFor(view: EditorView): ToolbarPosition | null {
   // Anchor above the topmost edge; clamp so it stays on screen.
   const top = Math.max(8, Math.min(from.top, to.top) - 44)
   const left = Math.min(Math.max(from.left, 120), window.innerWidth - 120)
-  return { top, left }
+  // Capture the range now so formatting applies to it even if the live
+  // selection later drifts (the reliability fix for "highlight sometimes
+  // doesn't work", especially in split mode).
+  return { top, left, from: sel.from, to: sel.to }
 }
 
 // Session cache of editor states so switching tabs keeps cursor + undo.
@@ -73,6 +78,7 @@ export function Editor({ path, content }: EditorProps) {
         : createEditorState(content, callbacks, options)
     const view = new EditorView({ state, parent: container.current })
     viewRef.current = view
+    setActiveView(view)
     view.focus()
 
     const dom = view.dom
@@ -107,12 +113,21 @@ export function Editor({ path, content }: EditorProps) {
     // Keep the floating toolbar glued to the selection while scrolling.
     const onScroll = () => refreshToolbar()
     view.scrollDOM.addEventListener('scroll', onScroll, { passive: true })
+    // Insert requests from outside the editor (math symbol menu, help).
+    const onInsert = (event: Event) => {
+      const { text, cursorOffset } = (event as CustomEvent<{ text: string; cursorOffset?: number }>)
+        .detail
+      insertAtCursor(view, text, cursorOffset)
+    }
+    window.addEventListener('neoma:insert-text', onInsert)
 
     return () => {
       dom.removeEventListener('paste', onPaste)
       dom.removeEventListener('drop', onDrop)
       view.scrollDOM.removeEventListener('scroll', onScroll)
+      window.removeEventListener('neoma:insert-text', onInsert)
       setToolbar(null)
+      setActiveView(null)
       stateCache.set(pathRef.current, view.state)
       view.destroy()
       viewRef.current = null

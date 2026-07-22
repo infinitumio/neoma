@@ -96,50 +96,91 @@ function makeSnippets(
   return snippets
 }
 
-function query(input: string, filters: SearchFilters = {}): SearchResultItem[] {
-  const parsed = parseQuery(input)
-  const termQuery = parsed.terms.join(' ')
+export interface QueryOptions extends SearchFilters {
+  /** broad = ranked/fuzzy; word = whole words only; phrase = exact phrase */
+  mode?: 'broad' | 'word' | 'phrase'
+  caseSensitive?: boolean
+}
 
+export interface QueryResponse {
+  items: SearchResultItem[]
+  stats: { checked: number; matched: number }
+}
+
+function query(input: string, options: QueryOptions = {}): QueryResponse {
+  const parsed = parseQuery(input)
+  const mode = options.mode ?? 'broad'
+  const caseSensitive = options.caseSensitive ?? false
+
+  // Exact-phrase mode treats the whole (unquoted) input as one phrase.
+  if (mode === 'phrase' && parsed.terms.length) {
+    parsed.phrases.push(parsed.terms.join(' '))
+    parsed.terms = []
+  }
+
+  const termQuery = parsed.terms.join(' ')
+  // Broad mode can use the ranked index; word/case modes post-filter every
+  // document so results are exact.
   let candidates: Array<{ path: string; score: number }>
-  if (termQuery) {
+  if (mode === 'broad' && !caseSensitive && termQuery) {
     candidates = mini.search(termQuery).map((r) => ({ path: r.id as string, score: r.score }))
   } else {
     candidates = [...docs.keys()].map((path) => ({ path, score: 1 }))
   }
 
-  const results: SearchResultItem[] = []
+  const fold = (value: string) => (caseSensitive ? value : value.toLowerCase())
+  const flags = caseSensitive ? 'g' : 'gi'
+  const wordPatterns = parsed.terms.map(
+    (t) => new RegExp(mode === 'word' ? `\\b${escapeRegExp(t)}\\b` : escapeRegExp(t), flags),
+  )
+
+  const items: SearchResultItem[] = []
+  let matched = 0
   for (const candidate of candidates) {
     const record = docs.get(candidate.path)
     if (!record) continue
     const { meta, text } = record
-    const haystack = `${meta.title}\n${text}`.toLowerCase()
+    const haystack = fold(`${meta.title}\n${text}`)
 
-    if (parsed.phrases.some((p) => !haystack.includes(p.toLowerCase()))) continue
-    if (parsed.excluded.some((x) => haystack.includes(x.toLowerCase()))) continue
-    const tag = parsed.tag ?? filters.tag
+    if (parsed.phrases.some((p) => !haystack.includes(fold(p)))) continue
+    if (parsed.excluded.some((x) => haystack.includes(fold(x)))) continue
+    if (mode !== 'broad' || caseSensitive) {
+      // Every term must appear (respecting word boundaries in word mode).
+      if (
+        !wordPatterns.every((re) => {
+          re.lastIndex = 0
+          return re.test(haystack)
+        })
+      )
+        continue
+    }
+    const tag = parsed.tag ?? options.tag
     if (tag && !meta.tags.some((t) => t === tag || t.startsWith(tag + '/'))) continue
-    const folder = parsed.path ?? filters.folder
+    const folder = parsed.path ?? options.folder
     if (folder && !isWithin(folder.replace(/\/$/, ''), meta.path)) continue
-    const noteType = parsed.type ?? filters.noteType
+    const noteType = parsed.type ?? options.noteType
     if (noteType && String(meta.frontmatter.type ?? '') !== noteType) continue
-    if (filters.createdAfter && meta.createdAt < filters.createdAfter) continue
-    if (filters.createdBefore && meta.createdAt > filters.createdBefore) continue
-    if (filters.modifiedAfter && meta.modifiedAt < filters.modifiedAfter) continue
-    if (filters.modifiedBefore && meta.modifiedAt > filters.modifiedBefore) continue
+    if (options.createdAfter && meta.createdAt < options.createdAfter) continue
+    if (options.createdBefore && meta.createdAt > options.createdBefore) continue
+    if (options.modifiedAfter && meta.modifiedAt < options.modifiedAfter) continue
+    if (options.modifiedBefore && meta.modifiedAt > options.modifiedBefore) continue
 
+    matched++
+    if (items.length >= 200) continue
     const patterns = [
-      ...parsed.phrases.map((p) => new RegExp(escapeRegExp(p), 'gi')),
-      ...parsed.terms.map((t) => new RegExp(escapeRegExp(t), 'gi')),
+      ...parsed.phrases.map((p) => new RegExp(escapeRegExp(p), flags)),
+      ...wordPatterns,
     ]
-    results.push({
+    items.push({
       path: meta.path,
       title: meta.title,
       score: candidate.score,
+      folder: meta.path.includes('/') ? meta.path.slice(0, meta.path.lastIndexOf('/')) : '',
+      modifiedAt: meta.modifiedAt,
       snippets: patterns.length ? makeSnippets(text, patterns) : [],
     })
-    if (results.length >= 200) break
   }
-  return results
+  return { items, stats: { checked: docs.size, matched } }
 }
 
 /** Plain-text mentions of any term, excluding text inside wiki links. */

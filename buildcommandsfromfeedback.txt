@@ -1,0 +1,1395 @@
+# Noema — User Feedback Implementation Prompt
+
+Update the existing **Noema** application based on the following real user-testing feedback.
+
+Noema is a lightweight, open-source, local-first knowledge-management, research-journal and study application. It should combine:
+
+* Notion-style organisation and page hierarchy
+* Obsidian-style local Markdown files, vaults, linking and graph views
+* A polished desktop-app experience
+* Strong offline functionality
+* Simple academic and exam-study workflows
+
+Do not rebuild the application from scratch unless an architectural change is necessary. Preserve existing working functionality, branding and the Modrinth-inspired design direction.
+
+The finished result must be functional. Do not add placeholder buttons, fake integrations or non-working interface elements.
+
+---
+
+# Main product direction
+
+Noema should no longer feel primarily like a website.
+
+It should feel like a real desktop productivity application that users can:
+
+* Install on their computer
+* Open from their taskbar
+* Pin to their taskbar
+* Launch from their desktop
+* Keep running in their system tray
+* Use without an internet connection
+* Use without creating an account
+* Use for university notes, mathematics, research, organisation and exam preparation
+
+Maintain the web-based application architecture where practical, but package the application as a desktop app using **Tauri** or an equivalent lightweight, fully open-source desktop framework.
+
+Avoid Electron unless there is a strong technical reason for using it.
+
+Noema should continue to support:
+
+* Local development in a browser
+* Progressive Web App installation
+* Desktop application installation
+* Fully offline use
+* Portable Markdown notes
+* Optional self-hosting
+
+The desktop version should be treated as the primary product experience.
+
+---
+
+# User profile and primary use cases
+
+The feedback came from a university student who currently uses Notion.
+
+Their main activities are:
+
+* Learning lecture content
+* Rewriting and paraphrasing lecture material
+* Taking academic notes
+* Working with advanced mathematics
+* Preparing for exams
+* Organising university tasks
+* Searching for specific words or concepts
+* Linking related pages
+* Embedding lecture PDFs
+* Using calendars
+* Structuring information into pages and subpages
+
+AI is not considered an essential feature.
+
+Do not prioritise generative AI over core note-taking, navigation, search, organisation and offline reliability.
+
+The primary value proposition should be:
+
+> Noema helps students understand, organise, connect and revisit what they learn.
+
+---
+
+# Priority order
+
+Implement the feedback in the following order.
+
+## Priority 0 — Fix existing problems
+
+These issues must be fixed before introducing major new features:
+
+1. Italic Markdown formatting is currently not working.
+2. Users cannot always tell whether actions or features have completed successfully.
+3. The vault concept is introduced without enough explanation.
+4. Installation currently feels untrustworthy or similar to downloading an unknown executable.
+5. Some interface elements are difficult to understand without prior knowledge of Obsidian.
+
+Verify all existing Markdown formatting features:
+
+* Bold
+* Italic
+* Bold italic
+* Strikethrough
+* Highlight
+* Inline code
+* Code blocks
+* Headings
+* Lists
+* Blockquotes
+* Links
+* Wiki links
+* Tables
+* Mathematical notation
+
+Add automated tests for italic parsing and rendering.
+
+---
+
+# Desktop application experience
+
+Create a proper desktop version of Noema.
+
+## Desktop requirements
+
+The desktop application must support:
+
+* Windows
+* macOS where practical
+* Linux where practical
+* Native application window
+* Custom application icon
+* Taskbar pinning
+* Desktop shortcut
+* Start menu entry on Windows
+* System tray support
+* Minimise to system tray
+* Restore from system tray
+* Optional launch on system startup
+* Native file and folder selection
+* Native save and export dialogs
+* Native notifications where appropriate
+* Offline startup
+* Automatic reopening of the last-used vault
+* Restoration of previously opened tabs
+
+Add a setting for system tray behaviour:
+
+* Close the application completely
+* Minimise to tray
+* Ask each time
+
+Do not force the application to stay in the system tray.
+
+## Offline behaviour
+
+All core functionality must work offline:
+
+* Create notes
+* Edit notes
+* Format notes
+* Create pages
+* Create subpages
+* Search
+* Navigate links
+* View backlinks
+* Use the graph
+* Open embedded PDFs
+* Use calendars
+* Create tasks
+* Apply templates
+* Export data
+* Change settings
+
+Offline mode must feel normal rather than degraded.
+
+Do not display alarming connection errors when the user is offline.
+
+Show a subtle status indicator:
+
+* Local
+* Offline
+* Syncing
+* Synced
+* Sync issue
+
+---
+
+# Trustworthy installation experience
+
+The current download experience made the user feel as though they might be downloading a virus.
+
+Improve trust throughout the installation process.
+
+## Requirements
+
+Create a professional releases page and installation guide containing:
+
+* Clear application screenshots
+* Supported operating systems
+* Exact installer filenames
+* File sizes
+* Version numbers
+* Release date
+* SHA-256 checksums
+* Link to the public source code
+* Link to the build workflow
+* Privacy statement
+* Explanation of why the installer may trigger an operating-system warning
+* Instructions for verifying the download
+* Instructions for uninstalling Noema
+* Statement that Noema contains no telemetry or advertising
+
+Use GitHub Actions to build releases from the public repository.
+
+Where possible, implement application signing. If signing is not currently available, explain that transparently instead of pretending the installer is signed.
+
+Use recognisable filenames such as:
+
+```text
+Noema-Setup-0.2.0-x64.exe
+Noema-0.2.0-universal.dmg
+noema_0.2.0_amd64.AppImage
+```
+
+Do not use random filenames or generic files such as `setup.exe`.
+
+---
+
+# Vault introduction and onboarding
+
+The concept of vaults made sense after explanation, but the application did not explain it well enough.
+
+Introduce vaults in simple language.
+
+Use wording such as:
+
+> A vault is the folder where Noema keeps a collection of related notes, attachments, calendars and settings.
+
+Explain that a user could create separate vaults for:
+
+* University
+* Work
+* Personal notes
+* Research
+* A specific degree
+* A specific project
+
+During onboarding, present these actions:
+
+* Create my first vault
+* Open an existing folder
+* Import from Markdown
+* Import from Notion
+* Import from Obsidian
+* Explore a demo vault
+
+For the first vault, offer starter choices:
+
+* University study
+* Research project
+* Personal knowledge base
+* Blank vault
+
+Do not require the user to understand terms such as Markdown, frontmatter or local-first before beginning.
+
+Include an optional guided tour explaining:
+
+* Vaults
+* Pages
+* Subpages
+* Links
+* Search
+* Graph
+* Calendar
+* Offline storage
+
+The tour must be dismissible and accessible again through Help.
+
+---
+
+# Pages and subpages
+
+Users want pages inside pages, similar to Notion.
+
+Implement a clear parent-page and subpage system while preserving portable Markdown storage.
+
+## Page hierarchy
+
+Allow users to:
+
+* Create a subpage from a page
+* Drag a page underneath another page
+* Move a page between parents
+* Collapse and expand parent pages
+* Display nested pages in the sidebar
+* See breadcrumbs above the editor
+* Navigate to the parent page
+* View all child pages
+* Reorder sibling pages
+* Convert a subpage into a top-level page
+* Convert a top-level page into a subpage
+
+Example:
+
+```text
+Artificial Intelligence
+├── Machine Learning
+│   ├── Regression
+│   ├── Decision Trees
+│   └── Neural Networks
+├── Mathematics
+│   ├── Linear Algebra
+│   └── Calculus
+└── Exam Preparation
+```
+
+## Storage compatibility
+
+Represent page hierarchy using ordinary folders and Markdown files where possible.
+
+Example:
+
+```text
+Artificial Intelligence/
+├── Artificial Intelligence.md
+├── Machine Learning/
+│   ├── Machine Learning.md
+│   ├── Regression.md
+│   ├── Decision Trees.md
+│   └── Neural Networks.md
+├── Mathematics/
+│   ├── Mathematics.md
+│   ├── Linear Algebra.md
+│   └── Calculus.md
+└── Exam Preparation.md
+```
+
+Do not lock hierarchy information inside a proprietary database.
+
+Add page breadcrumbs such as:
+
+```text
+University / Artificial Intelligence / Mathematics / Linear Algebra
+```
+
+---
+
+# Notion-style slash commands
+
+Add a slash-command menu inspired by the usability of Notion and Obsidian, without copying their proprietary code or exact design.
+
+Typing `/` on an empty line or after whitespace should open a searchable command menu.
+
+Include commands for:
+
+## Text
+
+* Text
+* Heading 1
+* Heading 2
+* Heading 3
+* Bulleted list
+* Numbered list
+* Task list
+* Toggle section
+* Quote
+* Callout
+* Divider
+* Code block
+
+## Academic
+
+* Equation
+* Inline equation
+* Theorem
+* Definition
+* Worked example
+* Proof
+* Citation
+* Footnote
+* Literature note
+* Experiment log
+* Exam question
+* Flashcard
+* Lecture summary
+
+## Media and embeds
+
+* Image
+* PDF
+* File
+* Calendar
+* Table
+* Link to page
+* Link to heading
+* Embed page
+* Code sandbox where supported
+
+## Organisation
+
+* New subpage
+* Table of contents
+* Breadcrumbs
+* Properties
+* Date
+* Reminder
+* Task board
+* Study checklist
+* Exam countdown
+
+The menu should:
+
+* Support keyboard navigation
+* Search commands as the user types
+* Show command descriptions
+* Show keyboard shortcuts
+* Close with Escape
+* Insert the selected element immediately
+* Work offline
+
+---
+
+# Mathematics support
+
+The user requires a high level of mathematical support.
+
+Implement robust mathematical notation using an open-source renderer such as KaTeX.
+
+Support:
+
+* Inline mathematics using `$...$`
+* Display mathematics using `$$...$$`
+* LaTeX-style expressions
+* Matrices
+* Fractions
+* Integrals
+* Summations
+* Limits
+* Greek letters
+* Vectors
+* Cases
+* Aligned equations
+* Set notation
+* Probability notation
+* Statistics notation
+* Logic notation
+
+Examples that must render correctly:
+
+```latex
+\frac{\partial L}{\partial w}
+```
+
+```latex
+\int_{-\infty}^{\infty} e^{-x^2} dx
+```
+
+```latex
+\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon}
+```
+
+```latex
+P(A \mid B) = \frac{P(B \mid A)P(A)}{P(B)}
+```
+
+Add:
+
+* Equation preview
+* Copy equation source
+* Copy rendered equation as an image where practical
+* Numbered display equations
+* Equation references
+* Slash command for inserting equations
+* Common mathematical symbol menu
+* Keyboard shortcuts for frequent symbols
+
+Do not require an internet connection to render mathematics.
+
+---
+
+# Highlighting and colour annotation
+
+The application currently lacks sufficient highlighting features.
+
+Allow users to highlight:
+
+* Individual words
+* Sentences
+* Paragraphs
+* Headings
+* Callouts
+* Mathematical explanations
+
+Provide a restrained default highlight palette:
+
+* Yellow
+* Green
+* Blue
+* Purple
+* Red
+* Orange
+* Grey
+
+Highlights should remain readable in dark and light modes.
+
+Store highlights using portable Markdown-compatible syntax where possible.
+
+For example:
+
+```markdown
+==Important highlighted text==
+```
+
+For coloured highlights, use a documented HTML or Markdown extension that remains understandable outside Noema.
+
+Example:
+
+```html
+<mark data-color="blue">Important definition</mark>
+```
+
+Preserve highlighted content when exporting.
+
+Add a toolbar button and slash command for highlighting.
+
+---
+
+# Search improvements
+
+Specific word search is considered essential.
+
+Create a powerful local search system that remains easy to understand.
+
+## Basic search
+
+Users must be able to search for:
+
+* A specific word
+* Exact phrases
+* Partial words
+* Page titles
+* Headings
+* Tags
+* Folder names
+* Mathematical terms
+* PDF filenames
+* Calendar events
+* Tasks
+
+Display:
+
+* Number of results
+* Page title
+* Matching sentence
+* Highlighted matching word
+* Page location
+* Parent page
+* Last modified date
+
+## Search controls
+
+Support:
+
+* Exact phrase: `"neural network"`
+* Include all words
+* Include any word
+* Exclude a word
+* Case-sensitive search
+* Whole-word search
+* Search current page
+* Search current folder
+* Search entire vault
+* Filter by page type
+* Filter by tag
+* Filter by date
+* Filter by colour
+* Filter by attachment type
+
+Add a visible toggle for:
+
+* Exact word
+* Exact phrase
+* Broad search
+
+Do not require users to learn advanced search syntax.
+
+Provide advanced syntax as an optional feature.
+
+## Search verification
+
+When a search is completed, clearly show:
+
+* Search completed
+* Number of pages checked
+* Number of matches found
+* Whether PDFs were included
+* Whether hidden or archived pages were included
+
+---
+
+# Clear feedback and feature confirmation
+
+The user wants to know whether features have run properly.
+
+Add clear but non-intrusive feedback for important actions.
+
+Examples:
+
+* Note saved
+* Page created
+* Page moved
+* Link updated
+* PDF embedded
+* Vault exported
+* Import completed
+* Search completed
+* Calendar connected
+* Backup completed
+* Sync completed
+* Unable to save
+* Permission required
+
+Use:
+
+* Toast notifications
+* Inline status messages
+* Progress indicators
+* Success icons
+* Error explanations
+* Undo actions
+
+Avoid displaying a toast for every keystroke.
+
+Show save status in the editor:
+
+* Editing
+* Saving
+* Saved locally
+* Save failed
+
+Error messages must explain:
+
+1. What happened
+2. Whether any data was lost
+3. What the user can do next
+
+---
+
+# PDF support
+
+Embedded PDFs are important for lecture notes and study materials.
+
+Implement first-class PDF support.
+
+Users should be able to:
+
+* Drag a PDF into a page
+* Select a PDF from their device
+* Embed a PDF inside a note
+* Resize the embedded PDF
+* Open the PDF in a dedicated viewer
+* Open the PDF in the operating system
+* Link directly to the PDF
+* Add notes underneath the PDF
+* Link a note to a PDF page
+* Search PDF filenames
+* View recently opened PDFs
+* Store PDFs inside the vault
+* Use PDFs offline
+
+Add a PDF viewer with:
+
+* Page navigation
+* Zoom
+* Fit width
+* Fit page
+* Rotation
+* Full-screen mode
+* Thumbnail sidebar
+* Search within text-based PDFs
+* Copy selected text
+* Print
+* Download or export
+* Current-page indicator
+
+Do not upload PDFs to an external server.
+
+Where supported, allow a link format such as:
+
+```markdown
+[[lecture-week-4.pdf#page=12]]
+```
+
+Add an optional split view:
+
+* PDF on the left
+* Note editor on the right
+
+This is particularly important for paraphrasing lecture material.
+
+---
+
+# Page linking and embeds
+
+Improve connections between pages.
+
+Users should be able to:
+
+* Link to another page
+* Link to a specific heading
+* Embed another page
+* Show a live preview of a linked page
+* Create a new page from an unresolved link
+* View backlinks
+* View unlinked mentions
+* Update links when a page is renamed
+* Display child pages
+* Display related pages
+
+Support:
+
+```markdown
+[[Page Name]]
+```
+
+```markdown
+[[Page Name|Custom Label]]
+```
+
+```markdown
+[[Page Name#Heading]]
+```
+
+```markdown
+![[Page Name]]
+```
+
+The embedded-page syntax should display a read-only preview by default, with an option to open the source page.
+
+---
+
+# Graph improvements
+
+The graph should visually communicate page hierarchy and folder structure.
+
+## Folder-based colours
+
+Automatically assign graph-node colours based on:
+
+* Top-level folder
+* Parent page
+* Page category
+* User-defined property
+
+Example:
+
+* Mathematics: blue
+* Artificial intelligence: green
+* Research: purple
+* Exam preparation: orange
+* Administration: grey
+
+Child pages should inherit their parent folder colour unless manually overridden.
+
+## Graph legend
+
+Add a visible graph legend showing:
+
+* Colour
+* Folder or category
+* Number of pages
+* Visibility toggle
+
+## Graph controls
+
+Allow users to:
+
+* Colour by folder
+* Colour by tag
+* Colour by page type
+* Colour by custom property
+* Choose custom colours
+* Reset colours
+* Hide folders
+* Hide individual pages
+* Highlight the current page
+* Show only related pages
+* Limit connection depth
+* Search for a page
+* Select a folder
+* Display parent-child relationships differently from normal links
+
+Use different visual connection styles:
+
+* Solid line: direct page link
+* Dashed line: parent-child relationship
+* Faint line: unlinked mention
+* Thicker line: multiple links
+
+The graph must remain performant and load only when opened.
+
+---
+
+# Calendar and organisation features
+
+The user uses Notion for organisation as well as note-taking.
+
+Introduce a lightweight calendar and task system without turning Noema into a heavy project-management platform.
+
+## Calendar
+
+Provide:
+
+* Monthly view
+* Weekly view
+* Daily agenda
+* Upcoming events
+* Due dates
+* Exam dates
+* Assignment deadlines
+* Study sessions
+* Recurring events
+* Event links to pages
+* Calendar filters
+* Calendar colours
+
+Allow pages to be connected to dates using frontmatter:
+
+```yaml
+---
+date: 2026-08-12
+due: 2026-08-18
+type: assignment
+course: Artificial Intelligence
+---
+```
+
+Calendar events should link directly to their associated pages.
+
+## External calendars
+
+Allow optional connection or import from:
+
+* ICS calendar files
+* Calendar subscription URLs
+* Google Calendar through an optional integration
+* Outlook Calendar through an optional integration
+
+Core calendar functionality must work offline.
+
+External integrations must be optional and clearly separated from the offline core.
+
+Never require a Google, Microsoft or Noema account to use the calendar.
+
+Provide offline caching for previously synchronised calendar events where permitted.
+
+## Tasks
+
+Support tasks inside notes:
+
+```markdown
+- [ ] Review Week 4 lecture
+- [x] Complete practice questions
+```
+
+Add:
+
+* Due dates
+* Priority
+* Course or project
+* Related page
+* Recurring tasks
+* Today view
+* Upcoming view
+* Completed view
+* Exam-study checklist
+
+Tasks must remain represented in readable Markdown.
+
+---
+
+# Exam-study features
+
+The user specifically values note-taking during exam periods.
+
+Add a focused exam-study workflow.
+
+## Study dashboard
+
+Create an optional dashboard showing:
+
+* Upcoming exams
+* Days until each exam
+* Topics to review
+* Incomplete study tasks
+* Recently edited notes
+* Weak topics
+* Lecture PDFs
+* Practice questions
+* Study progress
+
+## Exam pages
+
+Provide an exam template containing:
+
+* Course
+* Exam date
+* Exam location
+* Permitted materials
+* Topics
+* Revision checklist
+* Important formulas
+* Common mistakes
+* Practice questions
+* Confidence rating
+* Linked lecture notes
+
+## Flashcards
+
+Provide a simple flashcard syntax using portable Markdown.
+
+Example:
+
+```markdown
+Question:: What is gradient descent?
+Answer:: An optimisation method that iteratively adjusts parameters to minimise a loss function.
+```
+
+Allow users to:
+
+* Review cards
+* Reveal answers
+* Mark confidence
+* Filter cards by page, folder or course
+* Shuffle cards
+* Review offline
+
+Do not make spaced repetition mandatory in the first implementation.
+
+## Study mode
+
+Add a distraction-reduced study mode that:
+
+* Hides unnecessary panels
+* Enlarges note content
+* Shows page outline
+* Keeps search available
+* Allows highlighting
+* Allows flashcard review
+* Allows PDF split view
+
+---
+
+# Lecture-note and paraphrasing workflow
+
+The user often learns something and writes it down in their own words.
+
+Support this workflow without making AI mandatory.
+
+Create a lecture-note template containing:
+
+* Lecture title
+* Course
+* Week
+* Lecturer
+* Source material
+* Key concepts
+* Explanation in my own words
+* Mathematical definitions
+* Worked examples
+* Questions
+* Related pages
+* Exam relevance
+* Summary
+
+Add optional blocks:
+
+## Source material
+
+Content copied or referenced from a lecture.
+
+## My explanation
+
+The student’s paraphrased explanation.
+
+## What I do not understand
+
+Questions requiring follow-up.
+
+## Exam summary
+
+A condensed revision version.
+
+Make these available through slash commands.
+
+Do not automatically rewrite or transmit lecture material to an AI service.
+
+Future AI features may be optional plugins, but AI must not be required for the core experience.
+
+---
+
+# Cross-device connectivity
+
+Users want connectivity between their computer and phone.
+
+Noema must remain local-first and open-source.
+
+Implement a sync architecture that supports optional providers rather than forcing users onto a proprietary Noema cloud.
+
+## Sync principles
+
+* Sync is optional
+* Offline editing remains available
+* Local files remain the source of truth
+* Users can export everything
+* No Noema account is required
+* Sync providers are replaceable
+* Conflicts are never silently discarded
+* End-to-end encryption should be supported for remote sync where practical
+
+## Initial sync options
+
+Support or design adapters for:
+
+* Local network sync
+* WebDAV
+* Syncthing-compatible vault folders
+* Git-based sync for advanced users
+* User-selected cloud folders
+* Optional self-hosted Noema sync server
+
+The mobile experience may initially be:
+
+* Installable PWA
+* Responsive mobile interface
+* Offline local vault
+* Optional synchronisation through a supported adapter
+
+Document limitations honestly.
+
+## Conflict handling
+
+When the same page changes on two devices:
+
+* Keep both versions
+* Show a conflict-resolution screen
+* Highlight differences
+* Allow the user to merge content
+* Never overwrite a newer version silently
+
+---
+
+# Mobile interface
+
+Optimise Noema for phone use.
+
+Mobile features should include:
+
+* Open recent notes
+* Search
+* Create quick note
+* Open daily note
+* View tasks
+* View calendar
+* Read PDFs
+* Edit Markdown
+* Use slash commands
+* Add images
+* Record a simple text note
+* Navigate parent and child pages
+* Use offline mode
+
+On mobile:
+
+* Use a bottom navigation bar
+* Show the file tree as a drawer
+* Show page properties as a sheet
+* Use large touch targets
+* Support swipe-back navigation
+* Preserve editing drafts
+* Avoid desktop-sized multi-panel layouts
+
+---
+
+# Notion import
+
+Because the user currently uses Notion, provide a clear migration path.
+
+Support importing a standard Notion export containing:
+
+* Markdown files
+* CSV databases where practical
+* Images
+* PDFs
+* Attachments
+* Nested folders
+* Page links
+
+During import:
+
+* Show a preview
+* Explain how pages will be converted
+* Preserve folder hierarchy
+* Preserve attachments
+* Convert internal links where possible
+* Report unsupported elements
+* Create an import report
+* Never modify the original export
+
+Do not claim perfect Notion compatibility if some block types cannot be converted.
+
+---
+
+# Usability improvements
+
+Noema should be understandable without previous experience using Obsidian.
+
+## Terminology
+
+Where possible, use familiar wording:
+
+* Page instead of note in beginner-facing areas
+* Workspace or vault, with an explanation
+* Subpage
+* Linked page
+* Search
+* Calendar
+* Files
+* Attachments
+
+Advanced users may still see Markdown and vault terminology in settings and documentation.
+
+## Tooltips and help
+
+Add concise tooltips to unfamiliar controls.
+
+Add a Help section containing:
+
+* What is a vault?
+* How pages are stored
+* How offline mode works
+* How to create a subpage
+* How to link pages
+* How to embed a PDF
+* How to use the graph
+* How to move from Notion
+* How to synchronise devices
+* How to back up a vault
+
+Include a keyboard-shortcut reference.
+
+## Empty states
+
+Every empty panel should explain what it does.
+
+Example graph empty state:
+
+> Links between your pages will appear here. Type `[[` inside a page to create your first connection.
+
+Example backlinks empty state:
+
+> No other pages link to this page yet.
+
+---
+
+# Design requirements
+
+Continue using the existing Noema identity and Modrinth-inspired visual direction.
+
+The interface should be:
+
+* Modern
+* Calm
+* Academic
+* Lightweight
+* Trustworthy
+* Easy to understand
+* Suitable for long study sessions
+
+Do not copy Notion, Obsidian or Modrinth exactly.
+
+Use their product patterns as references while maintaining an original Noema identity.
+
+## Navigation
+
+Recommended desktop navigation:
+
+### Left activity rail
+
+* Home
+* Pages
+* Search
+* Calendar
+* Tasks
+* Graph
+* Templates
+* Attachments
+* Settings
+
+### Sidebar
+
+* Vault name
+* Quick actions
+* Page hierarchy
+* Favourites
+* Recent pages
+* Trash
+
+### Main workspace
+
+* Tabs
+* Breadcrumbs
+* Editor
+* Reading view
+* PDF split view
+* Calendar view
+* Graph view
+
+### Context panel
+
+* Page outline
+* Backlinks
+* Child pages
+* Properties
+* Attachments
+* Page information
+
+---
+
+# Performance requirements
+
+Despite the additional functionality, Noema must remain lightweight.
+
+Requirements:
+
+* Lazy-load the graph
+* Lazy-load the PDF viewer
+* Lazy-load calendars
+* Avoid loading all pages into the DOM
+* Use virtualised page trees
+* Use Web Workers for search indexing
+* Debounce autosave
+* Incrementally update search indexes
+* Avoid unnecessary background processes
+* Keep system-tray memory usage low
+* Avoid constant network polling
+* Allow users to disable non-essential startup features
+
+The editor and current page should become usable before the entire vault finishes indexing.
+
+---
+
+# Open-source requirements
+
+Noema must remain entirely open-source.
+
+Continue using:
+
+* AGPL-3.0-or-later
+* Public GitHub repository
+* Public issue tracker
+* Public build workflows
+* Open-source dependencies
+* No proprietary SDK requirement
+* No mandatory cloud service
+* No hidden telemetry
+
+Add GitHub issues or roadmap entries for major features that cannot be completed immediately.
+
+Do not mark incomplete features as finished.
+
+---
+
+# Testing requirements
+
+Add automated tests for the feedback-driven features.
+
+Test:
+
+1. Italic Markdown renders correctly.
+2. Bold italic renders correctly.
+3. A user can create a vault after reading the introduction.
+4. A user can create a parent page.
+5. A user can create a subpage.
+6. Breadcrumbs show the correct hierarchy.
+7. A page can be moved between parents.
+8. Slash commands open and insert content.
+9. Mathematics renders offline.
+10. Text can be highlighted.
+11. Coloured highlights survive reopening the page.
+12. Exact-word search works.
+13. Exact-phrase search works.
+14. Search clearly reports the number of matches.
+15. A PDF can be embedded.
+16. A PDF remains available offline.
+17. A page can link to another page.
+18. A page can embed another page.
+19. Graph nodes inherit folder colours.
+20. The graph legend matches node colours.
+21. A calendar event can link to a page.
+22. A task appears in the task view.
+23. The desktop app opens without internet.
+24. The desktop app can minimise to the system tray.
+25. The last vault reopens after restarting.
+26. A mobile PWA can create and edit a note offline.
+27. Sync conflicts preserve both versions.
+28. A Notion Markdown export can be imported.
+29. Success and failure messages are displayed correctly.
+30. All user data can be exported.
+
+---
+
+# Implementation phases
+
+Do not attempt to introduce every feature in one unstable release.
+
+## Phase 1 — Reliability and core usability
+
+* Fix italics
+* Improve success and error feedback
+* Add vault introduction
+* Improve onboarding
+* Add page and subpage hierarchy
+* Add breadcrumbs
+* Improve search
+* Add highlighting
+* Add slash commands
+* Strengthen mathematics support
+
+## Phase 2 — Desktop and study workflows
+
+* Package Noema as a desktop application
+* Add taskbar and system-tray behaviour
+* Improve installer trust
+* Add PDF embedding and split view
+* Add calendar
+* Add tasks
+* Add exam-study templates
+* Add flashcards
+* Add study mode
+
+## Phase 3 — Graph and organisation improvements
+
+* Folder-based graph colours
+* Graph legend
+* Parent-child graph relationships
+* Page embeds
+* Improved backlinks
+* Study dashboard
+* Calendar-page connections
+
+## Phase 4 — Mobile and synchronisation
+
+* Mobile PWA improvements
+* Offline mobile vault
+* Sync adapter architecture
+* WebDAV or local-folder sync
+* Conflict resolution
+* Optional self-hosted sync
+* Notion import improvements
+
+Complete and test each phase before beginning the next.
+
+---
+
+# Final acceptance criteria
+
+The updated Noema release is acceptable only when:
+
+* Italic formatting works.
+* Mathematics renders correctly and offline.
+* The desktop app can be installed and launched normally.
+* The application can be pinned to the taskbar.
+* System-tray behaviour works.
+* The application opens and edits notes without internet.
+* Vaults are clearly explained.
+* Users can create parent pages and subpages.
+* Page hierarchy is stored portably.
+* Search can find specific words and exact phrases.
+* Search results clearly explain what was found.
+* Users receive visible confirmation when important actions complete.
+* Text and headings can be highlighted.
+* PDFs can be embedded and viewed offline.
+* Pages can be linked and embedded.
+* Graph nodes can be coloured based on folder or parent structure.
+* Calendar events can connect to pages.
+* Tasks remain readable in Markdown.
+* Exam-study workflows are usable.
+* Slash commands are functional and searchable.
+* Mobile use is supported.
+* Cross-device sync is optional rather than mandatory.
+* No account is required.
+* No telemetry is introduced.
+* All data can be exported.
+* The repository remains completely open-source.
+* No unfinished placeholder features are presented as complete.
+
+The main goal of this iteration is not to make Noema larger for the sake of adding features.
+
+The goal is to make Noema feel like a trustworthy, understandable and genuinely useful application for university students who need to learn, organise, connect and revisit complex information.

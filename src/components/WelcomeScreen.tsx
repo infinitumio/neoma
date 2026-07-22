@@ -20,6 +20,7 @@ import { demoNotes } from '@/templates/demoVault'
 import { useUi } from '@/app/uiStore'
 import { useTabs } from '@/app/tabsStore'
 import { Modal } from './Modal'
+import { NewVaultDialog } from './NewVaultDialog'
 import { APP_NAME, APP_TAGLINE } from '@/app/about'
 import { friendlyDateTime } from '@/utils/dates'
 
@@ -35,18 +36,7 @@ export function WelcomeScreen() {
     void listVaults().then(setVaults)
   }, [])
 
-  const createVault = () => {
-    ui.askPrompt({
-      title: 'Create browser vault',
-      label: 'Vault name',
-      placeholder: 'e.g. PhD notes',
-      confirmLabel: 'Create vault',
-      onSubmit: async (name) => {
-        const vault = await createBrowserVault(name)
-        await openVault(vault)
-      },
-    })
-  }
+  const [showNewVault, setShowNewVault] = useState(false)
 
   const openFolder = async () => {
     try {
@@ -139,12 +129,13 @@ export function WelcomeScreen() {
         <p className="welcome-tagline">{APP_TAGLINE}</p>
 
         <div className="welcome-actions">
-          <button className="welcome-action" onClick={createVault} disabled={busy}>
+          <button className="welcome-action" onClick={() => setShowNewVault(true)} disabled={busy}>
             <Database className="action-icon" size={20} aria-hidden />
             <span className="action-text">
-              <span className="action-title">Create browser vault</span>
+              <span className="action-title">Create my first vault</span>
               <span className="action-desc">
-                Notes stored in this browser. Zero setup, works everywhere.
+                A private home for your pages, stored on this device. Pick a starter for study,
+                research or personal notes.
               </span>
             </span>
             <ChevronRight size={16} aria-hidden />
@@ -250,6 +241,8 @@ export function WelcomeScreen() {
           e.target.value = ''
         }}
       />
+
+      {showNewVault && <NewVaultDialog onClose={() => setShowNewVault(false)} />}
 
       {showStorageHelp && (
         <Modal title="How neoma stores your notes" onClose={() => setShowStorageHelp(false)}>
