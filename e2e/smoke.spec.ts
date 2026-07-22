@@ -567,6 +567,34 @@ test('study workflow: flashcard review, dashboard and study mode', async ({ page
   await expect(page.locator('.study-exam-title')).toContainText('Calculus Final')
 })
 
+test('flashcards render as a flip card in the reader', async ({ page }) => {
+  await createVault(page)
+  await createNote(
+    page,
+    '# Cell Biology\n\nQuestion:: Powerhouse of the cell?\nAnswer:: Mitochondria\nTopic:: Organelles\n',
+  )
+  await page.keyboard.press('ControlOrMeta+Shift+r')
+  const card = page.locator('.flashcard-embed')
+  await expect(card).toBeVisible()
+  await expect(card.locator('.flashcard-embed-front')).toContainText('Powerhouse')
+  await expect(card.locator('.flashcard-embed-topic')).toHaveText('Organelles')
+  // Clicking flips it to reveal the answer.
+  await card.click()
+  await expect(card).toHaveClass(/flipped/)
+  await expect(card.locator('.flashcard-embed-back')).toContainText('Mitochondria')
+})
+
+test('PDF embed with special characters renders a card, not raw text', async ({ page }) => {
+  await createVault(page)
+  // An embed target with underscores/parentheses used to leak markdown emphasis.
+  await createNote(page, '![[A_Study_(1_What_is_Research_).pdf]]')
+  await page.keyboard.press('ControlOrMeta+Shift+r')
+  // The embed becomes a PDF card (missing file → still a card shell), never
+  // literal "![[…]]" text with stray italics.
+  await expect(page.locator('.preview-content em')).toHaveCount(0)
+  await expect(page.locator('.preview-content')).not.toContainText('![[')
+})
+
 test('pinned item shows a context menu so it can be unpinned', async ({ page }) => {
   await createVault(page)
   await createNote(page, 'pin me')

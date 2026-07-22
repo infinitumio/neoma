@@ -21,3 +21,28 @@ describe('safe inline HTML (underline / super / subscript)', () => {
     expect(html).not.toContain('<script>')
   })
 })
+
+describe('wiki embeds with special characters', () => {
+  it('renders an embed whose path contains underscores and parentheses', async () => {
+    // Underscores would otherwise be parsed as emphasis, splitting the embed.
+    const target =
+      'Courses/Example Course/Week 1 - Introduction/A_Student s_Guide_to_Methodology_----_(1_What_is_Research_).pdf'
+    const html = await renderMarkdown(`![[${target}]]`)
+    expect(html).toContain('data-embed=')
+    expect(html).toContain(target)
+    // No stray emphasis leaked from the underscores.
+    expect(html).not.toContain('<em>')
+  })
+
+  it('renders a wiki link with underscores intact', async () => {
+    const html = await renderMarkdown('[[My_Great_Note]]')
+    expect(html).toContain('data-target="My_Great_Note"')
+    expect(html).not.toContain('<em>')
+  })
+
+  it('leaves [[…]] inside inline code alone', async () => {
+    const html = await renderMarkdown('Use `[[Note]]` syntax')
+    expect(html).toContain('<code>[[Note]]</code>')
+    expect(html).not.toContain('data-target')
+  })
+})

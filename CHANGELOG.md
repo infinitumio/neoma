@@ -31,6 +31,17 @@ All notable changes to neoma are documented here. The format follows
 
 - **Daily journal** Yesterday/Today/Tomorrow buttons no longer clip in the narrow panel —
   compact prev/next arrows now flank a wide "Today".
+- **PDF (and other) embeds/links with special characters** now render correctly. Targets
+  containing `_`, `*`, `(`, `)` (e.g. `![[A_Student_(1_What_is_Research_).pdf]]`) were being
+  mangled by CommonMark emphasis and shown as raw text; wiki spans are now protected before
+  parsing (code and math excluded), so they always become a proper link/embed/card.
+
+### Changed (slash, PDF & study round)
+
+- **Flashcards flip in the reading view** — a `Question:: / Answer::` block renders as a
+  clickable 3-D flip card (keyboard-accessible), with an optional `Topic::` / `Category::`
+  label. Cards also pick up the **nearest heading as their topic**, and the review session
+  gains a **topic filter**.
 
 ### Added (PDF & attachments round)
 

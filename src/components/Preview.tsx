@@ -136,6 +136,12 @@ export function Preview({ path, content }: PreviewProps) {
   }
 
   const onClick = (event: React.MouseEvent) => {
+    // Flashcard → flip to reveal the answer.
+    const card = (event.target as HTMLElement).closest<HTMLElement>('.flashcard-embed')
+    if (card) {
+      card.classList.toggle('flipped')
+      return
+    }
     // Embedded-PDF card → open the in-app viewer.
     const pdfCard = (event.target as HTMLElement).closest<HTMLElement>('.pdf-embed-card')
     if (pdfCard?.dataset.pdf) {
@@ -179,12 +185,22 @@ export function Preview({ path, content }: PreviewProps) {
     }
   }
 
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    const card = (event.target as HTMLElement).closest<HTMLElement>('.flashcard-embed')
+    if (card) {
+      event.preventDefault()
+      card.classList.toggle('flipped')
+    }
+  }
+
   return (
     <div
       className="preview-pane print-area"
       ref={containerRef}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      onKeyDown={onKeyDown}
     >
       <div
         className="preview-content markdown-body"

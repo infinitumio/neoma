@@ -18,6 +18,12 @@ import { parseWikiTarget } from './extractMeta'
 export interface InlineExtensionOptions {
   /** Resolve a wiki-link target to a vault path, or null when broken. */
   resolveLink?: (target: string) => string | null
+  /**
+   * Original `[[…]]` / `![[…]]` spans, replaced by placeholder tokens before
+   * parsing so their contents (which may contain `_`, `*`, etc.) survive
+   * CommonMark inline parsing intact. See render.ts → protectWikiSpans.
+   */
+  wikiTokens?: string[]
 }
 
 type Builder = (match: RegExpExecArray) => PhrasingContent | null
@@ -47,6 +53,8 @@ function splitTextNodes(tree: Root, regex: RegExp, build: Builder, skipInLinks =
 }
 
 const WIKI_RE = /(!?)\[\[([^\][\n]+?)\]\]/g
+/** Placeholder emitted by protectWikiSpans: U+E000 "WL" <index> U+E001. See render.ts. */
+const WIKI_TOKEN_RE = /\uE000WL(\d+)\uE001/g
 const HIGHLIGHT_RE = /==([^=\n](?:[^\n]*?[^=\n])?)==/g
 const TAG_RE = /(^|[\s(])#([\p{L}\p{N}/_-]*[\p{L}/_-][\p{L}\p{N}/_-]*)/gu
 const CITATION_RE = /\[(@[\w:.#$%&+?<>~/-]+(?:[^\]]*)?)\]/g
@@ -112,10 +120,24 @@ function transformSafeHtml(tree: Root): void {
 
 export function remarkInlineExtensions(options: InlineExtensionOptions = {}) {
   const resolveLink = options.resolveLink ?? (() => null)
+  const tokens = options.wikiTokens
   return (tree: Root) => {
-    splitTextNodes(tree, WIKI_RE, (m) => {
-      const isEmbed = m[1] === '!'
-      const { target, heading, alias } = parseWikiTarget(m[2])
+    // Wiki links/embeds are matched from placeholder tokens when the raw text
+    // was protected before parsing (see protectWikiSpans); otherwise they are
+    // matched directly from the text (used by callers that don't pre-protect).
+    const wikiRegex = tokens ? WIKI_TOKEN_RE : WIKI_RE
+    splitTextNodes(tree, wikiRegex, (m) => {
+      let raw: string
+      if (tokens) {
+        const original = tokens[Number(m[1])]
+        if (original == null) return null
+        raw = original
+      } else {
+        raw = m[0]
+      }
+      const isEmbed = raw.startsWith('!')
+      const inner = raw.replace(/^!?\[\[/, '').replace(/\]\]$/, '')
+      const { target, heading, alias } = parseWikiTarget(inner)
       if (!target) return null
       if (isEmbed) {
         return {

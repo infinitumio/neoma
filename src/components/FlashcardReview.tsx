@@ -21,6 +21,7 @@ export function FlashcardReview() {
 
   const [filter, setFilter] = useState<Filter>('all')
   const [shuffle, setShuffle] = useState(false)
+  const [topic, setTopic] = useState<string>('')
   const [order, setOrder] = useState<number[]>([])
   const [pos, setPos] = useState(0)
   const [revealed, setRevealed] = useState(false)
@@ -28,10 +29,21 @@ export function FlashcardReview() {
 
   const cards = useMemo(() => review?.cards ?? [], [review])
 
-  // Build the working set (filter + shuffle) whenever inputs change.
+  const cardTopic = (c: (typeof cards)[number]) => c.category ?? c.topic
+  const topics = useMemo(() => {
+    const set = new Set<string>()
+    for (const c of cards) {
+      const t = c.category ?? c.topic
+      if (t) set.add(t)
+    }
+    return [...set].sort((a, b) => a.localeCompare(b))
+  }, [cards])
+
+  // Build the working set (filter + topic + shuffle) whenever inputs change.
   const buildOrder = useCallback(() => {
     const states = getCardStates(vaultId)
     let idx = cards.map((_, i) => i)
+    if (topic) idx = idx.filter((i) => cardTopic(cards[i]) === topic)
     if (filter === 'weak') idx = idx.filter((i) => isWeak(states, cards[i].id))
     if (shuffle) {
       for (let i = idx.length - 1; i > 0; i--) {
@@ -40,7 +52,8 @@ export function FlashcardReview() {
       }
     }
     return idx
-  }, [cards, filter, shuffle, vaultId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards, filter, shuffle, topic, vaultId])
 
   useEffect(() => {
     setOrder(buildOrder())
@@ -109,6 +122,21 @@ export function FlashcardReview() {
           <FileText size={15} aria-hidden /> {review.title}
         </div>
         <div className="flashcard-controls">
+          {topics.length > 0 && (
+            <select
+              className="flashcard-topic-select"
+              aria-label="Filter by topic"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+            >
+              <option value="">All topics</option>
+              {topics.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             className={`btn btn-small${filter === 'weak' ? ' btn-primary' : ''}`}
             aria-pressed={filter === 'weak'}
@@ -175,6 +203,7 @@ export function FlashcardReview() {
           <>
             <div className="flashcard-count text-small text-faint">
               {pos + 1} / {order.length} · {card.deckName}
+              {cardTopic(card) && <span className="flashcard-topic-badge">{cardTopic(card)}</span>}
             </div>
             <button
               className="flashcard-card"

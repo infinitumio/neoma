@@ -53,4 +53,17 @@ describe('parseFlashcards', () => {
     const b = parseFlashcards('d.md', 'Q:: x\nA:: y')[0]
     expect(a.id).toBe(b.id)
   })
+
+  it('captures the nearest heading as the topic', () => {
+    const md = '# Cell Biology\n\nQuestion:: Powerhouse?\nAnswer:: Mitochondria'
+    const cards = parseFlashcards('d.md', md)
+    expect(cards[0].topic).toBe('Cell Biology')
+  })
+
+  it('captures an explicit Topic:: / Category:: label', () => {
+    const md = 'Question:: 2+2?\nAnswer:: 4\nTopic:: Arithmetic'
+    const cards = parseFlashcards('d.md', md)
+    expect(cards[0].category).toBe('Arithmetic')
+    expect(cards[0].back).toBe('4')
+  })
 })
