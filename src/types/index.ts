@@ -223,6 +223,8 @@ export interface ApplicationSettings {
   fileSortOrder: SortOrder
   confirmBeforeDelete: boolean
   reducedMotion: 'system' | 'reduced' | 'full'
+  /** Show hover tooltips on toolbar/sidebar controls. */
+  showTooltips: boolean
   customShortcuts: Record<string, string>
 }
 

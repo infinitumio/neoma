@@ -19,6 +19,7 @@ import { HelpModal } from '@/components/HelpModal'
 import { VaultSwitcher } from '@/components/VaultSwitcher'
 import { AttachmentPicker } from '@/components/AttachmentPicker'
 import { SlashMenu } from '@/components/SlashMenu'
+import { Tooltips } from '@/components/Tooltips'
 import { Dialogs } from '@/components/Dialogs'
 import { Toasts } from '@/components/Toasts'
 import { useVault, flushAllSaves, openVault, createNote } from './vaultStore'
@@ -82,7 +83,7 @@ function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }
           <PdfViewer path={path} initialPage={tab.pdfPage} toolbarExtra={splitButton} />
         </div>
         <div className="pdf-split-pane pdf-split-note">
-          <NotePane key={`${vaultId}:${tab.pdfSplitNote}`} path={tab.pdfSplitNote} />
+          <NotePane key={`${vaultId}:${tab.pdfSplitNote}`} path={tab.pdfSplitNote} hideBreadcrumbs />
         </div>
       </div>
     )
@@ -237,6 +238,7 @@ export default function App() {
       <AttachmentPicker />
       <SlashMenu />
       <FlashcardReview />
+      <Tooltips />
       <Dialogs />
       <Toasts />
     </>

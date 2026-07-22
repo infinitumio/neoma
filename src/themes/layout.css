@@ -2153,6 +2153,31 @@
   width: 10rem;
 }
 
+/* Node/link stats sit on their own row beneath the graph options. */
+.graph-stats {
+  flex-basis: 100%;
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Hovered node name floats separately so it never resizes the toolbar. */
+.graph-hover-name {
+  position: absolute;
+  bottom: var(--space-3);
+  left: var(--space-3);
+  max-width: calc(100% - 2 * var(--space-3));
+  padding: var(--space-1) var(--space-3);
+  background: color-mix(in srgb, var(--color-bg-raised) 88%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(6px);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* ---- Responsive ---- */
 .drawer-backdrop {
   display: none;
@@ -2647,4 +2672,48 @@
 }
 .study-link {
   white-space: nowrap;
+}
+
+/* ---- Hover tooltips (toggleable in Settings) ---- */
+.tooltip {
+  position: fixed;
+  z-index: 300;
+  padding: 3px 8px;
+  max-width: 260px;
+  background: var(--color-bg-raised);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-overlay);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  animation: tooltip-in 0.09s ease-out;
+}
+/* Above the target (default, horizontal toolbars). */
+.tooltip-top {
+  transform: translate(-50%, -100%);
+}
+/* Below the target (toolbars near the top edge). */
+.tooltip-bottom {
+  transform: translate(-50%, 0);
+}
+/* To the right of the target, vertically centred (vertical rail). */
+.tooltip-right {
+  transform: translate(0, -50%);
+}
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    animation: none;
+  }
 }

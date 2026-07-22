@@ -20,9 +20,11 @@ import { slugify } from '@/utils/misc'
 
 interface NotePaneProps {
   path: string
+  /** Hide the breadcrumb trail (e.g. in the PDF split view, where it's noise). */
+  hideBreadcrumbs?: boolean
 }
 
-export function NotePane({ path }: NotePaneProps) {
+export function NotePane({ path, hideBreadcrumbs }: NotePaneProps) {
   const editorMode = useUi((s) => s.editorMode)
   const note = useVault((s) => s.notes.get(path))
   const [missing, setMissing] = useState(false)
@@ -65,8 +67,8 @@ export function NotePane({ path }: NotePaneProps) {
   return (
     <div className="note-view">
       <div className="note-header">
-        <Breadcrumbs path={path} />
-        <span style={{ flex: 1 }} />
+        {hideBreadcrumbs ? <span style={{ flex: 1 }} /> : <Breadcrumbs path={path} />}
+        {!hideBreadcrumbs && <span style={{ flex: 1 }} />}
         <PageColorButton path={path} />
         {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
         <ViewModeSwitcher />

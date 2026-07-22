@@ -54,6 +54,11 @@ All notable changes to neoma are documented here. The format follows
   slash command.
 - Long attachment and PDF names are truncated with an ellipsis in the attachment picker and
   the Study dashboard instead of overflowing.
+- **Hover tooltips** on the activity rail, sidebars and PDF viewer controls (to the right of
+  rail buttons, above/below toolbar buttons), toggleable in Settings → Appearance.
+- The PDF split-view note pane hides its breadcrumb trail (redundant while paraphrasing).
+- Graph: the node/link stats moved onto their own row beneath the options, and the hovered
+  node name now floats separately so it no longer stretches the toolbar.
 
 ### Added (PDF & attachments round)
 

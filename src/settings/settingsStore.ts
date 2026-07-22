@@ -23,6 +23,7 @@ export const DEFAULT_SETTINGS: ApplicationSettings = {
   fileSortOrder: 'name',
   confirmBeforeDelete: true,
   reducedMotion: 'system',
+  showTooltips: true,
   customShortcuts: {},
 }
 

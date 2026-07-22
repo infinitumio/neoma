@@ -362,10 +362,15 @@ export default function GraphView() {
           />
           Hide orphans
         </label>
-        <span className="text-small text-faint" role="status">
-          {nodes.length} notes · {edges.length} links{hovered ? ` · ${hovered}` : ''}
+        <span className="graph-stats text-small text-faint" role="status">
+          {nodes.length} notes · {edges.length} links
         </span>
       </div>
+      {hovered && (
+        <div className="graph-hover-name text-small" role="status">
+          {hovered}
+        </div>
+      )}
       <GraphLegend nodes={nodes} />
     </div>
   )
