@@ -8,7 +8,7 @@
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import { Star } from 'lucide-react'
+import { Star, RotateCcw } from 'lucide-react'
 import { useSlashMenu } from '@/editor/slash/store'
 import { rankSlashCommands, getSlashCommand } from '@/editor/slash/registry'
 import {
@@ -16,6 +16,7 @@ import {
   getRecents,
   isFavourite,
   toggleFavourite,
+  clearRecents,
   subscribeUsage,
   usageVersion,
 } from '@/editor/slash/usage'
@@ -144,7 +145,24 @@ export function SlashMenu() {
         {groups.length === 0 && <div className="slash-empty">No matching commands</div>}
         {groups.map((group) => (
           <div key={group.category} className="slash-group">
-            <div className="slash-group-label">{group.category}</div>
+            <div className="slash-group-label">
+              <span>{group.category}</span>
+              {group.category === 'Recent' && (
+                <button
+                  className="slash-group-clear"
+                  aria-label="Clear recent commands"
+                  title="Clear recent"
+                  // Keep focus in the editor; clear on mousedown before blur.
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    clearRecents()
+                  }}
+                >
+                  <RotateCcw size={12} aria-hidden />
+                </button>
+              )}
+            </div>
             {group.commands.map((item) => {
               const flatIndex = indexOf(item.command.id)
               const selected = flatIndex === selectedIndex && flatIndex !== -1

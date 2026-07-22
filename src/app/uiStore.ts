@@ -58,6 +58,8 @@ interface UiState {
   attachmentPickerFor: string | null
   /** How the picked file is inserted: an inline embed, or a link/card. */
   attachmentPickerMode: 'embed' | 'link'
+  /** Whether the "reference a date/event" picker is open. */
+  calendarRefOpen: boolean
   settingsOpen: boolean
   confirm: ConfirmRequest | null
   prompt: PromptRequest | null
@@ -76,6 +78,7 @@ interface UiState {
   setHelpOpen: (open: boolean) => void
   setVaultSwitcherOpen: (open: boolean) => void
   setAttachmentPickerFor: (notePath: string | null, mode?: 'embed' | 'link') => void
+  setCalendarRefOpen: (open: boolean) => void
   setSettingsOpen: (open: boolean) => void
   askConfirm: (request: ConfirmRequest) => void
   askPrompt: (request: PromptRequest) => void
@@ -98,6 +101,7 @@ export const useUi = create<UiState>((set) => ({
   vaultSwitcherOpen: false,
   attachmentPickerFor: null,
   attachmentPickerMode: 'embed',
+  calendarRefOpen: false,
   settingsOpen: false,
   confirm: null,
   prompt: null,
@@ -122,6 +126,7 @@ export const useUi = create<UiState>((set) => ({
   setVaultSwitcherOpen: (open) => set({ vaultSwitcherOpen: open }),
   setAttachmentPickerFor: (notePath, mode = 'embed') =>
     set({ attachmentPickerFor: notePath, attachmentPickerMode: mode }),
+  setCalendarRefOpen: (open) => set({ calendarRefOpen: open }),
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   askConfirm: (request) => set({ confirm: request }),
   askPrompt: (request) => set({ prompt: request }),

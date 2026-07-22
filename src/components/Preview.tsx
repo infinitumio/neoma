@@ -13,6 +13,7 @@ import { useTabs } from '@/app/tabsStore'
 import { openNoteByTarget } from '@/app/navigation'
 import { pdfThumbnail } from './pdfThumbnail'
 import { basename, dirname, isImage, isPdf, joinPath, normalizePath } from '@/utils/paths'
+import { isTaskCheckbox, isTasksHeading } from '@/tasks/tasks'
 import 'katex/dist/katex.min.css'
 
 // Lazy so pdf.js stays out of the initial bundle; embeds render it inline.
@@ -33,6 +34,28 @@ export function toggleTaskInMarkdown(content: string, index: number): string {
     if (i++ !== index) return full
     return `${prefix}[${mark === ' ' ? 'x' : ' '}]`
   })
+}
+
+/** The nearest heading preceding an element's (top-level) list, for deciding
+ *  whether checkboxes sit under a "Tasks"/"To-do" heading. */
+function nearestHeadingText(el: Element): string {
+  let list: Element | null = el.closest('ul, ol')
+  while (list?.parentElement?.closest('ul, ol')) list = list.parentElement.closest('ul, ol')
+  let sib = list?.previousElementSibling ?? null
+  while (sib) {
+    if (/^H[1-6]$/.test(sib.tagName)) return sib.textContent ?? ''
+    sib = sib.previousElementSibling
+  }
+  return ''
+}
+
+/** Extract a YouTube video id from common URL shapes, or null. */
+export function youtubeId(url: string): string | null {
+  const m =
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(
+      url,
+    )
+  return m ? m[1] : null
 }
 
 /** Split a PDF reference like `lecture.pdf#page=12` into its path and page. */
@@ -145,6 +168,42 @@ export function Preview({ path, content }: PreviewProps) {
       if (!isPdf(internal)) continue
       link.replaceWith(makePdfCard(getLinkGraph().resolve(internal, path) ?? internal, internal))
     }
+    // Calendar references render as chips: dates (`[[2026-07-25]]`) and links to
+    // event/exam pages get a small icon and pill styling.
+    for (const link of container.querySelectorAll<HTMLElement>('a.wiki-link')) {
+      const target = link.dataset.target ?? ''
+      if (/^\d{4}-\d{2}-\d{2}$/.test(target)) {
+        link.classList.add('cal-ref', 'cal-ref-date')
+        continue
+      }
+      const resolved = link.dataset.resolved
+      const type = resolved ? useVault.getState().metas.get(resolved)?.frontmatter?.type : undefined
+      if (type === 'event') link.classList.add('cal-ref', 'cal-ref-event')
+      else if (type === 'exam') link.classList.add('cal-ref', 'cal-ref-exam')
+    }
+    // YouTube links become a responsive inline player (loads only when online).
+    for (const link of container.querySelectorAll<HTMLAnchorElement>('a[href]')) {
+      const id = youtubeId(link.getAttribute('href') ?? '')
+      if (!id) continue
+      const figure = document.createElement('figure')
+      figure.className = 'youtube-embed'
+      const frame = document.createElement('iframe')
+      frame.src = `https://www.youtube-nocookie.com/embed/${id}`
+      frame.title = link.textContent?.trim() || 'YouTube video'
+      frame.allow =
+        'accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen'
+      frame.allowFullscreen = true
+      frame.loading = 'lazy'
+      frame.referrerPolicy = 'strict-origin-when-cross-origin'
+      figure.appendChild(frame)
+      const caption = link.textContent?.trim()
+      if (caption && !/^https?:/i.test(caption)) {
+        const figcaption = document.createElement('figcaption')
+        figcaption.textContent = caption
+        figure.appendChild(figcaption)
+      }
+      link.replaceWith(figure)
+    }
     // Make task-list checkboxes tickable (GFM renders them disabled) and index
     // them in document order so a click maps back to the right source line.
     container
@@ -152,6 +211,11 @@ export function Preview({ path, content }: PreviewProps) {
       .forEach((box, i) => {
         box.disabled = false
         box.dataset.taskIndex = String(i)
+        // Mark real "tasks" (metadata, or under a Tasks/To-do heading) so they
+        // read differently from plain checklist items.
+        const li = box.closest('li.task-list-item')
+        if (li && (isTaskCheckbox(li.textContent ?? '') || isTasksHeading(nearestHeadingText(li))))
+          li.classList.add('is-task')
       })
     return () => {
       urls.forEach((url) => URL.revokeObjectURL(url))

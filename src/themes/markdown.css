@@ -346,3 +346,49 @@ details.callout > summary.callout-title::-webkit-details-marker {
     color: inherit;
   }
 }
+
+/* Real tasks (marked with #task / date / priority) read differently from
+   plain checklist items. */
+.markdown-body li.task-list-item.is-task {
+  padding: 2px 8px 2px 6px;
+  border-left: 2px solid var(--color-accent-muted);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-secondary, rgba(127, 127, 127, 0.06));
+}
+.markdown-body li.task-list-item.is-task input[type='checkbox'] {
+  accent-color: var(--color-accent);
+}
+
+/* Calendar references as chips (dates / events / exams) in the reader */
+.markdown-body .cal-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.02em 0.5em;
+  border-radius: 999px;
+  border-bottom: none;
+  font-size: 0.9em;
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.markdown-body .cal-ref::before {
+  font-size: 0.9em;
+  line-height: 1;
+}
+.markdown-body .cal-ref-date::before {
+  content: '📅';
+}
+.markdown-body .cal-ref-event::before {
+  content: '📌';
+}
+.markdown-body .cal-ref-exam {
+  background: color-mix(in srgb, #e5484d 16%, transparent);
+  color: #e5484d;
+}
+.markdown-body .cal-ref-exam::before {
+  content: '🎓';
+}
+.markdown-body .cal-ref:hover {
+  filter: brightness(1.1);
+}

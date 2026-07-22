@@ -57,6 +57,12 @@ export function recordUsage(id: string): void {
   notify()
 }
 
+/** Clear the recently-used list (favourites and usage counts are untouched). */
+export function clearRecents(): void {
+  localStorage.setItem(RECENTS_KEY, JSON.stringify([]))
+  notify()
+}
+
 export function toggleFavourite(id: string): void {
   const favs = getFavourites()
   const next = favs.includes(id) ? favs.filter((f) => f !== id) : [...favs, id]

@@ -4,8 +4,29 @@ import { describe, expect, it } from 'vitest'
 import { parseTasks, toggleTaskAtLine, setTaskDueInLine, daysFromToday } from '@/tasks/tasks'
 
 describe('parseTasks', () => {
-  it('parses a plain checkbox', () => {
-    const [t] = parseTasks('page.md', '- [ ] Buy milk')
+  it('only treats marked checkboxes as tasks (plain checklists are ignored)', () => {
+    const md = ['- [ ] Re-read notes', '- [ ] Summarise', '- [ ] Buy milk #task'].join('\n')
+    const tasks = parseTasks('page.md', md)
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0].text).toBe('Buy milk')
+  })
+
+  it('treats checkboxes under a Tasks/To-do heading as tasks', () => {
+    const md = [
+      '## Tasks',
+      '- [ ] alpha',
+      '- [ ] beta',
+      '## Revision checklist',
+      '- [ ] not a task',
+      '# To-do',
+      '- [ ] gamma',
+    ].join('\n')
+    const tasks = parseTasks('p.md', md)
+    expect(tasks.map((t) => t.text)).toEqual(['alpha', 'beta', 'gamma'])
+  })
+
+  it('parses a #task-marked checkbox', () => {
+    const [t] = parseTasks('page.md', '- [ ] Buy milk #task')
     expect(t.done).toBe(false)
     expect(t.text).toBe('Buy milk')
     expect(t.pageName).toBe('page')
@@ -13,8 +34,8 @@ describe('parseTasks', () => {
   })
 
   it('reads done state', () => {
-    expect(parseTasks('p.md', '- [x] done')[0].done).toBe(true)
-    expect(parseTasks('p.md', '- [ ] not')[0].done).toBe(false)
+    expect(parseTasks('p.md', '- [x] done #task')[0].done).toBe(true)
+    expect(parseTasks('p.md', '- [ ] not #task')[0].done).toBe(false)
   })
 
   it('extracts an emoji due date and strips it from the text', () => {
@@ -47,14 +68,14 @@ describe('parseTasks', () => {
   })
 
   it('ignores checkboxes inside code fences', () => {
-    const md = ['```', '- [ ] not a task', '```', '- [ ] real task'].join('\n')
+    const md = ['```', '- [ ] not a task 📅 2026-01-01', '```', '- [ ] real task #task'].join('\n')
     const tasks = parseTasks('p.md', md)
     expect(tasks).toHaveLength(1)
     expect(tasks[0].text).toBe('real task')
   })
 
   it('handles ordered-list tasks', () => {
-    expect(parseTasks('p.md', '1. [ ] first')[0].text).toBe('first')
+    expect(parseTasks('p.md', '1. [ ] first #task')[0].text).toBe('first')
   })
 })
 

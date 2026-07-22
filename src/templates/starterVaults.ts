@@ -169,8 +169,12 @@ tags:
 
 # Tasks with due dates
 
-These show up in the **Tasks** panel (Today / Upcoming) and on the **Calendar**.
-Set or change a due date from the Tasks panel's date picker.
+Checkboxes under a **"Tasks"** (or **"To-do"**) heading become tracked tasks —
+no special syntax needed. Giving any checkbox a 📅 due date, priority, course
+or recurrence also makes it a task. Plain checklists elsewhere stay checklists.
+Tasks show up in the **Tasks** panel (Today / Upcoming) and on the **Calendar**.
+
+## Tasks
 
 - [ ] Skim the tour pages 📅 ${d(0)} ⏫ #course/tour
 - [ ] Try the flashcard review 📅 ${d(2)} #course/tour
@@ -178,6 +182,11 @@ Set or change a due date from the Tasks panel's date picker.
 - [x] Create this vault
 
 Priorities: ⏫ high · 🔼 medium · 🔽 low. Recurrence: 🔁 every week.
+
+## Revision checklist (not tasks)
+
+- [ ] These are just checkboxes
+- [ ] Tick them in reading view, but they don't appear in the Tasks panel
 `,
       },
       {

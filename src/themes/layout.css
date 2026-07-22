@@ -394,6 +394,9 @@
 .slash-group-label {
   position: sticky;
   top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: var(--color-bg-raised);
   font-size: var(--font-size-xs);
   font-weight: 650;
@@ -401,6 +404,20 @@
   letter-spacing: 0.06em;
   color: var(--color-text-faint);
   padding: 0.35rem 0.5rem 0.2rem;
+}
+.slash-group-clear {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+}
+.slash-group-clear:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
 }
 
 .slash-item {
@@ -2623,11 +2640,24 @@
 /* ---- Inline PDF embed (reading view) ---- */
 .pdf-inline {
   margin: 1em 0;
+  /* Absolute cap (matches INLINE_MAX_WIDTH) — breaks the percentage feedback
+     loop that let embeds grow without bound inside auto-width table cells. */
+  max-width: 600px;
+  overflow: hidden;
+}
+/* Inside a table cell, keep the embed a small preview so it doesn't hog the
+   table width and squish the other columns. */
+.markdown-body td .pdf-inline,
+.markdown-body th .pdf-inline,
+.md-column .pdf-inline {
+  max-width: 300px;
 }
 .pdf-viewer-inline {
   flex: none;
   /* Height is set inline to fit exactly one page; capped as a safety net. */
   max-height: 90vh;
+  width: 100%;
+  max-width: 600px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -2635,6 +2665,7 @@
 .pdf-viewer-inline .pdf-pages {
   padding: var(--space-2);
   gap: var(--space-2);
+  overflow: auto;
 }
 .pdf-inline-loading {
   padding: var(--space-5);
@@ -3186,4 +3217,23 @@
 .tree-item .tree-lock {
   flex-shrink: 0;
   color: var(--color-text-faint);
+}
+
+/* ---- YouTube embed (reading view) ---- */
+.youtube-embed {
+  margin: 1em 0;
+  max-width: 720px;
+}
+.youtube-embed iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #000;
+}
+.youtube-embed figcaption {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }

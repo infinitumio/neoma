@@ -45,6 +45,10 @@ interface PdfViewerProps {
 }
 
 const MAX_PAGE_WIDTH = 900
+/** Absolute cap for inline embeds — must match `.pdf-inline` max-width so an
+ *  embed in an auto-width container (table cell / column) can't feed its own
+ *  width back into the measurement and grow without bound. */
+const INLINE_MAX_WIDTH = 600
 
 type FitMode = 'width' | 'page'
 
@@ -89,11 +93,12 @@ export function PdfViewer({ path, initialPage, toolbarExtra, inline }: PdfViewer
         const w = usableH * effRatio(Math.max(0, page - 1))
         setBaseWidth(Math.max(240, Math.min(w, MAX_PAGE_WIDTH * 1.6)))
       } else {
-        // Inline embeds fill as much width as they can; a full tab caps width.
+        // Always cap at MAX_PAGE_WIDTH — without a cap, an embed inside a
+        // shrink-to-fit container (a table cell or narrow column) feeds its own
+        // width back into the measurement and grows without bound.
         const pad = inline ? 12 : 48
-        const cap = inline ? el.clientWidth - pad : MAX_PAGE_WIDTH
-        const usable = Math.min(el.clientWidth - pad, cap)
-        setBaseWidth(Math.max(240, usable))
+        const usable = Math.min(el.clientWidth - pad, inline ? INLINE_MAX_WIDTH : MAX_PAGE_WIDTH)
+        setBaseWidth(Math.max(inline ? 160 : 240, usable))
       }
     }
     measure()

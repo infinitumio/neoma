@@ -18,6 +18,7 @@ import { SettingsModal } from '@/components/SettingsModal'
 import { HelpModal } from '@/components/HelpModal'
 import { VaultSwitcher } from '@/components/VaultSwitcher'
 import { AttachmentPicker } from '@/components/AttachmentPicker'
+import { CalendarRefPicker } from '@/components/CalendarRefPicker'
 import { SlashMenu } from '@/components/SlashMenu'
 import { Tooltips } from '@/components/Tooltips'
 import { Dialogs } from '@/components/Dialogs'
@@ -251,6 +252,7 @@ export default function App() {
       <HelpModal />
       <VaultSwitcher />
       <AttachmentPicker />
+      <CalendarRefPicker />
       <SlashMenu />
       <FlashcardReview />
       <Tooltips />

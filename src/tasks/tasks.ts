@@ -62,17 +62,49 @@ function cleanText(text: string): string {
     .trim()
 }
 
+const TASK_TAG_RE = /(^|\s)#task\b/i
+const HEADING_LINE_RE = /^#{1,6}\s+(.+?)\s*#*$/
+
+/** A heading that turns the checkboxes beneath it into tasks. */
+export function isTasksHeading(heading: string | undefined): boolean {
+  return !!heading && /^(tasks?|to[-\s]?dos?)$/i.test(heading.trim())
+}
+
+/**
+ * Whether a checkbox itself carries task metadata — a due date, priority,
+ * course, recurrence, or an explicit `#task` tag. (Checkboxes under a
+ * "Tasks"/"To-do" heading are also tasks; see parseTasks.)
+ */
+export function isTaskCheckbox(body: string): boolean {
+  return (
+    TASK_TAG_RE.test(body) ||
+    DUE_RE.test(body) ||
+    RECUR_RE.test(body) ||
+    COURSE_FIELD_RE.test(body) ||
+    COURSE_TAG_RE.test(body) ||
+    priorityOf(body) !== 'none'
+  )
+}
+
 export function parseTasks(path: string, markdown: string): Task[] {
   const pageName = basename(path).replace(/\.md$/i, '')
   const tasks: Task[] = []
   const lines = markdown.split('\n')
   let inFence = false
+  let heading = ''
   lines.forEach((line, i) => {
     if (/^\s*(```|~~~)/.test(line)) inFence = !inFence
     if (inFence) return
+    const h = HEADING_LINE_RE.exec(line)
+    if (h) {
+      heading = h[1].trim()
+      return
+    }
     const m = CHECKBOX_RE.exec(line)
     if (!m) return
     const body = m[3]
+    // A task if it carries metadata OR sits under a "Tasks"/"To-do" heading.
+    if (!isTaskCheckbox(body) && !isTasksHeading(heading)) return
     const due = DUE_RE.exec(body)?.[1]
     const recurMatch = RECUR_RE.exec(body)
     const recur = (recurMatch?.[1] ?? recurMatch?.[2])?.trim()
@@ -80,7 +112,7 @@ export function parseTasks(path: string, markdown: string): Task[] {
     const related = WIKILINK_RE.exec(body)?.[1]?.trim()
     tasks.push({
       id: `${path}:${i}`,
-      text: cleanText(body),
+      text: cleanText(body).replace(TASK_TAG_RE, '$1').trim(),
       done: m[2] !== ' ',
       path,
       pageName,
