@@ -65,6 +65,10 @@ tags:
 ## Next actions
 
 - [ ]
+
+## Quick notes
+
+-
 `,
   },
   {

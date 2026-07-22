@@ -43,7 +43,15 @@ export function FilesPanel() {
       label: 'Folder name',
       placeholder: 'e.g. Projects',
       onSubmit: async (value) => {
-        if (value.trim()) await createFolder('', value)
+        const name = value.trim()
+        if (!name) return
+        // "Calendar" is reserved for journals/events — steer users to it.
+        const reserved = useSettings.getState().settings.dailyNotesFolder
+        if (name.toLowerCase() === reserved.toLowerCase()) {
+          ui.toast(`“${reserved}” is managed by the Planner — add events there instead`, 'warning')
+          return
+        }
+        await createFolder('', name)
       },
     })
   }

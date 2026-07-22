@@ -27,6 +27,21 @@ export function dailyNoteExists(date: Date): boolean {
   return useVault.getState().entries.has(dailyNotePath(date))
 }
 
+/**
+ * Whether a folder is reserved by the calendar (the `Calendar` root or one of
+ * its `Calendar/<date>` day folders). These are managed by the app — users
+ * can't rename/delete/move them, only the events inside.
+ */
+export function isReservedCalendarFolder(path: string): boolean {
+  const { dailyNotesFolder, dailyNoteFormat } = useSettings.getState().settings
+  if (!dailyNotesFolder) return false
+  if (path === dailyNotesFolder) return true
+  const prefix = dailyNotesFolder + '/'
+  if (!path.startsWith(prefix)) return false
+  const seg = path.slice(prefix.length)
+  return !seg.includes('/') && parseDate(seg, dailyNoteFormat) !== null
+}
+
 /** The date a daily-note path represents, or null if it is not one. */
 export function dateOfDailyNote(path: string): Date | null {
   const { dailyNotesFolder, dailyNoteFormat } = useSettings.getState().settings

@@ -3181,3 +3181,9 @@
   cursor: pointer;
   filter: invert(0.6);
 }
+
+/* Lock marker on app-managed (reserved) calendar folders */
+.tree-item .tree-lock {
+  flex-shrink: 0;
+  color: var(--color-text-faint);
+}

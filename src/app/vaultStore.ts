@@ -476,6 +476,9 @@ export async function createNote(
   if (!adapter || !search) return null
   const state = useVault.getState()
   const path = uniquePath(joinPath(folder, `${sanitizeName(name)}.md`), (p) => state.entries.has(p))
+  // Materialise any missing ancestor folders so a note created in a new nested
+  // folder (e.g. Calendar/2026-07-25/) actually shows up in the tree.
+  await ensureFolderChain(folder)
   await adapter.writeText(path, content)
   const statEntry = await adapter.stat(path)
   updateEntry(statEntry ?? { path, kind: 'file', size: content.length, modifiedAt: Date.now() })
@@ -504,6 +507,20 @@ export async function createFolder(parent: string, name: string): Promise<string
   await adapter.createFolder(path)
   updateEntry({ path, kind: 'folder' })
   return path
+}
+
+/** Create folder entries for every ancestor segment of `folder` that doesn't
+ *  exist yet (so nested notes/events render in the tree). */
+async function ensureFolderChain(folder: string): Promise<void> {
+  if (!adapter || !folder) return
+  let acc = ''
+  for (const seg of folder.split('/')) {
+    acc = acc ? `${acc}/${seg}` : seg
+    if (!useVault.getState().entries.has(acc)) {
+      await adapter.createFolder(acc).catch(() => {})
+      updateEntry({ path: acc, kind: 'folder' })
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ */

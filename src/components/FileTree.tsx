@@ -19,6 +19,7 @@ import {
   FilePlus2,
   ArrowUpToLine,
   Palette,
+  Lock,
 } from 'lucide-react'
 import type { FileEntry } from '@/types'
 import { ContextMenu, type MenuItem } from './ContextMenu'
@@ -47,6 +48,7 @@ import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 import { useSettings } from '@/settings/settingsStore'
 import { basename, dirname, folderNoteOf, isMarkdown, isPdf, stem } from '@/utils/paths'
+import { isReservedCalendarFolder } from '@/templates/dailyNotes'
 import { downloadBlob, importFiles } from '@/storage/import-export'
 
 export interface TreeNode {
@@ -298,6 +300,16 @@ export function FileTree() {
   const menuItems = (entry: FileEntry): MenuItem[] => {
     if (entry.kind === 'folder') {
       const indexNote = indexNoteOf(entry.path)
+      // Reserved calendar folders (Calendar/ and its day folders) can't be
+      // renamed, moved or deleted — only their events. Strip those actions.
+      if (isReservedCalendarFolder(entry.path)) {
+        if (!indexNote) return []
+        return noteMenuItems(indexNote, entry).filter(
+          (m) => !['Rename…', 'Move…', 'Convert to top-level page', 'Duplicate', 'Delete'].includes(
+            m.label,
+          ),
+        )
+      }
       if (indexNote) return noteMenuItems(indexNote, entry)
       return [
         {
@@ -398,6 +410,8 @@ export function FileTree() {
     // folder's notes — see buildTree).
     const expandable = isFolder || children.length > 0
     const droppable = isFolder || isMarkdown(entry.path)
+    // Calendar/ and its day folders are app-managed: can't be dragged/renamed.
+    const reserved = isFolder && isReservedCalendarFolder(entry.path)
     return (
       <li key={entry.path} role="treeitem" aria-expanded={expandable ? isOpen : undefined}>
         <button
@@ -405,9 +419,9 @@ export function FileTree() {
           onClick={() => openEntry(entry)}
           onContextMenu={(e) => {
             e.preventDefault()
-            setMenu({ x: e.clientX, y: e.clientY, entry })
+            if (menuItems(entry).length) setMenu({ x: e.clientX, y: e.clientY, entry })
           }}
-          draggable={!isFolder || isPageFolder}
+          draggable={(!isFolder || isPageFolder) && !reserved}
           onDragStart={(e) => {
             e.dataTransfer.setData(
               'application/x-neoma-path',
@@ -486,6 +500,9 @@ export function FileTree() {
           })()}
           {pinned.includes(isPageFolder ? indexNote! : entry.path) && (
             <Pin size={12} className="pin-indicator" aria-label="Pinned" />
+          )}
+          {reserved && (
+            <Lock size={11} className="tree-lock" aria-label="Managed by the calendar" />
           )}
         </button>
         {expandable && isOpen && children.length > 0 && (

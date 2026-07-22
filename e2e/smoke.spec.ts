@@ -338,19 +338,16 @@ test('slash menu: fuzzy search, keyboard insert, categories', async ({ page }) =
   const editor = page.locator('.cm-content')
   await editor.click()
 
-  // Typing `/` opens the menu with category groups.
-  await page.keyboard.type('/')
+  // Type into the focused editor char-by-char (`pressSequentially` targets the
+  // element, avoiding a focus race). `/hea` opens the menu and fuzzy-filters.
+  await editor.pressSequentially('/hea')
   const menu = page.locator('.slash-menu')
   await expect(menu).toBeVisible()
   await expect(menu.locator('.slash-group-label').first()).toBeVisible()
-
-  // Fuzzy search: `/hea` surfaces headings; Enter inserts the top result.
-  await page.keyboard.type('hea')
   await expect(menu.locator('.slash-item-title', { hasText: 'Heading 1' })).toBeVisible()
   await page.keyboard.press('Enter')
-  // Wait for the menu to be fully removed (not just hidden) before clicking.
   await expect(page.locator('.slash-menu')).toHaveCount(0)
-  await expect(page.locator('.cm-content')).toContainText('#')
+  // The Source view reads the note content (authoritative).
   await page.getByRole('button', { name: 'Source', exact: true }).click()
   await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('#')
 })
