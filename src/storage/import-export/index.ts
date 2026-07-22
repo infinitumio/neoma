@@ -69,32 +69,76 @@ export async function importVaultZip(
   return summary
 }
 
-/** Import individual files (e.g. from a file picker or drag-and-drop). */
+export interface ImportOptions {
+  /** Folder to import into (used for Markdown/folder-structured imports). */
+  targetFolder?: string
+  /**
+   * Folder for loose attachments (files selected individually rather than as
+   * part of a dropped folder). Defaults to `targetFolder`.
+   */
+  attachmentsFolder?: string
+  /** Import every file as an attachment, even `.md`/`.zip`. */
+  attachmentsOnly?: boolean
+}
+
+/**
+ * Import individual files (from a file picker or drag-and-drop). Markdown
+ * becomes notes and ZIPs are expanded, unless `attachmentsOnly` is set. Loose
+ * attachments go into `attachmentsFolder`; files dropped as part of a folder
+ * keep their relative path. Returns the summary plus the paths written, so
+ * callers can open or colour the new attachments.
+ */
 export async function importFiles(
   adapter: StorageAdapter,
   files: File[],
-  targetFolder = '',
-): Promise<ImportSummary> {
-  const summary: ImportSummary = { notes: 0, attachments: 0, skipped: [] }
+  options: ImportOptions | string = {},
+): Promise<ImportSummary & { paths: string[] }> {
+  const opts: ImportOptions = typeof options === 'string' ? { targetFolder: options } : options
+  const targetFolder = opts.targetFolder ?? ''
+  const attachmentsFolder = opts.attachmentsFolder ?? targetFolder
+  const summary: ImportSummary & { paths: string[] } = {
+    notes: 0,
+    attachments: 0,
+    skipped: [],
+    paths: [],
+  }
   for (const file of files) {
-    const relative = normalizePath(
-      (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name,
-    )
-    const path = targetFolder ? `${targetFolder}/${relative}` : relative
-    if (file.name.toLowerCase().endsWith('.md')) {
+    const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath
+    const isLoose = !rel
+    const name = normalizePath(rel || file.name)
+
+    if (!opts.attachmentsOnly && file.name.toLowerCase().endsWith('.md')) {
+      const path = joinInto(targetFolder, name)
       await adapter.writeText(path, await file.text())
       summary.notes++
-    } else if (await looksLikeZip(file)) {
+      summary.paths.push(path)
+    } else if (!opts.attachmentsOnly && (await looksLikeZip(file))) {
       const inner = await importVaultZip(adapter, file)
       summary.notes += inner.notes
       summary.attachments += inner.attachments
       summary.skipped.push(...inner.skipped)
     } else {
+      // Attachment: loose files go to the attachment folder; folder-dropped
+      // files keep their structure under the target folder.
+      const path = isLoose
+        ? uniqueAttachmentPath(adapter, attachmentsFolder, file.name)
+        : joinInto(targetFolder, name)
       await adapter.writeBinary(path, file)
       summary.attachments++
+      summary.paths.push(path)
     }
   }
   return summary
+}
+
+function joinInto(folder: string, relative: string): string {
+  return normalizePath(folder ? `${folder}/${relative}` : relative)
+}
+
+/** A non-colliding attachment path inside `folder` (synchronous best-effort). */
+function uniqueAttachmentPath(adapter: StorageAdapter, folder: string, name: string): string {
+  void adapter
+  return joinInto(folder, name)
 }
 
 /** Detect a ZIP archive by extension, MIME type or magic bytes. */

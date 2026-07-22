@@ -17,8 +17,37 @@ import { visit } from 'unist-util-visit'
 import type { Root as HastRoot, Element } from 'hast'
 import { remarkInlineExtensions } from './inlineExtensions'
 import { remarkCallouts } from './callouts'
+import { remarkColumns, normalizeColumns } from './columns'
+import { remarkFlashcards } from './flashcardCard'
 import { getMarkdownExtensions } from './registry'
 import { parseFrontmatter } from './frontmatter'
+import { maskNonProse } from './extractMeta'
+
+const WIKI_SPAN_RE = /(!?)\[\[([^\][\n]+?)\]\]/g
+
+/**
+ * Replace every prose `[[…]]` / `![[…]]` span with an opaque placeholder token
+ * (U+E000 WL<index> U+E001) so its contents survive CommonMark inline parsing
+ * verbatim — otherwise `_`/`*` inside a target become emphasis and the span is
+ * split across nodes, never matching. Code and math are skipped via
+ * maskNonProse (offsets are preserved). remarkInlineExtensions restores them.
+ */
+function protectWikiSpans(body: string): { text: string; tokens: string[] } {
+  const masked = maskNonProse(body)
+  const tokens: string[] = []
+  let out = ''
+  let last = 0
+  for (const m of masked.matchAll(WIKI_SPAN_RE)) {
+    const start = m.index ?? 0
+    const end = start + m[0].length
+    out += body.slice(last, start)
+    const index = tokens.push(body.slice(start, end)) - 1
+    out += `WL${index}`
+    last = end
+  }
+  out += body.slice(last)
+  return { text: out, tokens }
+}
 
 export interface RenderOptions {
   resolveLink?: (target: string) => string | null
@@ -48,10 +77,15 @@ function rehypeLinkBehaviour() {
   }
 }
 
-function buildProcessor(options: RenderOptions): Processor<any, any, any, any, string> {
+function buildProcessor(
+  options: RenderOptions,
+  wikiTokens: string[],
+): Processor<any, any, any, any, string> {
   const processor: any = unified().use(remarkParse).use(remarkGfm).use(remarkMath)
   processor.use(remarkCallouts)
-  processor.use(remarkInlineExtensions, { resolveLink: options.resolveLink })
+  processor.use(remarkColumns)
+  processor.use(remarkFlashcards)
+  processor.use(remarkInlineExtensions, { resolveLink: options.resolveLink, wikiTokens })
   for (const ext of getMarkdownExtensions('remark')) {
     processor.use(ext.plugin, ext.options as any)
   }
@@ -69,6 +103,7 @@ function buildProcessor(options: RenderOptions): Processor<any, any, any, any, s
 /** Render a full note (frontmatter is stripped, not rendered). */
 export async function renderMarkdown(text: string, options: RenderOptions = {}): Promise<string> {
   const { body } = parseFrontmatter(text)
-  const file = await buildProcessor(options).process(body)
+  const { text: protectedBody, tokens } = protectWikiSpans(normalizeColumns(body))
+  const file = await buildProcessor(options, tokens).process(protectedBody)
   return String(file)
 }
