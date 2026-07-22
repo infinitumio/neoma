@@ -5,7 +5,9 @@
  */
 import { List, Link2, Info, SlidersHorizontal, X } from 'lucide-react'
 import { useUi, type RightPanelId } from '@/app/uiStore'
-import { useVault } from '@/app/vaultStore'
+import { useVault, subpagesOf } from '@/app/vaultStore'
+import { useTabs } from '@/app/tabsStore'
+import { stem } from '@/utils/paths'
 import { BacklinksContent, useActiveNotePath } from './panels/BacklinksPanel'
 import { scrollToHeading } from '@/app/navigation'
 import { friendlyDateTime } from '@/utils/dates'
@@ -58,8 +60,9 @@ export function RightSidebar() {
           <>
             {panel === 'outline' && (
               <div aria-label="Note outline">
+                <SubpagesList path={path} />
                 {meta.headings.length === 0 && (
-                  <p className="text-small text-faint">No headings in this note.</p>
+                  <p className="text-small text-faint">No headings in this page.</p>
                 )}
                 {meta.headings.map((heading, i) => (
                   <button
@@ -139,5 +142,22 @@ export function RightSidebar() {
         )}
       </div>
     </aside>
+  )
+}
+
+function SubpagesList({ path }: { path: string }) {
+  const openNote = useTabs((s) => s.openNote)
+  useVault((s) => s.entries)
+  const subpages = subpagesOf(path)
+  if (!subpages.length) return null
+  return (
+    <div style={{ marginBottom: 'var(--space-3)' }}>
+      <div className="sidebar-section-label">Subpages ({subpages.length})</div>
+      {subpages.map((sub) => (
+        <button key={sub} className="outline-item" onClick={() => openNote(sub)}>
+          {stem(sub)}
+        </button>
+      ))}
+    </div>
   )
 }

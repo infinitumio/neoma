@@ -16,13 +16,14 @@ export const DEFAULT_SETTINGS: ApplicationSettings = {
   defaultEditorMode: 'edit',
   autosaveDelayMs: 700,
   attachmentFolder: 'Attachments',
-  dailyNotesFolder: 'Journal',
+  dailyNotesFolder: 'Calendar',
   dailyNoteFormat: 'YYYY-MM-DD',
   dailyNoteTemplateId: 'daily-research-journal',
   templatesFolder: 'Templates',
   fileSortOrder: 'name',
   confirmBeforeDelete: true,
   reducedMotion: 'system',
+  showTooltips: true,
   customShortcuts: {},
 }
 

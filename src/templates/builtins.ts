@@ -65,6 +65,10 @@ tags:
 ## Next actions
 
 - [ ]
+
+## Quick notes
+
+-
 `,
   },
   {
@@ -232,6 +236,62 @@ tags:
 - [ ]
 
 ## Next meeting
+
+-
+`,
+  },
+  {
+    id: 'exam-prep',
+    name: 'Exam preparation',
+    description: 'Course, date, topics, revision checklist, formulas and flashcards',
+    builtIn: true,
+    content: `---
+title: {{title}}
+created: {{date}}
+type: exam
+course: ""
+exam-date: ""
+location: ""
+permitted-materials: ""
+confidence: 3
+tags:
+  - exam
+---
+
+## Topics to review
+
+- [ ]
+
+## Revision checklist
+
+- [ ] Re-read lecture notes
+- [ ] Summarise each topic in my own words
+- [ ] Attempt past papers
+- [ ] Review worked examples
+
+## Key formulas
+
+$$
+$$
+
+## Common mistakes
+
+-
+
+## Practice questions
+
+1.
+
+## Flashcards
+
+Question:: What is the format of the exam?
+Answer:: (fill this in)
+Topic:: Logistics
+
+Question::
+Answer::
+
+## Linked lectures
 
 -
 `,

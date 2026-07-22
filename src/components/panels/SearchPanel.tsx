@@ -1,15 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
  * Full-text search panel. All searching happens locally in the index worker.
- * Supports phrases ("…"), exclusions (-term), tag:/path:/type: filters and
- * date filters.
+ * Simple visible controls (broad / exact word / exact phrase, case, scope)
+ * cover most needs; the advanced mini-syntax ("…", -term, tag:, path:,
+ * type:) stays available for power users.
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Search as SearchIcon } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Search as SearchIcon, CheckCircle2 } from 'lucide-react'
 import type { SearchFilters, SearchResultItem } from '@/types'
 import { getSearch, useVault } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
 import { debounce } from '@/utils/misc'
+import { formatDate } from '@/utils/dates'
+
+type SearchMode = 'broad' | 'word' | 'phrase'
+
+interface SearchResponse {
+  items: SearchResultItem[]
+  stats: { checked: number; matched: number }
+}
 
 function Highlighted({ snippet }: { snippet: SearchResultItem['snippets'][number] }) {
   const parts: React.ReactNode[] = []
@@ -25,38 +34,94 @@ function Highlighted({ snippet }: { snippet: SearchResultItem['snippets'][number
 
 export function SearchPanel() {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchResultItem[] | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [mode, setMode] = useState<SearchMode>('broad')
+  const [caseSensitive, setCaseSensitive] = useState(false)
+  const [scopeFolder, setScopeFolder] = useState('')
   const [createdAfter, setCreatedAfter] = useState('')
   const [modifiedAfter, setModifiedAfter] = useState('')
+  const [response, setResponse] = useState<SearchResponse | null>(null)
+  const [busy, setBusy] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const metaVersion = useVault((s) => s.metaVersion)
+  const entries = useVault((s) => s.entries)
   const openNote = useTabs((s) => s.openNote)
 
-  const runSearch = useCallback(async (q: string, created: string, modified: string) => {
-    const search = getSearch()
-    if (!search || !q.trim()) {
-      setResults(null)
-      return
-    }
-    setBusy(true)
-    const filters: SearchFilters = {}
-    if (created) filters.createdAfter = new Date(created).getTime()
-    if (modified) filters.modifiedAfter = new Date(modified).getTime()
-    try {
-      setResults(await search.query(q, filters))
-    } finally {
-      setBusy(false)
-    }
-  }, [])
+  const folders = useMemo(
+    () =>
+      [...entries.values()]
+        .filter((e) => e.kind === 'folder')
+        .map((e) => e.path)
+        .sort(),
+    [entries],
+  )
+
+  const runSearch = useCallback(
+    async (
+      q: string,
+      opts: {
+        mode: SearchMode
+        caseSensitive: boolean
+        folder: string
+        created: string
+        modified: string
+      },
+    ) => {
+      const search = getSearch()
+      if (!search || !q.trim()) {
+        setResponse(null)
+        return
+      }
+      setBusy(true)
+      const filters: SearchFilters & { mode: SearchMode; caseSensitive: boolean } = {
+        mode: opts.mode,
+        caseSensitive: opts.caseSensitive,
+      }
+      if (opts.folder) filters.folder = opts.folder
+      if (opts.created) filters.createdAfter = new Date(opts.created).getTime()
+      if (opts.modified) filters.modifiedAfter = new Date(opts.modified).getTime()
+      try {
+        setResponse(await search.queryWithStats(q, filters))
+      } finally {
+        setBusy(false)
+      }
+    },
+    [],
+  )
 
   const debouncedSearch = useRef(
-    debounce((q: string, c: string, m: string) => void runSearch(q, c, m), 200),
+    debounce(
+      (
+        q: string,
+        opts: {
+          mode: SearchMode
+          caseSensitive: boolean
+          folder: string
+          created: string
+          modified: string
+        },
+      ) => void runSearch(q, opts),
+      200,
+    ),
   ).current
 
   useEffect(() => {
-    debouncedSearch(query, createdAfter, modifiedAfter)
-  }, [query, createdAfter, modifiedAfter, debouncedSearch, metaVersion])
+    debouncedSearch(query, {
+      mode,
+      caseSensitive,
+      folder: scopeFolder,
+      created: createdAfter,
+      modified: modifiedAfter,
+    })
+  }, [
+    query,
+    mode,
+    caseSensitive,
+    scopeFolder,
+    createdAfter,
+    modifiedAfter,
+    debouncedSearch,
+    metaVersion,
+  ])
 
   // Allow other components (tag clicks) to drive the search box.
   useEffect(() => {
@@ -69,25 +134,77 @@ export function SearchPanel() {
     return () => window.removeEventListener('neoma:search', handler)
   }, [])
 
+  const items = response?.items ?? []
+
   return (
     <>
       <div className="sidebar-header">
         <span className="sidebar-title">Search</span>
       </div>
       <div className="sidebar-body">
-        <div style={{ position: 'relative' }}>
-          <input
-            ref={inputRef}
-            className="input"
-            type="search"
-            role="searchbox"
-            placeholder='e.g. attention "exact phrase" -draft tag:experiments'
-            aria-label="Search vault"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+        <input
+          ref={inputRef}
+          className="input"
+          type="search"
+          role="searchbox"
+          placeholder="Search your pages…"
+          aria-label="Search vault"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+
+        <div className="search-modes" role="group" aria-label="Search mode">
+          {(
+            [
+              ['broad', 'Broad'],
+              ['word', 'Exact word'],
+              ['phrase', 'Exact phrase'],
+            ] as Array<[SearchMode, string]>
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              className={`mode-chip${mode === id ? ' active' : ''}`}
+              aria-pressed={mode === id}
+              title={
+                id === 'broad'
+                  ? 'Ranked search with partial-word matches'
+                  : id === 'word'
+                    ? 'Match whole words only'
+                    : 'Match the exact phrase'
+              }
+              onClick={() => setMode(id)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+
         <div className="search-filters">
+          <label
+            className="text-small text-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+          >
+            <input
+              type="checkbox"
+              checked={caseSensitive}
+              onChange={(e) => setCaseSensitive(e.target.checked)}
+            />
+            Case sensitive
+          </label>
+          <select
+            className="input"
+            style={{ width: 'auto' }}
+            value={scopeFolder}
+            aria-label="Search scope"
+            onChange={(e) => setScopeFolder(e.target.value)}
+          >
+            <option value="">Entire vault</option>
+            {folders.map((folder) => (
+              <option key={folder} value={folder}>
+                {folder}/
+              </option>
+            ))}
+          </select>
           <label className="text-small text-secondary">
             Created after{' '}
             <input
@@ -109,24 +226,42 @@ export function SearchPanel() {
             />
           </label>
         </div>
-        <div role="status" className="visually-hidden">
-          {busy ? 'Searching' : results ? `${results.length} results` : ''}
-        </div>
-        {results !== null && (
+
+        {response !== null && !busy && (
+          <p className="search-status" role="status">
+            <CheckCircle2 size={13} aria-hidden /> Search completed —{' '}
+            <strong>
+              {response.stats.matched} match{response.stats.matched === 1 ? '' : 'es'}
+            </strong>{' '}
+            in {response.stats.checked} page{response.stats.checked === 1 ? '' : 's'} checked
+          </p>
+        )}
+        {busy && (
+          <p className="search-status" role="status">
+            Searching…
+          </p>
+        )}
+
+        {response !== null && (
           <div aria-label="Search results">
-            {results.length === 0 && (
+            {items.length === 0 && (
               <p className="text-small text-faint" style={{ padding: 'var(--space-2)' }}>
-                No matching notes.
+                No matching pages. Try Broad mode, or check the scope filter.
               </p>
             )}
-            {results.map((result) => (
+            {items.map((result) => (
               <button
                 key={result.path}
                 className="search-result"
                 onClick={() => openNote(result.path)}
               >
                 <div className="result-title">{result.title}</div>
-                <div className="text-small text-faint">{result.path}</div>
+                <div className="text-small text-faint">
+                  {result.folder ? `${result.folder} · ` : ''}
+                  {result.modifiedAt
+                    ? `edited ${formatDate(new Date(result.modifiedAt), 'DD MMM YYYY')}`
+                    : ''}
+                </div>
                 {result.snippets.map((snippet, i) => (
                   <Highlighted key={i} snippet={snippet} />
                 ))}
@@ -134,14 +269,16 @@ export function SearchPanel() {
             ))}
           </div>
         )}
-        {results === null && (
+
+        {response === null && (
           <div className="text-small text-faint" style={{ padding: 'var(--space-2)' }}>
             <p style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <SearchIcon size={14} aria-hidden /> Search titles, contents, paths and tags.
+              <SearchIcon size={14} aria-hidden /> Search titles, contents, paths and tags — all on
+              this device.
             </p>
             <p style={{ marginTop: 'var(--space-2)' }}>
-              Use <code>"phrases"</code>, <code>-excluded</code>, <code>tag:</code>,{' '}
-              <code>path:</code> and <code>type:</code>.
+              Optional advanced syntax: <code>"phrases"</code>, <code>-excluded</code>,{' '}
+              <code>tag:</code>, <code>path:</code>, <code>type:</code>.
             </p>
           </div>
         )}

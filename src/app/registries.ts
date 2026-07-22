@@ -18,6 +18,8 @@ export interface PanelRegistration {
   icon: LucideIcon
   component: ComponentType
   order: number
+  /** Collapsible rail group this panel belongs to (e.g. 'planner'). */
+  group?: string
 }
 
 const panels = new Map<string, PanelRegistration>()

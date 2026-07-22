@@ -7,6 +7,9 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { Editor } from './Editor'
 import { SourceView } from './SourceView'
 import { ViewModeSwitcher } from './ViewModeSwitcher'
+import { Breadcrumbs } from './Breadcrumbs'
+import { MathSymbolMenu } from './MathSymbolMenu'
+import { PageColorButton } from './PageColorButton'
 
 // The preview pulls in the markdown pipeline + KaTeX; load it on demand so
 // the initial bundle stays small for people who just want to type.
@@ -17,9 +20,11 @@ import { slugify } from '@/utils/misc'
 
 interface NotePaneProps {
   path: string
+  /** Hide the breadcrumb trail (e.g. in the PDF split view, where it's noise). */
+  hideBreadcrumbs?: boolean
 }
 
-export function NotePane({ path }: NotePaneProps) {
+export function NotePane({ path, hideBreadcrumbs }: NotePaneProps) {
   const editorMode = useUi((s) => s.editorMode)
   const note = useVault((s) => s.notes.get(path))
   const [missing, setMissing] = useState(false)
@@ -62,6 +67,10 @@ export function NotePane({ path }: NotePaneProps) {
   return (
     <div className="note-view">
       <div className="note-header">
+        {hideBreadcrumbs ? <span style={{ flex: 1 }} /> : <Breadcrumbs path={path} />}
+        {!hideBreadcrumbs && <span style={{ flex: 1 }} />}
+        <PageColorButton path={path} />
+        {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
         <ViewModeSwitcher />
       </div>
       <div className={`editor-area ${editorMode}`} data-mode={editorMode}>

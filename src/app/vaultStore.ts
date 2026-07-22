@@ -12,18 +12,24 @@ import { ConflictError, PermissionError } from '@/storage/errors'
 import { SearchClient } from '@/search/SearchClient'
 import { LinkGraph } from '@/links/LinkGraph'
 import { rewriteLinks } from '@/links/rewriteLinks'
+import { updateFrontmatter } from '@/markdown/frontmatter'
+import { isPageColor, type PageColor } from '@/utils/colors'
 import { debounce } from '@/utils/misc'
 import {
   basename,
   dirname,
+  folderNoteOf,
+  isFolderNote,
   isMarkdown,
   isWithin,
   joinPath,
+  pageFolderOf,
   sanitizeName,
   stem,
   uniquePath,
 } from '@/utils/paths'
 import { useSettings } from '@/settings/settingsStore'
+import { insertUnderHeading } from '@/journal/quicknotes'
 import { useTabs } from './tabsStore'
 
 export type VaultStatus = 'closed' | 'opening' | 'ready' | 'permission' | 'error'
@@ -61,6 +67,8 @@ interface VaultState {
   linkUpdatePlan: LinkUpdatePlan | null
   /** bumped whenever metas change, so panels can recompute cheaply */
   metaVersion: number
+  /** colour-code for non-note files (pages use frontmatter `color`) */
+  fileColors: Record<string, PageColor>
 }
 
 // Non-serialisable singletons live at module scope, not in the store.
@@ -86,6 +94,67 @@ function pinnedKey(vaultId: string): string {
   return `neoma.pinned.${vaultId}`
 }
 
+function colorsKey(vaultId: string): string {
+  return `neoma.colors.${vaultId}`
+}
+
+function readFileColors(vaultId: string): Record<string, PageColor> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(colorsKey(vaultId)) ?? '{}')
+    const out: Record<string, PageColor> = {}
+    for (const [path, color] of Object.entries(raw)) {
+      if (isPageColor(color)) out[path] = color
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
+/** The colour of a page (frontmatter) or file (stored map), or null. */
+export function getEntryColor(path: string): PageColor | null {
+  const meta = useVault.getState().metas.get(path)
+  if (meta && isPageColor(meta.frontmatter.color)) return meta.frontmatter.color
+  const stored = useVault.getState().fileColors[path]
+  return stored ?? null
+}
+
+/**
+ * Set (or clear, with color === null) a page/file colour. Pages store the
+ * colour in portable frontmatter; other files use a per-vault local map.
+ */
+export async function setEntryColor(path: string, color: PageColor | null): Promise<void> {
+  const vault = useVault.getState().vault
+  if (!vault) return
+  if (isMarkdown(path) && adapter && search) {
+    let text = useVault.getState().notes.get(path)?.content
+    if (text === undefined) text = await adapter.readText(path).catch(() => undefined)
+    if (text === undefined) return
+    const updated = updateFrontmatter(text, { color: color ?? undefined })
+    await adapter.writeText(path, updated)
+    const open = useVault.getState().notes.get(path)
+    if (open) setNote(path, { content: updated, saveState: 'saved' })
+    const statEntry = await adapter.stat(path)
+    const prev = useVault.getState().metas.get(path)
+    const metas = await search.upsertWithMeta([
+      {
+        path,
+        text: updated,
+        createdAt: prev?.createdAt ?? Date.now(),
+        modifiedAt: statEntry?.modifiedAt ?? Date.now(),
+      },
+    ])
+    bumpMetas(metas)
+    updateEntry(statEntry ?? { path, kind: 'file' })
+  } else {
+    const fileColors = { ...useVault.getState().fileColors }
+    if (color) fileColors[path] = color
+    else delete fileColors[path]
+    localStorage.setItem(colorsKey(vault.id), JSON.stringify(fileColors))
+    setState({ fileColors, metaVersion: useVault.getState().metaVersion + 1 })
+  }
+}
+
 export const useVault = create<VaultState>(() => ({
   vault: null,
   status: 'closed',
@@ -99,6 +168,7 @@ export const useVault = create<VaultState>(() => ({
   conflict: null,
   linkUpdatePlan: null,
   metaVersion: 0,
+  fileColors: {},
 }))
 
 function setState(partial: Partial<VaultState>): void {
@@ -151,6 +221,7 @@ export async function openVault(vault: Vault): Promise<void> {
     linkUpdatePlan: null,
     indexProgress: null,
     pinned: JSON.parse(localStorage.getItem(pinnedKey(vault.id)) ?? '[]'),
+    fileColors: readFileColors(vault.id),
   })
 
   localStorage.setItem('neoma.lastVault', vault.id)
@@ -283,6 +354,28 @@ function setNote(path: string, patch: Partial<OpenNote>): void {
 }
 
 /** Called by the editor on every keystroke (already CM-debounced lightly). */
+/** Append a block of text to a note (loading it first), then autosave. */
+export async function appendToNote(path: string, text: string): Promise<void> {
+  await loadNote(path)
+  const content = useVault.getState().notes.get(path)?.content
+  if (content === undefined) return
+  const sep = content === '' || content.endsWith('\n') ? '' : '\n'
+  updateNoteContent(path, `${content}${sep}${text}\n`)
+}
+
+/** Insert a line under a `## <heading>` section of a note (creating it if
+ *  needed), then autosave. */
+export async function appendUnderHeading(
+  path: string,
+  heading: string,
+  line: string,
+): Promise<void> {
+  await loadNote(path)
+  const content = useVault.getState().notes.get(path)?.content
+  if (content === undefined) return
+  updateNoteContent(path, insertUnderHeading(content, heading, line))
+}
+
 export function updateNoteContent(path: string, content: string): void {
   const note = useVault.getState().notes.get(path)
   if (!note || note.content === content) return
@@ -383,6 +476,9 @@ export async function createNote(
   if (!adapter || !search) return null
   const state = useVault.getState()
   const path = uniquePath(joinPath(folder, `${sanitizeName(name)}.md`), (p) => state.entries.has(p))
+  // Materialise any missing ancestor folders so a note created in a new nested
+  // folder (e.g. Calendar/2026-07-25/) actually shows up in the tree.
+  await ensureFolderChain(folder)
   await adapter.writeText(path, content)
   const statEntry = await adapter.stat(path)
   updateEntry(statEntry ?? { path, kind: 'file', size: content.length, modifiedAt: Date.now() })
@@ -411,6 +507,134 @@ export async function createFolder(parent: string, name: string): Promise<string
   await adapter.createFolder(path)
   updateEntry({ path, kind: 'folder' })
   return path
+}
+
+/** Create folder entries for every ancestor segment of `folder` that doesn't
+ *  exist yet (so nested notes/events render in the tree). */
+async function ensureFolderChain(folder: string): Promise<void> {
+  if (!adapter || !folder) return
+  let acc = ''
+  for (const seg of folder.split('/')) {
+    acc = acc ? `${acc}/${seg}` : seg
+    if (!useVault.getState().entries.has(acc)) {
+      await adapter.createFolder(acc).catch(() => {})
+      updateEntry({ path: acc, kind: 'folder' })
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Page hierarchy (subpages via the folder-note convention)            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Create a subpage under `parentPath` (a note). If the parent is a plain
+ * note `A/B.md`, it is first promoted to a folder note `A/B/B.md` so the
+ * hierarchy stays visible to any Markdown tool as ordinary folders.
+ * Returns the new subpage's path.
+ */
+/**
+ * Ensure a page owns a folder (the folder-note convention), promoting a
+ * plain note `A/B.md` to `A/B/B.md` if needed. Returns the folder and the
+ * page's (possibly new) path.
+ */
+async function ensurePageFolder(notePath: string): Promise<{ folder: string; notePath: string }> {
+  const existing = pageFolderOf(notePath)
+  if (existing) return { folder: existing, notePath }
+  const folder = notePath.replace(/\.md$/i, '')
+  const promoted = folderNoteOf(folder)
+  if (!adapter || useVault.getState().entries.has(promoted)) return { folder, notePath }
+  await adapter.createFolder(folder)
+  updateEntry({ path: folder, kind: 'folder' })
+  await moveFileInternal(notePath, promoted)
+  return { folder, notePath: promoted }
+}
+
+export async function createSubpage(parentPath: string, name = 'Untitled'): Promise<string | null> {
+  if (!adapter) return null
+  const { folder } = await ensurePageFolder(parentPath)
+  return createNote(folder, name)
+}
+
+/**
+ * Import a file and attach it under `notePath` — the note is promoted to a
+ * page-folder (so it becomes the attachment's parent in the tree) and the
+ * file lands inside. Returns the attachment's vault path.
+ */
+export async function attachToPage(
+  notePath: string,
+  file: Blob,
+  name: string,
+): Promise<string | null> {
+  if (!adapter) return null
+  const { folder } = await ensurePageFolder(notePath)
+  const path = uniquePath(joinPath(folder, sanitizeName(stem(name)) + extOf(name)), (p) =>
+    useVault.getState().entries.has(p),
+  )
+  await adapter.writeBinary(path, file)
+  const statEntry = await adapter.stat(path)
+  updateEntry(statEntry ?? { path, kind: 'file', size: file.size, modifiedAt: Date.now() })
+  return path
+}
+
+/** All attachment (non-Markdown) files in the vault. */
+export function listAttachments(): FileEntry[] {
+  return [...useVault.getState().entries.values()]
+    .filter((e) => e.kind === 'file' && !isMarkdown(e.path))
+    .sort((a, b) => a.path.localeCompare(b.path))
+}
+
+/** All direct subpages of a page (folder-note children, excluding itself). */
+export function subpagesOf(path: string): string[] {
+  const folder = pageFolderOf(path)
+  if (!folder) return []
+  const entries = useVault.getState().entries
+  const children: string[] = []
+  for (const entry of entries.values()) {
+    if (entry.kind !== 'file' || !isMarkdown(entry.path)) continue
+    if (entry.path === path) continue
+    const dir = dirname(entry.path)
+    if (dir === folder) children.push(entry.path)
+    else if (dirname(dir) === folder && isFolderNote(entry.path)) children.push(entry.path)
+  }
+  return children.sort((a, b) => a.localeCompare(b))
+}
+
+/**
+ * Rename a page. For a folder note (`A/B/B.md`) both the folder and its
+ * index note are renamed so the convention stays intact. Returns a link
+ * update plan when other notes link to the renamed page.
+ */
+export async function renamePage(path: string, newName: string): Promise<LinkUpdatePlan | null> {
+  const folder = pageFolderOf(path)
+  if (!folder) return renameNote(path, newName)
+  const clean = sanitizeName(newName)
+  await renameFolder(folder, clean)
+  const newFolder = joinPath(dirname(folder), clean)
+  return renameNote(joinPath(newFolder, basename(path)), clean)
+}
+
+/** Move a note to the vault root (convert a subpage into a top-level page). */
+export async function convertToTopLevel(path: string): Promise<void> {
+  await moveNote(path, '')
+}
+
+/**
+ * Make `path` a subpage of `targetNote`: promotes the target to a folder
+ * note if needed, then moves the note inside. Used by drag-and-drop.
+ */
+export async function nestUnder(path: string, targetNote: string): Promise<void> {
+  if (!adapter || path === targetNote) return
+  let folder = pageFolderOf(targetNote)
+  if (!folder) {
+    folder = targetNote.replace(/\.md$/i, '')
+    if (isWithin(folder, path)) return // already inside
+    await adapter.createFolder(folder)
+    updateEntry({ path: folder, kind: 'folder' })
+    await moveFileInternal(targetNote, folderNoteOf(folder))
+  }
+  if (dirname(path) === folder) return
+  await moveNote(path, folder)
 }
 
 export async function deleteNote(path: string): Promise<void> {
