@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -41,7 +41,7 @@ jobs:
           # Privacy guard: the bundle must not reference third-party CDNs.
           ! grep -REl "https?://(cdn\.|unpkg\.com|cdnjs|jsdelivr|fonts\.googleapis)" dist/assets && echo "no external CDN references"
       - name: Upload dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neoma-dist
           path: dist/
