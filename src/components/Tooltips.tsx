@@ -11,8 +11,19 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSettings } from '@/settings/settingsStore'
 
+// Tooltips are for icon-only controls in the rail, sidebars and PDF viewer.
+// The icon-only rule below excludes text entries (e.g. file-tree pages), so
+// page-navigation items that already show a label never get a tooltip.
 const REGION = '.activity-rail, .sidebar, .right-sidebar, .pdf-viewer'
 const SHOW_DELAY = 450
+
+/** An icon-only control (no visible text, not a form field) — the only kind
+ *  that benefits from a tooltip. */
+function isIconOnly(el: HTMLElement): boolean {
+  const tag = el.tagName
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return false
+  return (el.textContent ?? '').trim() === ''
+}
 
 interface TipState {
   text: string
@@ -67,7 +78,7 @@ export function Tooltips() {
       if (e.pointerType && e.pointerType !== 'mouse') return
       const target = e.target as HTMLElement | null
       const source = target?.closest<HTMLElement>('[data-tooltip], [aria-label], [title]')
-      if (!source || !source.closest(REGION)) {
+      if (!source || !source.closest(REGION) || !isIconOnly(source)) {
         clear()
         return
       }
