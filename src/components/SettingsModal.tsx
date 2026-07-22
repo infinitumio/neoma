@@ -6,6 +6,9 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { Modal } from './Modal'
 import { useUi } from '@/app/uiStore'
+import { useVault } from '@/app/vaultStore'
+import { parseIcs } from '@/calendar/ics'
+import { loadIcs, saveIcs, clearIcs } from '@/calendar/icsStore'
 import { useSettings, exportSettingsJson, importSettingsJson } from '@/settings/settingsStore'
 import type { ApplicationSettings } from '@/types'
 import { BUILTIN_TEMPLATES } from '@/templates/builtins'
@@ -21,6 +24,63 @@ import {
   PRIVACY_STATEMENT,
 } from '@/app/about'
 import { useInstallPrompt } from '@/app/usePwa'
+
+/** Import events from an .ics file (e.g. exported/subscribed from Google or
+ *  Outlook) into the calendar. Offline — the user picks a file they already
+ *  have; nothing is fetched. */
+function IcsImportRow() {
+  const vaultId = useVault((s) => s.vault?.id)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [count, setCount] = useState(() => loadIcs(vaultId).length)
+
+  const onFile = async (files: FileList | null) => {
+    const file = files?.[0]
+    if (!file) return
+    try {
+      const parsed = parseIcs(await file.text(), file.name.replace(/\.ics$/i, ''))
+      const merged = [...loadIcs(vaultId), ...parsed]
+      saveIcs(vaultId, merged)
+      setCount(merged.length)
+      useUi.getState().toast(`Imported ${parsed.length} events from ${file.name}`, 'success')
+    } catch {
+      useUi.getState().toast('Could not read that .ics file', 'error')
+    }
+  }
+
+  return (
+    <Row
+      name="Import a calendar (.ics)"
+      desc="Bring events from an exported/subscribed Google, Outlook or Apple calendar into neoma. Read-only, stored locally, never fetched from the network."
+    >
+      <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".ics,text/calendar"
+          hidden
+          onChange={(e) => void onFile(e.target.files)}
+        />
+        <button className="btn" onClick={() => fileRef.current?.click()}>
+          Import .ics
+        </button>
+        {count > 0 && (
+          <>
+            <span className="text-small text-faint">{count} imported</span>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                clearIcs(vaultId)
+                setCount(0)
+              }}
+            >
+              Clear
+            </button>
+          </>
+        )}
+      </div>
+    </Row>
+  )
+}
 
 function Row({ name, desc, children }: { name: string; desc?: string; children: ReactNode }) {
   return (
@@ -278,6 +338,7 @@ export function SettingsModal() {
                   ))}
                 </select>
               </Row>
+              <IcsImportRow />
             </>
           )}
 

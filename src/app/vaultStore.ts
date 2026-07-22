@@ -353,6 +353,15 @@ function setNote(path: string, patch: Partial<OpenNote>): void {
 }
 
 /** Called by the editor on every keystroke (already CM-debounced lightly). */
+/** Append a block of text to a note (loading it first), then autosave. */
+export async function appendToNote(path: string, text: string): Promise<void> {
+  await loadNote(path)
+  const content = useVault.getState().notes.get(path)?.content
+  if (content === undefined) return
+  const sep = content === '' || content.endsWith('\n') ? '' : '\n'
+  updateNoteContent(path, `${content}${sep}${text}\n`)
+}
+
 export function updateNoteContent(path: string, content: string): void {
   const note = useVault.getState().notes.get(path)
   if (!note || note.content === content) return

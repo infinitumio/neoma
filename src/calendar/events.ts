@@ -6,7 +6,7 @@
  */
 import type { NoteMeta } from '@/types'
 
-export type EventKind = 'note' | 'exam' | 'task'
+export type EventKind = 'note' | 'exam' | 'task' | 'ics'
 
 export interface CalEvent {
   /** ISO date (YYYY-MM-DD) */
@@ -63,6 +63,7 @@ const COLORS: Record<string, string> = {
   exam: '#e5484d',
   task: '#4c8dff',
   note: '#30a46c',
+  ics: '#8e6ee6',
 }
 
 /** A stable colour for an event (by course when present, else by kind). */

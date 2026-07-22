@@ -10,6 +10,7 @@ export type SidePanelId =
   | 'tags'
   | 'backlinks'
   | 'daily'
+  | 'calendar'
   | 'study'
   | 'tasks'
   | 'templates'

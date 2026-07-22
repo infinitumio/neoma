@@ -25,6 +25,18 @@ function dueLabel(days: number | null): string | null {
 }
 
 export function TasksPanel() {
+  return (
+    <>
+      <div className="sidebar-header">
+        <span className="sidebar-title">Tasks</span>
+      </div>
+      <TasksBody />
+    </>
+  )
+}
+
+/** Task list body without the panel header, so it can nest in the Planner. */
+export function TasksBody() {
   const metaVersion = useVault((s) => s.metaVersion)
   const openNote = useTabs((s) => s.openNote)
   const [view, setView] = useState<View>('today')
@@ -37,7 +49,6 @@ export function TasksPanel() {
   }, [metaVersion])
 
   const onToggle = async (task: Task) => {
-    // Optimistic flip, then persist + re-collect.
     setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)))
     await toggleTask(task)
     refresh()
@@ -65,7 +76,7 @@ export function TasksPanel() {
       if (t.done) return false
       const d = daysFromToday(t.due, today)
       if (view === 'today') return d !== null && d <= 0
-      return d === null || d > 0 // upcoming (incl. undated)
+      return d === null || d > 0
     })
     return list.sort((a, b) => {
       const da = daysFromToday(a.due, today)
@@ -81,9 +92,6 @@ export function TasksPanel() {
 
   return (
     <>
-      <div className="sidebar-header">
-        <span className="sidebar-title">Tasks</span>
-      </div>
       <div className="sidebar-body">
         <div className="search-modes" role="tablist">
           {(['today', 'upcoming', 'completed'] as View[]).map((v) => (

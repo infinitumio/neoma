@@ -8,14 +8,21 @@ All notable changes to neoma are documented here. The format follows
 
 ### Added (calendar, tasks & desktop round)
 
+- **Planner** — a collapsible rail group that expands to three separate panels:
+  **Journal** (daily notes calendar), **Calendar** (a mini month of events) and **Tasks**.
 - **Tasks** — a Today / Upcoming / Completed view over the vault's Markdown checkboxes,
   with optional readable metadata (due `📅`/`[due::]`, priority `⏫🔼🔽`/`[priority::]`,
   `#course/x`, a related `[[link]]`, recurrence `🔁`/`[repeat::]`). Ticking writes back to
   the note; tasks stay plain Markdown.
-- **Calendar** — a new tab (rail button + "Open calendar" command) with a month grid and an
-  agenda list over events from note frontmatter (`date`/`due`/`exam-date`) and task due
-  dates. Events link to their page; colours by course or kind; filter by course. Offline —
-  external calendars remain an optional future add-on.
+- **Calendar** — a full month + agenda view (rail Planner → Calendar → "Open full calendar",
+  or the "Open calendar" command) over events from note frontmatter (`date`/`due`/
+  `exam-date`), task due dates, and imported .ics calendars. Selecting a day shows a
+  **summary** of everything on it (events, journal entry, notes edited); hovering a day
+  gives a quick overview. Events link to their page; colours by course or kind; filter by
+  course.
+- **Import calendars (.ics)** from **Settings → Daily notes** — bring in events from an
+  exported/subscribed Google, Outlook or Apple calendar. Read-only, stored locally, never
+  fetched from the network; live Google/Outlook OAuth remains an optional future add-on.
 - **Desktop app scaffold (Tauri 2)** in `src-tauri/` — native window, system tray,
   single-instance focus, configurable close behaviour (quit / minimise-to-tray / ask),
   optional launch-on-startup, native dialogs/notifications. Builds locally with a Rust

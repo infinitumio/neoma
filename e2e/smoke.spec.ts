@@ -101,7 +101,9 @@ test('search finds phrases locally', async ({ page }) => {
 
 test('daily note is created from template after confirmation', async ({ page }) => {
   await createVault(page)
-  await page.getByRole('button', { name: 'Daily journal' }).click()
+  // Journal lives under the collapsible Planner rail group.
+  await page.getByRole('button', { name: 'Planner', exact: true }).click()
+  await page.getByRole('button', { name: 'Journal', exact: true }).click()
   await page.getByRole('button', { name: 'Today', exact: true }).click()
   await page.getByRole('button', { name: 'Create', exact: true }).click()
   // CodeMirror virtualises long documents, so assert on above-the-fold text.

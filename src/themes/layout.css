@@ -1900,7 +1900,10 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--dot-color, var(--color-accent));
+}
+.calendar-panel-upcoming {
+  margin-top: var(--space-3);
 }
 
 /* Compact prev/next arrows flanking a wide "Today" — never clips. */
@@ -2869,10 +2872,22 @@
   border-color: var(--color-accent);
   background: var(--color-accent-subtle);
 }
+.calendar-cell-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+.calendar-cell-icons {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
 .calendar-cell-num {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
-  align-self: flex-end;
 }
 .calendar-cell-events {
   display: flex;
@@ -2962,4 +2977,152 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ---- Planner panel (grouped Journal / Calendar / Tasks) ---- */
+.planner-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2) 0;
+}
+.planner-tabs .mode-chip {
+  flex: 1;
+  text-align: center;
+}
+
+/* ---- Calendar month + day summary ---- */
+.calendar-month-wrap {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.calendar-month-wrap .calendar-month {
+  flex: 1;
+}
+.calendar-cell {
+  align-items: stretch;
+  text-align: left;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.calendar-cell:hover {
+  background: var(--color-bg-hover);
+}
+.calendar-cell.selected {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+.calendar-event {
+  width: 100%;
+}
+.calendar-more {
+  font-size: 10px;
+  color: var(--color-text-faint);
+  padding-left: 2px;
+}
+.calendar-summary {
+  width: 280px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-bg-sidebar);
+  overflow-y: auto;
+  padding: var(--space-3);
+}
+.calendar-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-weight: 650;
+  margin-bottom: var(--space-2);
+}
+.calendar-summary section {
+  margin-bottom: var(--space-3);
+}
+@media (max-width: 720px) {
+  .calendar-summary {
+    display: none;
+  }
+}
+
+/* ---- Collapsible rail group (e.g. Planner → Journal/Calendar/Tasks) ---- */
+/* Members look like normal rail buttons, tied together by a subtle vertical
+   accent line, and slide in when the group opens (delay set inline per item). */
+.rail-group-item {
+  position: relative;
+  animation: rail-item-in 0.16s ease both;
+  /* Square left corners so the button sits flush against the accent bar. */
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.rail-group-item::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--color-accent);
+}
+@keyframes rail-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rail-group-item {
+    animation: none;
+  }
+}
+
+/* ---- Journal quick notes ---- */
+.quicknotes {
+  margin-top: var(--space-3);
+}
+.quicknotes-input {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-1);
+}
+.quicknotes-input .input {
+  flex: 1;
+  min-width: 0;
+}
+.quicknotes-list {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+}
+.quicknote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 3px var(--space-1) 3px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.quicknote:hover {
+  background: var(--color-bg-hover);
+}
+.quicknote-text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quicknote-action {
+  opacity: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.quicknote:hover .quicknote-action {
+  opacity: 1;
 }

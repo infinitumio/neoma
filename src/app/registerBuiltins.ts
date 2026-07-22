@@ -8,11 +8,12 @@ import {
   Search,
   Tags,
   Link2,
+  NotebookPen,
   CalendarDays,
+  ListTodo,
   LayoutTemplate,
   Trash2,
   GraduationCap,
-  ListTodo,
 } from 'lucide-react'
 import { registerPanel } from './registries'
 import { FilesPanel } from '@/components/panels/FilesPanel'
@@ -20,10 +21,11 @@ import { SearchPanel } from '@/components/panels/SearchPanel'
 import { TagsPanel } from '@/components/panels/TagsPanel'
 import { BacklinksPanel } from '@/components/panels/BacklinksPanel'
 import { DailyPanel } from '@/components/panels/DailyPanel'
+import { CalendarPanel } from '@/components/panels/CalendarPanel'
+import { TasksPanel } from '@/components/panels/TasksPanel'
 import { TemplatesPanel } from '@/components/panels/TemplatesPanel'
 import { TrashPanel } from '@/components/panels/TrashPanel'
 import { StudyPanel } from '@/components/panels/StudyPanel'
-import { TasksPanel } from '@/components/panels/TasksPanel'
 
 let done = false
 
@@ -40,12 +42,30 @@ export function registerBuiltinPanels(): void {
     component: BacklinksPanel,
     order: 40,
   })
+  // The Planner group: three separate panels that collapse under one rail entry.
   registerPanel({
     id: 'daily',
-    label: 'Daily journal',
-    icon: CalendarDays,
+    label: 'Journal',
+    icon: NotebookPen,
     component: DailyPanel,
     order: 50,
+    group: 'planner',
+  })
+  registerPanel({
+    id: 'calendar',
+    label: 'Calendar',
+    icon: CalendarDays,
+    component: CalendarPanel,
+    order: 51,
+    group: 'planner',
+  })
+  registerPanel({
+    id: 'tasks',
+    label: 'Tasks',
+    icon: ListTodo,
+    component: TasksPanel,
+    order: 52,
+    group: 'planner',
   })
   registerPanel({
     id: 'study',
@@ -53,13 +73,6 @@ export function registerBuiltinPanels(): void {
     icon: GraduationCap,
     component: StudyPanel,
     order: 55,
-  })
-  registerPanel({
-    id: 'tasks',
-    label: 'Tasks',
-    icon: ListTodo,
-    component: TasksPanel,
-    order: 56,
   })
   registerPanel({
     id: 'templates',
