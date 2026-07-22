@@ -37,7 +37,11 @@ function toIsoDate(value: string): string | null {
 }
 
 function unescape(value: string): string {
-  return value.replace(/\\n/gi, ' ').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\')
+  return value
+    .replace(/\\n/gi, ' ')
+    .replace(/\\,/g, ',')
+    .replace(/\\;/g, ';')
+    .replace(/\\\\/g, '\\')
 }
 
 /** Parse the VEVENTs of an .ics document into calendar events. */

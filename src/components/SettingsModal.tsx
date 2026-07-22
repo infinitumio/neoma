@@ -210,7 +210,10 @@ export function SettingsModal() {
                   <option value="full">Full</option>
                 </select>
               </Row>
-              <Row name="Hover tooltips" desc="Show labels when hovering toolbar and sidebar buttons">
+              <Row
+                name="Hover tooltips"
+                desc="Show labels when hovering toolbar and sidebar buttons"
+              >
                 <Toggle
                   checked={settings.showTooltips}
                   onChange={(v) => set('showTooltips', v)}

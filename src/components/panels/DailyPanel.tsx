@@ -93,7 +93,12 @@ function QuickNotes() {
             if (e.key === 'Enter') add()
           }}
         />
-        <button className="icon-btn" aria-label="Add quick note" onClick={add} disabled={!text.trim()}>
+        <button
+          className="icon-btn"
+          aria-label="Add quick note"
+          onClick={add}
+          disabled={!text.trim()}
+        >
           <Plus size={16} aria-hidden />
         </button>
       </div>
@@ -201,7 +206,10 @@ export function JournalBody() {
           >
             <ChevronLeft size={16} aria-hidden />
           </button>
-          <button className="btn btn-primary daily-quicknav-today" onClick={() => void openDaily(new Date())}>
+          <button
+            className="btn btn-primary daily-quicknav-today"
+            onClick={() => void openDaily(new Date())}
+          >
             <CalendarDays size={14} aria-hidden />
             <span>Today</span>
           </button>

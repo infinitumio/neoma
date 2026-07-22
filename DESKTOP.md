@@ -51,11 +51,11 @@ npm run desktop:build   # tauri build — produces installers under src-tauri/ta
 
 Typical outputs:
 
-| OS      | Artifact                                             |
-| ------- | ---------------------------------------------------- |
-| Windows | `bundle/nsis/neoma_0.2.0_x64-setup.exe`              |
-| macOS   | `bundle/dmg/neoma_0.2.0_universal.dmg` (or `aarch64`)|
-| Linux   | `bundle/appimage/neoma_0.2.0_amd64.AppImage`, `.deb` |
+| OS      | Artifact                                              |
+| ------- | ----------------------------------------------------- |
+| Windows | `bundle/nsis/neoma_0.2.0_x64-setup.exe`               |
+| macOS   | `bundle/dmg/neoma_0.2.0_universal.dmg` (or `aarch64`) |
+| Linux   | `bundle/appimage/neoma_0.2.0_amd64.AppImage`, `.deb`  |
 
 ## What the shell does
 

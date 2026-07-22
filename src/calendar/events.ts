@@ -41,7 +41,14 @@ export function eventsFromMetas(metas: NoteMeta[]): CalEvent[] {
     const course = str(fm.course)
     const examDate = asDate(fm['exam-date'])
     if (examDate) {
-      events.push({ date: examDate, title: meta.title, path: meta.path, kind: 'exam', type, course })
+      events.push({
+        date: examDate,
+        title: meta.title,
+        path: meta.path,
+        kind: 'exam',
+        type,
+        course,
+      })
     }
     const date = asDate(fm.date) ?? asDate(fm.due)
     // Don't double-count an exam page whose `date` equals its exam date.

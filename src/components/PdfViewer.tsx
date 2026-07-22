@@ -422,7 +422,11 @@ export function PdfViewer({ path, initialPage, toolbarExtra, inline }: PdfViewer
             }}
           />
           <span className="pdf-search-count text-small text-faint">
-            {matches.length ? `${activeMatch + 1} / ${matches.length}` : query.trim() ? '0 / 0' : ''}
+            {matches.length
+              ? `${activeMatch + 1} / ${matches.length}`
+              : query.trim()
+                ? '0 / 0'
+                : ''}
           </span>
           <button
             className="icon-btn"
@@ -440,7 +444,11 @@ export function PdfViewer({ path, initialPage, toolbarExtra, inline }: PdfViewer
           >
             <ChevronDown size={14} aria-hidden />
           </button>
-          <button className="icon-btn" aria-label="Close search" onClick={() => setSearchOpen(false)}>
+          <button
+            className="icon-btn"
+            aria-label="Close search"
+            onClick={() => setSearchOpen(false)}
+          >
             <X size={14} aria-hidden />
           </button>
         </div>
@@ -580,7 +588,11 @@ function PdfPage({
       const cssViewport = p.getViewport({ scale, rotation })
       const textContent = await p.getTextContent()
       if (cancelled) return
-      const layer = new TextLayer({ textContentSource: textContent, container: textDiv, viewport: cssViewport })
+      const layer = new TextLayer({
+        textContentSource: textContent,
+        container: textDiv,
+        viewport: cssViewport,
+      })
       await layer.render()
       if (!cancelled) setRendered(true)
     })()

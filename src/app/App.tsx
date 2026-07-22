@@ -88,7 +88,11 @@ function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }
           <PdfViewer path={path} initialPage={tab.pdfPage} toolbarExtra={splitButton} />
         </div>
         <div className="pdf-split-pane pdf-split-note">
-          <NotePane key={`${vaultId}:${tab.pdfSplitNote}`} path={tab.pdfSplitNote} hideBreadcrumbs />
+          <NotePane
+            key={`${vaultId}:${tab.pdfSplitNote}`}
+            path={tab.pdfSplitNote}
+            hideBreadcrumbs
+          />
         </div>
       </div>
     )

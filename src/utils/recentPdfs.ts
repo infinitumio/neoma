@@ -34,7 +34,10 @@ export function recordRecentPdf(vaultId: string | null | undefined, path: string
 export function forgetRecentPdf(vaultId: string | null | undefined, path: string): void {
   if (!vaultId) return
   try {
-    localStorage.setItem(key(vaultId), JSON.stringify(getRecentPdfs(vaultId).filter((p) => p !== path)))
+    localStorage.setItem(
+      key(vaultId),
+      JSON.stringify(getRecentPdfs(vaultId).filter((p) => p !== path)),
+    )
   } catch {
     /* non-fatal */
   }

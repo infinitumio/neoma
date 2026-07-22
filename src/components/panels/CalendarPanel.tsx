@@ -179,8 +179,7 @@ function EventsBody() {
       <div className="sidebar-section-label">Upcoming</div>
       {upcoming.length === 0 && (
         <p className="text-small text-faint" style={{ padding: '0 var(--space-2)' }}>
-          No upcoming events. Add a <code>date:</code> to a page, or import a calendar in
-          Settings.
+          No upcoming events. Add a <code>date:</code> to a page, or import a calendar in Settings.
         </p>
       )}
       {upcoming.map((e, i) => (

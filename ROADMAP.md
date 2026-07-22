@@ -32,14 +32,14 @@ before the next begins.
 - [x] Exam-study workflow: study dashboard, exam template, flashcard review (reader flip
       cards + topics), study mode
 - [~] Package neoma as a **desktop app** with Tauri (Windows first; macOS/Linux where
-      practical): native window, system-tray behaviour (close / minimise-to-tray / ask),
-      optional launch on startup, native dialogs/notifications, offline startup, reopen
-      last vault + tabs. _Scaffolded in `src-tauri/` (see [DESKTOP.md](DESKTOP.md)); builds
-      locally with a Rust toolchain — not yet compiled in CI._
+  practical): native window, system-tray behaviour (close / minimise-to-tray / ask),
+  optional launch on startup, native dialogs/notifications, offline startup, reopen
+  last vault + tabs. _Scaffolded in `src-tauri/` (see [DESKTOP.md](DESKTOP.md)); builds
+  locally with a Rust toolchain — not yet compiled in CI._
 - [~] Trustworthy installer: releases with exact filenames, sizes, versions, SHA-256
-      checksums, source/build links, and an honest unsigned-warning explanation.
-      _[INSTALL.md](INSTALL.md) + `desktop-release.yml` workflow in place; signing pending
-      certificates._
+  checksums, source/build links, and an honest unsigned-warning explanation.
+  _[INSTALL.md](INSTALL.md) + `desktop-release.yml` workflow in place; signing pending
+  certificates._
 
 ## Phase 3 — graph and organisation (planned)
 

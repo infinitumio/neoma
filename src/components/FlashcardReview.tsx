@@ -116,7 +116,12 @@ export function FlashcardReview() {
   if (!review) return null
 
   return createPortal(
-    <div className="flashcard-overlay" role="dialog" aria-modal="true" aria-label="Flashcard review">
+    <div
+      className="flashcard-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Flashcard review"
+    >
       <header className="flashcard-header">
         <div className="flashcard-title">
           <FileText size={15} aria-hidden /> {review.title}
@@ -164,7 +169,9 @@ export function FlashcardReview() {
       <div className="flashcard-progress" aria-hidden>
         <div
           className="flashcard-progress-bar"
-          style={{ width: `${order.length ? (Math.min(pos, order.length) / order.length) * 100 : 0}%` }}
+          style={{
+            width: `${order.length ? (Math.min(pos, order.length) / order.length) * 100 : 0}%`,
+          }}
         />
       </div>
 

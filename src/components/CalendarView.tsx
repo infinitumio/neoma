@@ -241,7 +241,9 @@ export default function CalendarView() {
                   >
                     <span className="calendar-cell-top">
                       <span className="calendar-cell-icons" aria-hidden>
-                        {hasJournal && <BookOpen size={11} style={{ color: 'var(--color-accent)' }} />}
+                        {hasJournal && (
+                          <BookOpen size={11} style={{ color: 'var(--color-accent)' }} />
+                        )}
                         {distinctKinds(dayEvents).map((k) => {
                           const Icon = KIND_ICON[k]
                           return <Icon key={k} size={11} style={{ color: KIND_COLOR[k] }} />
@@ -373,7 +375,9 @@ function DaySummary({
         <div className="sidebar-section-label">Journal</div>
         <button className="study-link" onClick={() => void openDaily(day)}>
           <BookOpen size={12} aria-hidden />
-          <span className="study-link-name">{hasJournal ? 'Open journal entry' : 'Create journal entry'}</span>
+          <span className="study-link-name">
+            {hasJournal ? 'Open journal entry' : 'Create journal entry'}
+          </span>
         </button>
       </section>
 

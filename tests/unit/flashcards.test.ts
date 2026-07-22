@@ -5,7 +5,10 @@ import { parseFlashcards } from '@/study/flashcards'
 
 describe('parseFlashcards', () => {
   it('parses Question:: / Answer:: pairs', () => {
-    const cards = parseFlashcards('deck.md', 'Question:: What is entropy?\nAnswer:: A measure of disorder.')
+    const cards = parseFlashcards(
+      'deck.md',
+      'Question:: What is entropy?\nAnswer:: A measure of disorder.',
+    )
     expect(cards).toHaveLength(1)
     expect(cards[0].front).toBe('What is entropy?')
     expect(cards[0].back).toBe('A measure of disorder.')
@@ -34,13 +37,7 @@ describe('parseFlashcards', () => {
   })
 
   it('parses several cards from one note', () => {
-    const md = [
-      'Question:: One?',
-      'Answer:: A',
-      '',
-      'Question:: Two?',
-      'Answer:: B',
-    ].join('\n')
+    const md = ['Question:: One?', 'Answer:: A', '', 'Question:: Two?', 'Answer:: B'].join('\n')
     expect(parseFlashcards('d.md', md)).toHaveLength(2)
   })
 

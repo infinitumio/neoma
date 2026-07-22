@@ -48,7 +48,16 @@ import {
 import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 import { useSettings } from '@/settings/settingsStore'
-import { basename, dirname, folderNoteOf, isMarkdown, isPdf, isWithin, joinPath, stem } from '@/utils/paths'
+import {
+  basename,
+  dirname,
+  folderNoteOf,
+  isMarkdown,
+  isPdf,
+  isWithin,
+  joinPath,
+  stem,
+} from '@/utils/paths'
 import { isReservedCalendarFolder } from '@/templates/dailyNotes'
 import { loadOrder, saveFolderOrder } from '@/app/fileOrder'
 import { Modal } from './Modal'
@@ -160,9 +169,7 @@ export function FileTree() {
         out.push(node.entry.path)
         const index = folderNoteOf(node.entry.path)
         const isPage = node.entry.kind === 'folder' && entries.has(index)
-        const kids = isPage
-          ? node.children.filter((c) => c.entry.path !== index)
-          : node.children
+        const kids = isPage ? node.children.filter((c) => c.entry.path !== index) : node.children
         const expandable = node.entry.kind === 'folder' || kids.length > 0
         if (expandable && !collapsed.has(node.entry.path)) walk(kids)
       }
@@ -190,7 +197,10 @@ export function FileTree() {
     return entries.has(candidate) ? candidate : null
   }
 
-  const openEntry = (entry: FileEntry, e?: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }) => {
+  const openEntry = (
+    entry: FileEntry,
+    e?: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean },
+  ) => {
     // Modifier-clicks build a multi-selection instead of opening.
     if (e && (e.metaKey || e.ctrlKey)) {
       setSelected((prev) => {
@@ -431,9 +441,10 @@ export function FileTree() {
       if (isReservedCalendarFolder(entry.path)) {
         if (!indexNote) return []
         return noteMenuItems(indexNote, entry).filter(
-          (m) => !['Rename…', 'Move…', 'Convert to top-level page', 'Duplicate', 'Delete'].includes(
-            m.label,
-          ),
+          (m) =>
+            !['Rename…', 'Move…', 'Convert to top-level page', 'Duplicate', 'Delete'].includes(
+              m.label,
+            ),
         )
       }
       if (indexNote) return noteMenuItems(indexNote, entry)
@@ -834,7 +845,12 @@ function MovePicker({
           </button>
         )}
         {shown.map((folder) => (
-          <button key={folder} className="attachment-row" title={folder} onClick={() => onPick(folder)}>
+          <button
+            key={folder}
+            className="attachment-row"
+            title={folder}
+            onClick={() => onPick(folder)}
+          >
             <FolderIcon size={15} aria-hidden />
             <span className="attachment-name">{basename(folder)}</span>
             <span className="attachment-path text-faint text-small">{folder}</span>

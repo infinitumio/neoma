@@ -76,7 +76,9 @@ export function Tooltips() {
       const target = e.target as HTMLElement | null
       // Only real controls get tooltips — never containers/landmarks (so
       // hovering empty sidebar/rail space shows nothing).
-      const source = target?.closest<HTMLElement>('button, [role="button"], a[href], [data-tooltip]')
+      const source = target?.closest<HTMLElement>(
+        'button, [role="button"], a[href], [data-tooltip]',
+      )
       if (!source || !source.closest(REGION) || !isIconOnly(source)) {
         clear()
         return
@@ -89,7 +91,12 @@ export function Tooltips() {
         // Vertical rail (and the icon rail) read best with the label to the
         // right of the button; horizontal toolbars use above/below.
         if (source.closest('.activity-rail')) {
-          setTip({ text, x: Math.round(r.right + 8), y: Math.round(r.top + r.height / 2), side: 'right' })
+          setTip({
+            text,
+            x: Math.round(r.right + 8),
+            y: Math.round(r.top + r.height / 2),
+            side: 'right',
+          })
           return
         }
         const below = r.top < 44
@@ -119,7 +126,11 @@ export function Tooltips() {
 
   if (!tip) return null
   return createPortal(
-    <div className={`tooltip tooltip-${tip.side}`} role="tooltip" style={{ left: tip.x, top: tip.y }}>
+    <div
+      className={`tooltip tooltip-${tip.side}`}
+      role="tooltip"
+      style={{ left: tip.x, top: tip.y }}
+    >
       {tip.text}
     </div>,
     document.body,

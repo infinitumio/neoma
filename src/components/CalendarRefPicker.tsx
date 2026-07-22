@@ -42,7 +42,10 @@ export function CalendarRefPicker() {
   }
 
   return (
-    <Modal title="Reference a date or event" onClose={() => useUi.getState().setCalendarRefOpen(false)}>
+    <Modal
+      title="Reference a date or event"
+      onClose={() => useUi.getState().setCalendarRefOpen(false)}
+    >
       <div className="calref">
         <div className="calref-row">
           <input
@@ -52,7 +55,11 @@ export function CalendarRefPicker() {
             aria-label="Date to reference"
             onChange={(e) => setDate(e.target.value)}
           />
-          <button className="btn btn-primary" disabled={!date} onClick={() => insert(`[[${date}]]`)}>
+          <button
+            className="btn btn-primary"
+            disabled={!date}
+            onClick={() => insert(`[[${date}]]`)}
+          >
             <CalendarDays size={14} aria-hidden /> Insert date link
           </button>
         </div>

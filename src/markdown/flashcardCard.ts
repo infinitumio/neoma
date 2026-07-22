@@ -12,8 +12,7 @@
 import type { Root, Parent } from 'mdast'
 import { visit } from 'unist-util-visit'
 
-const CARD_RE =
-  /^\s*(?:question|q)::\s*([\s\S]+?)\s*(?:answer|a)::\s*([\s\S]+?)\s*$/i
+const CARD_RE = /^\s*(?:question|q)::\s*([\s\S]+?)\s*(?:answer|a)::\s*([\s\S]+?)\s*$/i
 const TOPIC_RE = /\n?\s*(?:topic|category)::\s*(.+)\s*$/i
 
 /** Concatenate a paragraph's visible text, keeping line breaks. */

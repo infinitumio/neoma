@@ -22,11 +22,11 @@ shows.
 Each release lists, for every file: the **exact filename**, **size**, **version**,
 **release date**, and a **SHA-256 checksum**. Example (illustrative):
 
-| OS            | File                                | Size   |
-| ------------- | ----------------------------------- | ------ |
-| Windows 10/11 | `neoma_0.2.0_x64-setup.exe`         | ~8 MB  |
-| macOS 12+     | `neoma_0.2.0_universal.dmg`         | ~10 MB |
-| Linux         | `neoma_0.2.0_amd64.AppImage`        | ~85 MB |
+| OS            | File                         | Size   |
+| ------------- | ---------------------------- | ------ |
+| Windows 10/11 | `neoma_0.2.0_x64-setup.exe`  | ~8 MB  |
+| macOS 12+     | `neoma_0.2.0_universal.dmg`  | ~10 MB |
+| Linux         | `neoma_0.2.0_amd64.AppImage` | ~85 MB |
 
 A `SHA256SUMS.txt` file is published alongside the installers.
 

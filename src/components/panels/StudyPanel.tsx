@@ -107,7 +107,11 @@ export function StudyPanel() {
       </div>
       <div className="sidebar-body study-panel">
         <div className="study-actions">
-          <button className="btn btn-primary" onClick={() => void reviewAll()} disabled={!cardCount}>
+          <button
+            className="btn btn-primary"
+            onClick={() => void reviewAll()}
+            disabled={!cardCount}
+          >
             <Layers size={14} aria-hidden /> Review flashcards
             {cardCount != null && cardCount > 0 && <span className="study-badge">{cardCount}</span>}
           </button>

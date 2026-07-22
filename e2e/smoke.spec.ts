@@ -580,7 +580,9 @@ test('flashcards render as a flip card in the reader', async ({ page }) => {
   await expect(card).toBeVisible()
   await expect(card.locator('.flashcard-embed-front')).toContainText('Powerhouse')
   // Topic appears on both faces (so it flips with the card).
-  await expect(card.locator('.flashcard-embed-front .flashcard-embed-topic')).toHaveText('Organelles')
+  await expect(card.locator('.flashcard-embed-front .flashcard-embed-topic')).toHaveText(
+    'Organelles',
+  )
   // Clicking flips it to reveal the answer.
   await card.click()
   await expect(card).toHaveClass(/flipped/)
@@ -609,7 +611,9 @@ test('task checkboxes can be ticked in the reading view', async ({ page }) => {
   await expect(boxes.first()).toBeChecked()
   // The toggle is written back to the markdown source.
   await page.getByRole('button', { name: 'Source', exact: true }).click()
-  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('- [x] Buy milk')
+  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText(
+    '- [x] Buy milk',
+  )
 })
 
 test('pinned item shows a context menu so it can be unpinned', async ({ page }) => {

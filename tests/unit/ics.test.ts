@@ -21,7 +21,11 @@ describe('parseIcs', () => {
   it('parses date-only and datetime VEVENTs', () => {
     const events = parseIcs(SAMPLE, 'my-cal')
     expect(events).toHaveLength(2)
-    expect(events[0]).toMatchObject({ date: '2026-08-01', title: 'Lecture: Intro to ML', kind: 'ics' })
+    expect(events[0]).toMatchObject({
+      date: '2026-08-01',
+      title: 'Lecture: Intro to ML',
+      kind: 'ics',
+    })
     expect(events[1].date).toBe('2026-08-02')
     expect(events[0].course).toBe('my-cal')
   })
@@ -34,13 +38,18 @@ describe('parseIcs', () => {
       'DTSTART;VALUE=DATE:20260901',
       'END:VEVENT',
     ].join('\r\n')
-    expect(parseIcs(folded)[0].title).toBe('A very long title that has been folded across two lines')
+    expect(parseIcs(folded)[0].title).toBe(
+      'A very long title that has been folded across two lines',
+    )
   })
 
   it('unescapes commas and semicolons', () => {
-    const esc = ['BEGIN:VEVENT', 'SUMMARY:Buy milk\\, eggs\\; bread', 'DTSTART:20260901', 'END:VEVENT'].join(
-      '\r\n',
-    )
+    const esc = [
+      'BEGIN:VEVENT',
+      'SUMMARY:Buy milk\\, eggs\\; bread',
+      'DTSTART:20260901',
+      'END:VEVENT',
+    ].join('\r\n')
     expect(parseIcs(esc)[0].title).toBe('Buy milk, eggs; bread')
   })
 
