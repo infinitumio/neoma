@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Application root: welcome flow or workspace, plus global chrome. */
 import { lazy, Suspense, useEffect } from 'react'
-import { Columns2 } from 'lucide-react'
+import { Columns2, BookOpen } from 'lucide-react'
 import type { TabState } from '@/types'
 import { WelcomeScreen } from '@/components/WelcomeScreen'
+import { FlashcardReview } from '@/components/FlashcardReview'
+import { useStudy } from '@/study/studyStore'
 import { ActivityRail } from '@/components/ActivityRail'
 import { Sidebar } from '@/components/Sidebar'
 import { TabsBar } from '@/components/TabsBar'
@@ -108,6 +110,17 @@ function Workspace() {
   const activeTab = useTabs((s) => s.tabs.find((t) => t.id === s.activeId))
   const vaultId = useVault((s) => s.vault?.id)
   const isMobile = useIsMobile()
+  const studyMode = useStudy((s) => s.studyMode)
+
+  // Study mode: exit on Escape.
+  useEffect(() => {
+    if (!studyMode) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') useStudy.getState().setStudyMode(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [studyMode])
 
   // Editor state is cached by path; two vaults can share a path (e.g.
   // Untitled.md), so clear the cache whenever the vault changes.
@@ -126,7 +139,15 @@ function Workspace() {
   }, [activeTab?.id, activeTab?.path])
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${studyMode ? ' study-mode' : ''}`}>
+      {studyMode && (
+        <button
+          className="btn btn-small study-exit"
+          onClick={() => useStudy.getState().setStudyMode(false)}
+        >
+          <BookOpen size={14} aria-hidden /> Exit study mode <span className="kbd">Esc</span>
+        </button>
+      )}
       <ActivityRail />
       <Sidebar />
       <div className="main-area">
@@ -215,6 +236,7 @@ export default function App() {
       <VaultSwitcher />
       <AttachmentPicker />
       <SlashMenu />
+      <FlashcardReview />
       <Dialogs />
       <Toasts />
     </>

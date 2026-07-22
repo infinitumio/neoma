@@ -2202,3 +2202,264 @@
     white-space: nowrap;
   }
 }
+
+/* ============================================================
+   Study workflow: dashboard panel, flashcard review, study mode
+   ============================================================ */
+
+.btn-small {
+  padding: 3px 8px;
+  font-size: var(--font-size-sm);
+}
+
+/* ---- Study dashboard panel ---- */
+.study-panel .sidebar-section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-4);
+}
+.study-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.study-actions .btn {
+  justify-content: center;
+  gap: var(--space-2);
+}
+.study-badge {
+  min-width: 1.2rem;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 11px;
+  line-height: 1.2rem;
+}
+.study-hint {
+  padding: 0 var(--space-2);
+}
+.study-exam {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: none;
+  cursor: pointer;
+  margin-bottom: var(--space-2);
+  text-align: left;
+}
+.study-exam:hover {
+  background: var(--color-bg-hover);
+}
+.study-exam-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.study-exam-title {
+  color: var(--color-text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.study-exam-sub {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.study-days {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.study-days.soon {
+  background: color-mix(in srgb, #f5a623 25%, transparent);
+  color: #f5a623;
+}
+.study-days.past {
+  opacity: 0.6;
+}
+.study-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 5px var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+}
+.study-link:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+.study-link svg {
+  flex: none;
+}
+
+/* ---- Flashcard review overlay ---- */
+.flashcard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+}
+.flashcard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.flashcard-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+.flashcard-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.flashcard-progress {
+  height: 3px;
+  background: var(--color-bg-hover);
+}
+.flashcard-progress-bar {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.2s ease;
+}
+.flashcard-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+.flashcard-count {
+  text-align: center;
+}
+.flashcard-card {
+  width: min(680px, 92vw);
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-sidebar);
+  box-shadow: var(--shadow-overlay);
+  cursor: pointer;
+  text-align: center;
+}
+.flashcard-face {
+  white-space: pre-wrap;
+  max-width: 100%;
+}
+.flashcard-front {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.flashcard-back {
+  font-size: 1.15rem;
+  color: var(--color-text);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  width: 100%;
+}
+.flashcard-hint {
+  margin-top: var(--space-2);
+}
+.flashcard-rate {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.flashcard-rate .btn {
+  min-width: 96px;
+  justify-content: center;
+  gap: var(--space-2);
+}
+.flashcard-again {
+  border-color: color-mix(in srgb, #e5484d 50%, var(--color-border));
+  color: #e5484d;
+}
+.flashcard-good {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+}
+.flashcard-easy {
+  border-color: color-mix(in srgb, #30a46c 50%, var(--color-border));
+  color: #30a46c;
+}
+.flashcard-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+.flashcard-done {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+/* ---- Study mode: hide chrome, centre and enlarge content ---- */
+.app-shell.study-mode .activity-rail,
+.app-shell.study-mode .sidebar,
+.app-shell.study-mode .right-sidebar,
+.app-shell.study-mode .tabs-bar {
+  display: none;
+}
+.app-shell.study-mode .cm-content,
+.app-shell.study-mode .preview-pane {
+  font-size: 1.08em;
+  line-height: 1.75;
+}
+/* Centre the note column for comfortable reading. */
+.app-shell.study-mode .cm-content,
+.app-shell.study-mode .preview-pane > * {
+  max-width: 780px;
+  margin-inline: auto;
+}
+.app-shell.study-mode .cm-scroller {
+  padding-inline: var(--space-6);
+}
+.study-exit {
+  position: fixed;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-overlay);
+}

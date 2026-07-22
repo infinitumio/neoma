@@ -527,6 +527,46 @@ test('PDF viewer: text layer, find, thumbnails and split-with-note', async ({ pa
   await expect(page.locator('.pdf-split-note')).toContainText('lecture')
 })
 
+test('study workflow: flashcard review, dashboard and study mode', async ({ page }) => {
+  await createVault(page)
+  await createNote(
+    page,
+    'Question:: Powerhouse of the cell?\nAnswer:: Mitochondria\n\nThe capital of France :: Paris\n',
+  )
+
+  // Study dashboard counts the cards and opens a review.
+  await page.getByRole('button', { name: 'Study', exact: true }).click()
+  await expect(page.locator('.study-panel')).toBeVisible()
+  await expect(page.locator('.study-badge')).toHaveText('2')
+  await page.locator('.study-actions .btn-primary').click()
+
+  const overlay = page.locator('.flashcard-overlay')
+  await expect(overlay).toBeVisible()
+  await expect(overlay.locator('.flashcard-front')).toContainText('Powerhouse')
+  // Reveal + rate advances the session.
+  await page.keyboard.press('Space')
+  await expect(overlay.locator('.flashcard-back')).toContainText('Mitochondria')
+  await page.keyboard.press('2') // Good
+  await expect(overlay.locator('.flashcard-front')).toContainText('capital of France')
+  await page.keyboard.press('Escape')
+  await expect(overlay).toBeHidden()
+
+  // Study mode hides the chrome and offers an exit.
+  await page.locator('.study-actions .btn', { hasText: 'Study mode' }).click()
+  await expect(page.locator('.app-shell.study-mode')).toBeVisible()
+  await expect(page.locator('.activity-rail')).toBeHidden()
+  await page.locator('.study-exit').click()
+  await expect(page.locator('.app-shell.study-mode')).toHaveCount(0)
+
+  // The exam template creates a page that surfaces on the dashboard.
+  await page.getByRole('button', { name: 'Templates', exact: true }).click()
+  await page.getByRole('button', { name: /Exam preparation/ }).click()
+  await page.getByLabel('Note title').fill('Calculus Final')
+  await page.getByRole('button', { name: /^Create$/ }).click()
+  await page.getByRole('button', { name: 'Study', exact: true }).click()
+  await expect(page.locator('.study-exam-title')).toContainText('Calculus Final')
+})
+
 test('pinned item shows a context menu so it can be unpinned', async ({ page }) => {
   await createVault(page)
   await createNote(page, 'pin me')

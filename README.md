@@ -43,9 +43,11 @@ readable in any text editor.
 
 - **Markdown editor** (CodeMirror 6) with edit, split, reading and read-only **source**
   views, plus a floating toolbar to format highlighted text in place
-- **Slash commands** (`/`) — a searchable menu of block inserts: headings, lists, callouts,
-  toggles, code, and academic blocks (equations, theorems, proofs, flashcards, exam
-  questions, lecture summaries), all inserting portable Markdown
+- **Slash commands** (`/`) — a Notion-style inline menu that opens beneath the cursor:
+  fuzzy search, category groups, favourites/recents, context-aware ranking and a rich
+  preview panel. ~90 commands (headings, lists, callouts, toggles, code, equations,
+  theorems, proofs, flashcards, exam questions, lecture summaries) sharing one registry
+  with the command palette; all insert portable Markdown
 - **Pages and subpages** — nest pages (stored as ordinary folders + files), with
   breadcrumbs and drag-to-nest
 - **Wiki links** — `[[Page]]`, `[[Page|Alias]]`, `[[Page#Heading]]` — with autocompletion
@@ -66,8 +68,14 @@ readable in any text editor.
 - **Tabs** with pinning, reopen-closed, and session restore
 - **Attachments**: paste or drag images and PDFs, or use the attachment picker (choose from
   the vault or add a file under the page); stored with relative paths
-- **In-app PDF viewer** (offline, bundled pdf.js): open PDFs in a tab with page nav, zoom
-  and fit-width; PDF embeds/links show a first-page preview card
+- **In-app PDF viewer** (offline, bundled pdf.js): selectable text layer (copy + find with
+  highlights), thumbnails, page nav, zoom, fit-width/fit-page, rotate, fullscreen and print;
+  `[[lecture.pdf#page=12]]` links jump to a page; optional split view (PDF + a companion
+  note for paraphrasing); PDF embeds/links show a first-page preview card
+- **Study workflow**: a Study dashboard (upcoming exams with days-until, recent lecture PDFs
+  and notes), an exam-prep template, a **flashcard review** for `Question:: / Answer::` (and
+  `front :: back`) cards — reveal, rate confidence, shuffle, hard-only filter, all offline —
+  and a distraction-free **study mode**
 - **Command palette** (`Ctrl/Cmd+K`) and customisable keyboard shortcuts
 - **Import/export**: whole-vault ZIP, single-note Markdown/HTML, print-to-PDF
 - **Recently deleted** with restore; conflict detection for external file edits

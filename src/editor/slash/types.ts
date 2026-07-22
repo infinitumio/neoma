@@ -29,6 +29,8 @@ export interface SlashCommand {
   run: (ctx: SlashCommandContext) => void
   /** when present and true, the command is shown but not runnable */
   disabledReason?: string
+  /** an action that doesn't need an editor/active note (e.g. study mode) */
+  global?: boolean
 }
 
 export type SlashCategory =

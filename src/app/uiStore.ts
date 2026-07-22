@@ -5,7 +5,14 @@ import type { EditorMode } from '@/types'
 import { generateId } from '@/utils/misc'
 
 export type SidePanelId =
-  'files' | 'search' | 'tags' | 'backlinks' | 'daily' | 'templates' | 'trash'
+  | 'files'
+  | 'search'
+  | 'tags'
+  | 'backlinks'
+  | 'daily'
+  | 'study'
+  | 'templates'
+  | 'trash'
 
 export type RightPanelId = 'outline' | 'backlinks' | 'properties' | 'info'
 

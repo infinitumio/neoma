@@ -237,6 +237,58 @@ tags:
 `,
   },
   {
+    id: 'exam-prep',
+    name: 'Exam preparation',
+    description: 'Course, date, topics, revision checklist, formulas and flashcards',
+    builtIn: true,
+    content: `---
+title: {{title}}
+created: {{date}}
+type: exam
+course: ""
+exam-date: ""
+location: ""
+permitted-materials: ""
+confidence: 3
+tags:
+  - exam
+---
+
+## Topics to review
+
+- [ ]
+
+## Revision checklist
+
+- [ ] Re-read lecture notes
+- [ ] Summarise each topic in my own words
+- [ ] Attempt past papers
+- [ ] Review worked examples
+
+## Key formulas
+
+$$
+$$
+
+## Common mistakes
+
+-
+
+## Practice questions
+
+1.
+
+## Flashcards
+
+Question::
+Answer::
+
+## Linked lectures
+
+-
+`,
+  },
+  {
     id: 'research-question',
     name: 'Research question',
     description: 'Frame a research question with evidence, methods and risks',

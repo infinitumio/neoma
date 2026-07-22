@@ -6,6 +6,32 @@ All notable changes to neoma are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (slash, PDF & study round)
+
+- **Complete slash-command system** — a Notion-style inline menu that opens beneath the
+  cursor: fuzzy search, category groups, Favourites/Recent, context-aware ranking, a rich
+  two-line preview panel, and full keyboard/screen-reader support. ~90 commands share one
+  registry with the command palette (`/` and `Ctrl/Cmd+K` are the same definitions).
+  AI commands appear but stay disabled until an AI plugin is installed. _(Fixes a crash
+  where the menu never opened — `coordsAtPos` was read during a CodeMirror update.)_
+- **First-class PDF viewer** — a selectable **text layer** (copy text; **find in document**
+  with match navigation and highlighting), a **thumbnail** sidebar, **rotate**,
+  **fit-width / fit-page**, **fullscreen**, **print**, and a page-number input.
+  `[[lecture.pdf#page=12]]` and `(lecture.pdf#page=12)` links jump to a page. Optional
+  **split view** puts the PDF beside an auto-created companion note for paraphrasing
+  lectures. Recently opened PDFs are tracked per vault.
+- **Study workflow** — a **Study dashboard** panel (upcoming exams with days-until, recent
+  lecture PDFs and notes, a vault-wide flashcard count), an **exam-prep template** (course,
+  date, topics, revision checklist, formulas, common mistakes, practice questions,
+  confidence, linked lectures), **flashcard review** for `Question:: / Answer::` and
+  `front :: back` cards (reveal, rate confidence, shuffle, hard-only filter, offline), and a
+  distraction-free **study mode**.
+
+### Fixed (slash, PDF & study round)
+
+- **Daily journal** Yesterday/Today/Tomorrow buttons no longer clip in the narrow panel —
+  compact prev/next arrows now flank a wide "Today".
+
 ### Added (PDF & attachments round)
 
 - **In-app PDF viewer** — PDFs open in a viewer tab (never a silent download): continuous

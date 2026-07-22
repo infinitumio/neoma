@@ -17,7 +17,10 @@ import { registerCommand, runCommand, getCommand } from '@/commands/registry'
 import { getActiveView } from '../activeView'
 import { useUi } from '@/app/uiStore'
 import { useTabs } from '@/app/tabsStore'
+import { useVault } from '@/app/vaultStore'
 import { isoDate } from '@/utils/dates'
+import { useStudy, cardsForNote, cardsForVault } from '@/study/studyStore'
+import { basename } from '@/utils/paths'
 
 const snippet = (t: string) => (ctx: { view: EditorView }) => insertSnippet(ctx.view, t)
 const wrap = (b: string, a: string, ph?: string) => (ctx: { view: EditorView }) =>
@@ -28,6 +31,29 @@ function openAttachmentPicker(): void {
   const tabs = useTabs.getState()
   const active = tabs.tabs.find((t) => t.id === tabs.activeId)
   if (active?.type === 'note' && active.path) useUi.getState().setAttachmentPickerFor(active.path)
+}
+
+/** Review the flashcards in the active note. */
+async function reviewCurrentNote(): Promise<void> {
+  const tabs = useTabs.getState()
+  const active = tabs.tabs.find((t) => t.id === tabs.activeId)
+  if (active?.type !== 'note' || !active.path) return
+  const cards = await cardsForNote(active.path)
+  if (!cards.length) {
+    useUi.getState().toast('No flashcards on this page yet', 'info')
+    return
+  }
+  useStudy.getState().openReview(basename(active.path).replace(/\.md$/i, ''), cards)
+}
+
+/** Review every flashcard in the vault. */
+async function reviewWholeVault(): Promise<void> {
+  const cards = await cardsForVault()
+  if (!cards.length) {
+    useUi.getState().toast('No flashcards found in this vault', 'info')
+    return
+  }
+  useStudy.getState().openReview('All flashcards', cards)
 }
 
 export const SLASH_COMMANDS: SlashCommand[] = [
@@ -709,6 +735,35 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     run: snippet('Question:: ${question}\nAnswer:: ${answer}'),
   },
   {
+    id: 'study.review',
+    title: 'Review Flashcards',
+    category: 'Study',
+    icon: 'flashcard',
+    description: 'Review this page’s flashcards',
+    keywords: ['revise', 'srs', 'study', 'quiz', 'test'],
+    run: () => void reviewCurrentNote(),
+  },
+  {
+    id: 'study.review-all',
+    title: 'Review All Flashcards',
+    category: 'Study',
+    icon: 'flashcard',
+    description: 'Review every flashcard in the vault',
+    keywords: ['revise', 'srs', 'study', 'deck'],
+    global: true,
+    run: () => void reviewWholeVault(),
+  },
+  {
+    id: 'study.study-mode',
+    title: 'Study Mode',
+    category: 'Study',
+    icon: 'book',
+    description: 'Distraction-free study layout',
+    keywords: ['focus', 'zen', 'distraction'],
+    global: true,
+    run: () => useStudy.getState().toggleStudyMode(),
+  },
+  {
     id: 'study.practice',
     title: 'Practice Question',
     category: 'Study',
@@ -1124,12 +1179,18 @@ export function registerSlashCommands(): void {
       category: command.category,
       shortcut: command.shortcut,
       isAvailable: () => {
+        if (command.disabledReason) return false
+        if (command.global) return useVault.getState().status === 'ready'
         const tabs = useTabs.getState()
         const active = tabs.tabs.find((t) => t.id === tabs.activeId)
-        return active?.type === 'note' && !command.disabledReason
+        return active?.type === 'note'
       },
       run: () => {
         const view = getActiveView()
+        if (command.global) {
+          command.run({ view: view as EditorView })
+          return
+        }
         if (view) command.run({ view })
       },
     })

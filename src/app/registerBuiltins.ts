@@ -3,7 +3,16 @@
  * Registers the first-party sidebar panels through the panel registry —
  * the same path a future plugin would take.
  */
-import { Files, Search, Tags, Link2, CalendarDays, LayoutTemplate, Trash2 } from 'lucide-react'
+import {
+  Files,
+  Search,
+  Tags,
+  Link2,
+  CalendarDays,
+  LayoutTemplate,
+  Trash2,
+  GraduationCap,
+} from 'lucide-react'
 import { registerPanel } from './registries'
 import { FilesPanel } from '@/components/panels/FilesPanel'
 import { SearchPanel } from '@/components/panels/SearchPanel'
@@ -12,6 +21,7 @@ import { BacklinksPanel } from '@/components/panels/BacklinksPanel'
 import { DailyPanel } from '@/components/panels/DailyPanel'
 import { TemplatesPanel } from '@/components/panels/TemplatesPanel'
 import { TrashPanel } from '@/components/panels/TrashPanel'
+import { StudyPanel } from '@/components/panels/StudyPanel'
 
 let done = false
 
@@ -34,6 +44,13 @@ export function registerBuiltinPanels(): void {
     icon: CalendarDays,
     component: DailyPanel,
     order: 50,
+  })
+  registerPanel({
+    id: 'study',
+    label: 'Study',
+    icon: GraduationCap,
+    component: StudyPanel,
+    order: 55,
   })
   registerPanel({
     id: 'templates',
