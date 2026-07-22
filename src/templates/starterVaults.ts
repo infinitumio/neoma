@@ -468,7 +468,7 @@ tags:
 
 - Reading: create literature notes under [[Literature/Literature]]
 - Experiments: log runs under [[Experiments/Experiments]]
-- Journal: [[Journal/${today()}|Today's entry]]
+- Journal: [[${today()}|Today's entry]] (opens from the Planner → Journal)
 
 > [!definition] Vault
 > A vault is the folder where neoma keeps a set of related pages, attachments
@@ -499,8 +499,11 @@ One page per experiment run. Use the **Experiment log** template.
 `,
       },
       {
-        path: `Journal/${today()}.md`,
+        // Journal lives under Calendar/<date>/ as the day's folder-note.
+        path: `Calendar/${today()}/${today()}.md`,
         content: `---
+title: ${today()}
+created: ${today()}
 type: journal
 tags:
   - journal
@@ -519,6 +522,10 @@ tags:
 ## Next actions
 
 - [ ]
+
+## Quick notes
+
+-
 `,
       },
     ],

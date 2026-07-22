@@ -5,7 +5,7 @@
  * three panels in the rail's "Planner" group (alongside Journal and Tasks).
  */
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Maximize2, CircleDot } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Maximize2, CircleDot, Plus } from 'lucide-react'
 import { addDays, formatDate, isoDate } from '@/utils/dates'
 import { useVault } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
@@ -35,6 +35,7 @@ function EventsBody() {
   const openSpecial = useTabs((s) => s.openSpecial)
   const [viewDate, setViewDate] = useState(() => new Date())
   const [dynamic, setDynamic] = useState<CalEvent[]>([])
+  const [selected, setSelected] = useState(() => isoDate())
 
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
@@ -124,17 +125,14 @@ function EventsBody() {
                   'calendar-day',
                   day.getMonth() !== month ? 'other-month' : '',
                   iso === today ? 'today' : '',
+                  iso === selected ? 'selected' : '',
                   dayEvents.length ? 'has-note' : '',
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                title={
-                  dayEvents.length
-                    ? `${dayEvents.map((e) => e.title).join('\n')}\n(click to add an event)`
-                    : 'Click to add an event'
-                }
-                onClick={() => promptNewEvent(iso, false)}
-                aria-label={`Add event on ${iso}`}
+                title={dayEvents.map((e) => e.title).join('\n') || undefined}
+                onClick={() => setSelected(iso)}
+                aria-label={iso}
                 style={
                   dayEvents.length
                     ? ({ '--dot-color': eventColor(dayEvents[0]) } as React.CSSProperties)
@@ -147,6 +145,36 @@ function EventsBody() {
           })}
         </div>
       </div>
+
+      <div className="calendar-panel-daybar">
+        <span className="sidebar-section-label" style={{ padding: 0 }}>
+          {formatDate(new Date(selected), 'ddd, DD MMM')}
+        </span>
+        <button
+          className="btn btn-small"
+          onClick={() => promptNewEvent(selected)}
+          title="Add an event on this day"
+        >
+          <Plus size={13} aria-hidden /> Event
+        </button>
+      </div>
+      {(eventsByDate.get(selected) ?? []).length === 0 ? (
+        <p className="text-small text-faint" style={{ padding: '0 var(--space-2)' }}>
+          Nothing on this day. Add an event, or pick another date.
+        </p>
+      ) : (
+        (eventsByDate.get(selected) ?? []).map((e, i) => (
+          <button
+            key={i}
+            className="study-link"
+            title={e.title}
+            onClick={() => e.path && openNote(e.path)}
+          >
+            <CircleDot size={12} style={{ color: eventColor(e) }} aria-hidden />
+            <span className="study-link-name">{e.title}</span>
+          </button>
+        ))
+      )}
 
       <div className="sidebar-section-label">Upcoming</div>
       {upcoming.length === 0 && (

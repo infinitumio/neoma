@@ -358,6 +358,14 @@ details.callout > summary.callout-title::-webkit-details-marker {
 .markdown-body li.task-list-item.is-task input[type='checkbox'] {
   accent-color: var(--color-accent);
 }
+/* Completed checkboxes read as done: greyed and struck through. */
+.markdown-body li.task-list-item:has(input[type='checkbox']:checked) {
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}
+.markdown-body li.task-list-item.is-task:has(input[type='checkbox']:checked) {
+  opacity: 0.7;
+}
 
 /* Calendar references as chips (dates / events / exams) in the reader */
 .markdown-body .cal-ref {

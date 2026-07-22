@@ -579,7 +579,8 @@ test('flashcards render as a flip card in the reader', async ({ page }) => {
   const card = page.locator('.flashcard-embed')
   await expect(card).toBeVisible()
   await expect(card.locator('.flashcard-embed-front')).toContainText('Powerhouse')
-  await expect(card.locator('.flashcard-embed-topic')).toHaveText('Organelles')
+  // Topic appears on both faces (so it flips with the card).
+  await expect(card.locator('.flashcard-embed-front .flashcard-embed-topic')).toHaveText('Organelles')
   // Clicking flips it to reveal the answer.
   await card.click()
   await expect(card).toHaveClass(/flipped/)

@@ -27,12 +27,33 @@ function paragraphText(node: unknown): string {
   return out
 }
 
-function face(className: string, text: string) {
+function face(className: string, text: string, hint: string, topic?: string) {
+  const children: unknown[] = []
+  if (topic) {
+    children.push({
+      type: 'element',
+      tagName: 'div',
+      properties: { className: ['flashcard-embed-topic'] },
+      children: [{ type: 'text', value: topic }],
+    })
+  }
+  children.push({
+    type: 'element',
+    tagName: 'div',
+    properties: { className: ['flashcard-embed-text'] },
+    children: [{ type: 'text', value: text }],
+  })
+  children.push({
+    type: 'element',
+    tagName: 'div',
+    properties: { className: ['flashcard-embed-hint'] },
+    children: [{ type: 'text', value: hint }],
+  })
   return {
     type: 'element',
     tagName: 'div',
     properties: { className: ['flashcard-embed-face', className] },
-    children: [{ type: 'text', value: text }],
+    children,
   }
 }
 
@@ -56,28 +77,16 @@ export function remarkFlashcards() {
       const back = m[2].trim()
       if (!front || !back) return
 
-      const faces = [face('flashcard-embed-front', front), face('flashcard-embed-back', back)]
+      // Topic + hint live inside each face so they flip with the card.
       const inner = {
         type: 'element',
         tagName: 'div',
         properties: { className: ['flashcard-embed-inner'] },
-        children: faces,
+        children: [
+          face('flashcard-embed-front', front, 'Click to flip', topic),
+          face('flashcard-embed-back', back, 'Click to flip back', topic),
+        ],
       }
-      const children: unknown[] = [inner]
-      if (topic) {
-        children.push({
-          type: 'element',
-          tagName: 'div',
-          properties: { className: ['flashcard-embed-topic'] },
-          children: [{ type: 'text', value: topic }],
-        })
-      }
-      children.push({
-        type: 'element',
-        tagName: 'div',
-        properties: { className: ['flashcard-embed-hint'] },
-        children: [{ type: 'text', value: 'Click to flip' }],
-      })
 
       const replacement = {
         type: 'paragraph',
@@ -91,7 +100,7 @@ export function remarkFlashcards() {
             tabindex: 0,
             'aria-label': `Flashcard: ${front}. Click to reveal the answer.`,
           },
-          hChildren: children,
+          hChildren: [inner],
         },
         children: [],
       }

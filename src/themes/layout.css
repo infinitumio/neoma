@@ -1910,6 +1910,19 @@
   border: 1px solid var(--color-accent-muted);
 }
 
+/* The day the user has selected in the mini calendar. */
+.calendar-day.selected {
+  background: var(--color-accent-subtle);
+  color: #fff;
+  font-weight: 650;
+}
+.calendar-day.selected:hover {
+  background: var(--color-accent-subtle);
+}
+.calendar-day.selected.has-note::after {
+  background: #fff;
+}
+
 .calendar-day.has-note::after {
   content: '';
   position: absolute;
@@ -2613,6 +2626,10 @@
   color: var(--color-text-faint);
   pointer-events: none;
 }
+.flashcard-embed-text {
+  max-width: 100%;
+  white-space: pre-wrap;
+}
 @media (prefers-reduced-motion: reduce) {
   .flashcard-embed-inner {
     transition: none;
@@ -3281,4 +3298,14 @@
 }
 .tree-item.drop-after::after {
   bottom: -1px;
+}
+
+/* Mini-calendar selected-day bar (label + add-event button) */
+.calendar-panel-daybar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: 0 var(--space-2);
 }
