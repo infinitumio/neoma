@@ -5,7 +5,7 @@
  * Markdown pages so the vault opens with something to explore.
  */
 import { useState } from 'react'
-import { GraduationCap, FlaskConical, BookOpen, FileText } from 'lucide-react'
+import { GraduationCap, FlaskConical, BookOpen, FileText, Sparkles } from 'lucide-react'
 import { Modal } from './Modal'
 import { STARTERS, getStarter, type StarterId } from '@/templates/starterVaults'
 import { createBrowserVault } from '@/storage/VaultManager'
@@ -14,6 +14,7 @@ import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 
 const ICONS: Record<StarterId, typeof FileText> = {
+  demo: Sparkles,
   university: GraduationCap,
   research: FlaskConical,
   personal: BookOpen,

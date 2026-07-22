@@ -7,8 +7,11 @@
 import { createNote } from '@/app/vaultStore'
 import { useUi } from '@/app/uiStore'
 import { useTabs } from '@/app/tabsStore'
+import { useSettings } from '@/settings/settingsStore'
+import { joinPath } from '@/utils/paths'
 
-/** Prompt for a title and create an event on `date` (ISO). */
+/** Prompt for a title and create an event on `date` (ISO). Events live in the
+ *  day's folder (e.g. Calendar/2026-07-25/) next to that day's journal note. */
 export function promptNewEvent(date: string, open = true): void {
   useUi.getState().askPrompt({
     title: 'New event',
@@ -19,7 +22,8 @@ export function promptNewEvent(date: string, open = true): void {
       const name = value.trim()
       if (!name) return
       const content = `---\ntitle: ${name}\ntype: event\ndate: ${date}\ntags:\n  - event\n---\n\n`
-      const path = await createNote('Calendar', `${date} ${name}`, content)
+      const folder = joinPath(useSettings.getState().settings.dailyNotesFolder, date)
+      const path = await createNote(folder, name, content)
       if (path) {
         if (open) useTabs.getState().openNote(path)
         useUi.getState().toast('Event added', 'success')

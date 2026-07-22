@@ -4,9 +4,9 @@
  * a starter, which seeds a few real, editable pages so the vault isn't empty
  * and unfamiliar. All content is ordinary Markdown — nothing proprietary.
  */
-import { isoDate } from '@/utils/dates'
+import { addDays, isoDate } from '@/utils/dates'
 
-export type StarterId = 'university' | 'research' | 'personal' | 'blank'
+export type StarterId = 'demo' | 'university' | 'research' | 'personal' | 'blank'
 
 export interface Starter {
   id: StarterId
@@ -16,8 +16,304 @@ export interface Starter {
 }
 
 const today = () => isoDate()
+/** ISO date `n` days from today — used to seed live calendar/task content. */
+const d = (n: number) => isoDate(addDays(new Date(), n))
 
 export const STARTERS: Starter[] = [
+  {
+    id: 'demo',
+    name: 'Feature tour',
+    description: 'A guided vault that shows off every feature — dates are set around today.',
+    files: () => [
+      {
+        path: 'Start here.md',
+        content: `---
+title: Start here
+type: page
+color: green
+tags:
+  - tour
+---
+
+# 👋 Welcome to the neoma feature tour
+
+This vault is filled with live examples. Everything is a plain Markdown file on
+your device — nothing is uploaded. Work through the pages below, then delete
+what you don't need.
+
+> [!tip] Two things to try first
+> 1. Type \`/\` on a blank line for the **slash menu** (headings, math, callouts, columns…).
+> 2. Press \`Ctrl/Cmd+K\` for the **command palette**.
+
+## The tour
+
+- [[Tour/Text, callouts & columns]] — formatting, callouts, highlights, columns
+- [[Tour/Mathematics]] — LaTeX, matrices, theorems
+- [[Tour/Flashcards]] — flip cards you can review
+- [[Tour/Tasks & dates]] — checkboxes with due dates that land on the calendar
+- [[Courses/Courses]] — pages, **subpages**, and an **exam** page
+- Open the **Planner** in the left rail (Journal · Calendar · Tasks), the
+  **Study** panel, and the **Graph** view.
+
+Tags like #tour and #biology are clickable, and so are [[wiki links]].
+`,
+      },
+      {
+        path: 'Tour/Text, callouts & columns.md',
+        content: `---
+title: Text, callouts & columns
+tags:
+  - tour
+---
+
+# Text & formatting
+
+**Bold**, *italic*, <u>underline</u>, ~~strikethrough~~, \`inline code\`, and
+==highlighted== text. You can also colour highlights:
+<mark data-color="blue">blue</mark>, <mark data-color="orange">orange</mark>.
+
+## Callouts
+
+> [!note] Note
+> Callouts group information. Types include note, tip, warning, example, quote.
+
+> [!warning] Watch out
+> This is a warning callout.
+
+## Columns
+
+Write things side by side with the **Columns** slash command:
+
+:::columns
+### Pros
+- Offline & private
+- Plain Markdown
+- Fast search
+|||
+### Cons
+- You'll want to tell your friends
+- Hard to go back to other apps
+:::
+
+## Task list (tick these in reading view)
+
+- [x] Read *Start here*
+- [ ] Explore the slash menu
+- [ ] Open the Graph view
+
+---
+
+Links: [[Start here]] · [[Tour/Mathematics]]
+`,
+      },
+      {
+        path: 'Tour/Mathematics.md',
+        content: `---
+title: Mathematics
+tags:
+  - tour
+---
+
+# Mathematics (KaTeX, offline)
+
+Inline math like $e^{i\\pi} + 1 = 0$, and display math:
+
+$$
+\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}
+$$
+
+A matrix:
+
+$$
+\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}
+$$
+
+> [!definition] Bayes' theorem
+> $$ P(A \\mid B) = \\frac{P(B \\mid A)\\,P(A)}{P(B)} $$
+
+Double-click any rendered equation in reading view to copy its LaTeX.
+`,
+      },
+      {
+        path: 'Tour/Flashcards.md',
+        content: `---
+title: Flashcards
+tags:
+  - tour
+  - revision
+---
+
+# Flashcards
+
+In **reading view** these become flip cards. In the **Study** panel (or with the
+*Review Flashcards* command) you can review them — reveal, rate, shuffle.
+
+Question:: What does neoma store your notes as?
+Answer:: Plain Markdown files on your own device.
+Topic:: neoma basics
+
+Question:: What is the powerhouse of the cell?
+Answer:: The mitochondria.
+Topic:: Biology
+
+The capital of France :: Paris
+`,
+      },
+      {
+        path: 'Tour/Tasks & dates.md',
+        content: `---
+title: Tasks & dates
+tags:
+  - tour
+---
+
+# Tasks with due dates
+
+These show up in the **Tasks** panel (Today / Upcoming) and on the **Calendar**.
+Set or change a due date from the Tasks panel's date picker.
+
+- [ ] Skim the tour pages 📅 ${d(0)} ⏫ #course/tour
+- [ ] Try the flashcard review 📅 ${d(2)} #course/tour
+- [ ] Add your own exam page 📅 ${d(5)} 🔼
+- [x] Create this vault
+
+Priorities: ⏫ high · 🔼 medium · 🔽 low. Recurrence: 🔁 every week.
+`,
+      },
+      {
+        path: 'Courses/Courses.md',
+        content: `---
+title: Courses
+type: page
+tags:
+  - tour
+---
+
+# Courses
+
+This page has **subpages** (folder-note hierarchy). Open [[Courses/Biology 101/Biology 101|Biology 101]].
+`,
+      },
+      {
+        path: 'Courses/Biology 101/Biology 101.md',
+        content: `---
+title: Biology 101
+type: course
+course: Biology
+color: blue
+tags:
+  - biology
+---
+
+# Biology 101
+
+- Lecture: [[Courses/Biology 101/Lecture 1 — Cells|Lecture 1 — Cells]]
+- Exam: [[Courses/Biology 101/Final exam|Final exam]]
+
+Below is a live embed of the lecture:
+
+![[Courses/Biology 101/Lecture 1 — Cells]]
+`,
+      },
+      {
+        path: 'Courses/Biology 101/Lecture 1 — Cells.md',
+        content: `---
+title: Lecture 1 — Cells
+type: lecture
+course: Biology
+date: ${d(-3)}
+tags:
+  - biology
+---
+
+# Lecture 1 — Cells
+
+## Key idea
+
+==The cell is the basic unit of life.== Mitochondria produce ATP.
+
+## Flashcards
+
+Question:: What produces ATP in the cell?
+Answer:: The mitochondria.
+Topic:: Biology
+`,
+      },
+      {
+        path: 'Courses/Biology 101/Final exam.md',
+        content: `---
+title: Biology 101 — Final exam
+type: exam
+course: Biology
+exam-date: ${d(12)}
+location: Hall B
+confidence: 2
+tags:
+  - biology
+  - exam
+---
+
+# Biology 101 — Final exam
+
+## Topics to review
+
+- [ ] Cell structure
+- [ ] Photosynthesis
+- [ ] Genetics
+
+## Practice questions
+
+1. Describe the role of mitochondria.
+
+## Flashcards
+
+Question:: Where does photosynthesis occur?
+Answer:: In the chloroplasts.
+Topic:: Biology
+`,
+      },
+      {
+        // Events live in the day's folder, next to that day's journal note.
+        path: `Calendar/${d(2)}/Study group.md`,
+        content: `---
+title: Study group
+type: event
+date: ${d(2)}
+course: Biology
+tags:
+  - event
+---
+
+# Study group
+
+Meet to review [[Courses/Biology 101/Lecture 1 — Cells|Lecture 1]]. Referenced on
+[[${d(2)}]] so it shows a link marker on the calendar.
+`,
+      },
+      {
+        // The journal note is the folder-note of its day folder.
+        path: `Calendar/${today()}/${today()}.md`,
+        content: `---
+title: ${today()}
+created: ${today()}
+type: journal
+tags:
+  - journal
+---
+
+# ${today()}
+
+## Objectives
+
+- Explore neoma
+
+## Quick notes
+
+- Add jottings here from the Journal panel's "Quick notes" box.
+`,
+      },
+    ],
+  },
   {
     id: 'university',
     name: 'University study',

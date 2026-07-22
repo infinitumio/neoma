@@ -66,9 +66,13 @@ function QuickNotes() {
     setVersion((v) => v + 1)
   }
   const promote = async (text: string, id: string) => {
-    const created = await createDailyNote(new Date())
-    const path = created ?? dailyNotePath(new Date())
-    // Keep promoted quick notes together under one "Quick notes" heading.
+    const date = new Date()
+    // Reuse today's journal entry — only create it when it doesn't exist yet
+    // (createDailyNote uniquifies, so calling it unconditionally would make a
+    // duplicate entry). Then keep quick notes together under one heading.
+    const path = dailyNoteExists(date)
+      ? dailyNotePath(date)
+      : ((await createDailyNote(date)) ?? dailyNotePath(date))
     await appendUnderHeading(path, 'Quick notes', `- ${text}`)
     remove(id)
     useUi.getState().toast('Added under “Quick notes” in today’s journal', 'success')
