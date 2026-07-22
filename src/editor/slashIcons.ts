@@ -43,6 +43,7 @@ export type SlashIcon =
   | 'ai'
   | 'page'
   | 'reminder'
+  | 'columns'
 
 const P: Record<SlashIcon, string> = {
   text: '<path d="M4 7V5h16v2M9 19h6M12 5v14"/>',
@@ -85,6 +86,7 @@ const P: Record<SlashIcon, string> = {
   ai: '<path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9zM19 15l.8 2 .2.8 2 .8-2 .8-.2 2-.8-2-2-.8 2-.8z"/>',
   page: '<path d="M6 2h9l5 5v15H6zM15 2v5h5M9 12h6M9 16h6"/>',
   reminder: '<path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/>',
+  columns: '<rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/>',
 }
 
 export function slashIconSvg(name: SlashIcon): string {

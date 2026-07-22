@@ -46,3 +46,37 @@ describe('wiki embeds with special characters', () => {
     expect(html).not.toContain('data-target')
   })
 })
+
+describe('column layout', () => {
+  it('renders :::columns … ||| … ::: as side-by-side columns', async () => {
+    const md = [':::columns', 'Left side', '|||', 'Right side', ':::'].join('\n')
+    const html = await renderMarkdown(md)
+    expect(html).toContain('class="md-columns"')
+    expect((html.match(/class="md-column"/g) ?? []).length).toBe(2)
+    expect(html).toContain('Left side')
+    expect(html).toContain('Right side')
+  })
+
+  it('parses markdown (and embeds) inside a column', async () => {
+    const md = [':::columns', '# Notes', '|||', '![[diagram.png]]', ':::'].join('\n')
+    const html = await renderMarkdown(md)
+    expect(html).toContain('<h1')
+    expect(html).toContain('data-embed="diagram.png"')
+  })
+
+  it('supports three columns', async () => {
+    const md = [':::columns', 'a', '|||', 'b', '|||', 'c', ':::'].join('\n')
+    const html = await renderMarkdown(md)
+    expect((html.match(/class="md-column"/g) ?? []).length).toBe(3)
+  })
+})
+
+describe('PDF links with spaces in the path', () => {
+  it('renders an internal link (card-eligible) from an angle-bracket destination', async () => {
+    const md = '[Lecture.pdf](<Courses/Week 1 - Intro/A Study (1).pdf>)'
+    const html = await renderMarkdown(md)
+    // remark-rehype keeps the anchor; Preview turns data-internal PDF links
+    // into a card at runtime.
+    expect(html).toContain('data-internal="Courses/Week 1 - Intro/A Study (1).pdf"')
+  })
+})

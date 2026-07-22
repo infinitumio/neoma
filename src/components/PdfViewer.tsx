@@ -40,13 +40,15 @@ interface PdfViewerProps {
   initialPage?: number
   /** Rendered beside the pages when set (e.g. split-view toolbar button). */
   toolbarExtra?: React.ReactNode
+  /** Inline in a note (constrained height, its own scroll), not a full tab. */
+  inline?: boolean
 }
 
 const MAX_PAGE_WIDTH = 900
 
 type FitMode = 'width' | 'page'
 
-export function PdfViewer({ path, initialPage, toolbarExtra }: PdfViewerProps) {
+export function PdfViewer({ path, initialPage, toolbarExtra, inline }: PdfViewerProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const blobRef = useRef<Blob | null>(null)
@@ -87,7 +89,10 @@ export function PdfViewer({ path, initialPage, toolbarExtra }: PdfViewerProps) {
         const w = usableH * effRatio(Math.max(0, page - 1))
         setBaseWidth(Math.max(240, Math.min(w, MAX_PAGE_WIDTH * 1.6)))
       } else {
-        const usable = Math.min(el.clientWidth - 48, MAX_PAGE_WIDTH)
+        // Inline embeds fill as much width as they can; a full tab caps width.
+        const pad = inline ? 12 : 48
+        const cap = inline ? el.clientWidth - pad : MAX_PAGE_WIDTH
+        const usable = Math.min(el.clientWidth - pad, cap)
         setBaseWidth(Math.max(240, usable))
       }
     }
@@ -259,18 +264,33 @@ export function PdfViewer({ path, initialPage, toolbarExtra }: PdfViewerProps) {
   const rotate = () => setRotation((r) => (r + 90) % 360)
   const isFitWidth = fit === 'width' && Math.abs(zoom - 1) < 0.01
 
+  // Inline embeds are sized to show exactly one page (toolbar + one page box).
+  const TOOLBAR_AND_PADDING = 56
+  const inlineHeight = inline
+    ? Math.round(baseWidth / effRatio(0)) + TOOLBAR_AND_PADDING
+    : undefined
+
   return (
-    <div className="pdf-viewer" data-testid="pdf-viewer" ref={rootRef}>
+    <div
+      className={`pdf-viewer${inline ? ' pdf-viewer-inline' : ''}`}
+      data-testid="pdf-viewer"
+      ref={rootRef}
+      style={inlineHeight ? { height: inlineHeight } : undefined}
+    >
       <div className="pdf-toolbar">
-        <button
-          className={`icon-btn${showThumbs ? ' active' : ''}`}
-          aria-label="Toggle thumbnails"
-          aria-pressed={showThumbs}
-          onClick={() => setShowThumbs((v) => !v)}
-        >
-          <PanelLeft size={16} aria-hidden />
-        </button>
-        <span className="pdf-toolbar-sep" />
+        {!inline && (
+          <>
+            <button
+              className={`icon-btn${showThumbs ? ' active' : ''}`}
+              aria-label="Toggle thumbnails"
+              aria-pressed={showThumbs}
+              onClick={() => setShowThumbs((v) => !v)}
+            >
+              <PanelLeft size={16} aria-hidden />
+            </button>
+            <span className="pdf-toolbar-sep" />
+          </>
+        )}
         <div className="pdf-page-indicator" role="status" aria-live="polite">
           <input
             className="pdf-page-input"
@@ -316,61 +336,69 @@ export function PdfViewer({ path, initialPage, toolbarExtra }: PdfViewerProps) {
         >
           <ZoomIn size={16} aria-hidden />
         </button>
-        <button
-          className={`icon-btn${isFitWidth ? ' active' : ''}`}
-          aria-label="Fit width"
-          aria-pressed={isFitWidth}
-          onClick={() => {
-            setFit('width')
-            setZoom(1)
-          }}
-        >
-          <StretchHorizontal size={16} aria-hidden />
-        </button>
-        <button
-          className={`icon-btn${fit === 'page' ? ' active' : ''}`}
-          aria-label="Fit page"
-          aria-pressed={fit === 'page'}
-          onClick={() => {
-            setFit('page')
-            setZoom(1)
-          }}
-        >
-          <ScanLine size={16} aria-hidden />
-        </button>
-        <button className="icon-btn" aria-label="Rotate clockwise" onClick={rotate}>
-          <RotateCw size={16} aria-hidden />
-        </button>
-        <span className="pdf-toolbar-sep" />
-        <button
-          className={`icon-btn${searchOpen ? ' active' : ''}`}
-          aria-label="Find in document"
-          aria-pressed={searchOpen}
-          onClick={() => setSearchOpen((v) => !v)}
-        >
-          <Search size={16} aria-hidden />
-        </button>
-        <button className="icon-btn" aria-label="Print" onClick={print}>
-          <Printer size={16} aria-hidden />
-        </button>
-        <button
-          className="icon-btn"
-          aria-label="Download PDF"
-          onClick={() => blobRef.current && downloadBlob(blobRef.current, basename(path))}
-        >
-          <Download size={16} aria-hidden />
-        </button>
-        <button className="icon-btn" aria-label="Open in new window" onClick={openExternally}>
-          <ExternalLink size={16} aria-hidden />
-        </button>
-        <button
-          className="icon-btn"
-          aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          onClick={toggleFullscreen}
-        >
-          {fullscreen ? <Minimize2 size={16} aria-hidden /> : <Maximize2 size={16} aria-hidden />}
-        </button>
-        {toolbarExtra}
+        {!inline && (
+          <>
+            <button
+              className={`icon-btn${isFitWidth ? ' active' : ''}`}
+              aria-label="Fit width"
+              aria-pressed={isFitWidth}
+              onClick={() => {
+                setFit('width')
+                setZoom(1)
+              }}
+            >
+              <StretchHorizontal size={16} aria-hidden />
+            </button>
+            <button
+              className={`icon-btn${fit === 'page' ? ' active' : ''}`}
+              aria-label="Fit page"
+              aria-pressed={fit === 'page'}
+              onClick={() => {
+                setFit('page')
+                setZoom(1)
+              }}
+            >
+              <ScanLine size={16} aria-hidden />
+            </button>
+            <button className="icon-btn" aria-label="Rotate clockwise" onClick={rotate}>
+              <RotateCw size={16} aria-hidden />
+            </button>
+            <span className="pdf-toolbar-sep" />
+            <button
+              className={`icon-btn${searchOpen ? ' active' : ''}`}
+              aria-label="Find in document"
+              aria-pressed={searchOpen}
+              onClick={() => setSearchOpen((v) => !v)}
+            >
+              <Search size={16} aria-hidden />
+            </button>
+            <button className="icon-btn" aria-label="Print" onClick={print}>
+              <Printer size={16} aria-hidden />
+            </button>
+            <button
+              className="icon-btn"
+              aria-label="Download PDF"
+              onClick={() => blobRef.current && downloadBlob(blobRef.current, basename(path))}
+            >
+              <Download size={16} aria-hidden />
+            </button>
+            <button className="icon-btn" aria-label="Open in new window" onClick={openExternally}>
+              <ExternalLink size={16} aria-hidden />
+            </button>
+            <button
+              className="icon-btn"
+              aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+              onClick={toggleFullscreen}
+            >
+              {fullscreen ? (
+                <Minimize2 size={16} aria-hidden />
+              ) : (
+                <Maximize2 size={16} aria-hidden />
+              )}
+            </button>
+            {toolbarExtra}
+          </>
+        )}
       </div>
 
       {searchOpen && (

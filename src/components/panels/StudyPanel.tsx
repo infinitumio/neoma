@@ -152,8 +152,14 @@ export function StudyPanel() {
               <FileText size={13} aria-hidden /> Recent lecture PDFs
             </div>
             {recentPdfs.map((path) => (
-              <button key={path} className="study-link" onClick={() => openPdf(path)}>
-                <FileText size={13} aria-hidden /> {basename(path)}
+              <button
+                key={path}
+                className="study-link"
+                title={basename(path)}
+                onClick={() => openPdf(path)}
+              >
+                <FileText size={13} aria-hidden />
+                <span className="study-link-name">{basename(path)}</span>
               </button>
             ))}
           </>
@@ -163,8 +169,14 @@ export function StudyPanel() {
           <Clock size={13} aria-hidden /> Recent notes
         </div>
         {recentNotes.map((note) => (
-          <button key={note.path} className="study-link" onClick={() => openNote(note.path)}>
-            <FileText size={13} aria-hidden /> {note.title}
+          <button
+            key={note.path}
+            className="study-link"
+            title={note.title}
+            onClick={() => openNote(note.path)}
+          >
+            <FileText size={13} aria-hidden />
+            <span className="study-link-name">{note.title}</span>
           </button>
         ))}
       </div>

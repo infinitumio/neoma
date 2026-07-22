@@ -1144,15 +1144,27 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   color: var(--color-text);
+  overflow: hidden;
 }
 
 .attachment-row:hover {
   background: var(--color-bg-hover);
 }
 
+.attachment-row > svg {
+  flex: none;
+}
+
 .attachment-row .attachment-name {
   font-weight: 550;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-width: 4rem;
+}
+
+.attachment-row .attachment-path {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right;
 }
 
 .attachment-add {
@@ -2578,4 +2590,61 @@
   color: var(--color-accent);
   font-size: 11px;
   font-weight: 600;
+}
+
+/* ---- Inline PDF embed (reading view) ---- */
+.pdf-inline {
+  margin: 1em 0;
+}
+.pdf-viewer-inline {
+  flex: none;
+  /* Height is set inline to fit exactly one page; capped as a safety net. */
+  max-height: 90vh;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.pdf-viewer-inline .pdf-pages {
+  padding: var(--space-2);
+  gap: var(--space-2);
+}
+.pdf-inline-loading {
+  padding: var(--space-5);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* ---- Column layout (write alongside embeds/images/text) ---- */
+.md-columns {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  margin: 1em 0;
+}
+.md-column {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.md-column > :first-child {
+  margin-top: 0;
+}
+.md-column > :last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 700px) {
+  .md-columns {
+    flex-direction: column;
+  }
+}
+
+/* Truncate long attachment / PDF names so they never overflow. */
+.attachment-row .attachment-name,
+.attachment-row .attachment-path,
+.study-link-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.study-link {
+  white-space: nowrap;
 }

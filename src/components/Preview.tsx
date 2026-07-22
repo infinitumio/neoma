@@ -4,7 +4,8 @@
  * link navigation, tag clicks, and resolves vault-relative images/embeds to
  * blob URLs through the storage adapter — never via the network.
  */
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
 import { renderMarkdown } from '@/markdown/render'
 import { getAdapter, getLinkGraph, updateNoteContent, useVault } from '@/app/vaultStore'
 import { useUi } from '@/app/uiStore'
@@ -13,6 +14,9 @@ import { openNoteByTarget } from '@/app/navigation'
 import { pdfThumbnail } from './pdfThumbnail'
 import { basename, dirname, isImage, isPdf, joinPath, normalizePath } from '@/utils/paths'
 import 'katex/dist/katex.min.css'
+
+// Lazy so pdf.js stays out of the initial bundle; embeds render it inline.
+const PdfViewer = lazy(() => import('./PdfViewer').then((m) => ({ default: m.PdfViewer })))
 
 interface PreviewProps {
   path: string
@@ -82,6 +86,7 @@ export function Preview({ path, content }: PreviewProps) {
     const container = containerRef.current
     if (!container) return
     const urls: string[] = []
+    const roots: Root[] = []
     const adapter = getAdapter()
     if (!adapter) return
 
@@ -120,10 +125,21 @@ export function Preview({ path, content }: PreviewProps) {
           embed.replaceWith(img)
         })
       } else if (isPdf(target)) {
-        embed.replaceWith(makePdfCard(getLinkGraph().resolve(target, path) ?? target, target))
+        // An embed shows the PDF inline, scrollable, in the reading view.
+        const resolved = getLinkGraph().resolve(target, path) ?? target
+        const host = document.createElement('div')
+        host.className = 'pdf-inline'
+        embed.replaceWith(host)
+        const root = createRoot(host)
+        root.render(
+          <Suspense fallback={<div className="pdf-inline-loading">Loading PDF…</div>}>
+            <PdfViewer path={resolved} inline />
+          </Suspense>,
+        )
+        roots.push(root)
       }
     }
-    // PDF links (`[label](file.pdf)`) also get a preview card.
+    // PDF links (`[label](file.pdf)`) get a preview card that opens the viewer.
     for (const link of container.querySelectorAll<HTMLElement>('a[data-internal]')) {
       const internal = decodeURIComponent(link.dataset.internal ?? '')
       if (!isPdf(internal)) continue
@@ -137,7 +153,12 @@ export function Preview({ path, content }: PreviewProps) {
         box.disabled = false
         box.dataset.taskIndex = String(i)
       })
-    return () => urls.forEach((url) => URL.revokeObjectURL(url))
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url))
+      // Unmount inline viewers asynchronously (can't unmount during render).
+      const toUnmount = roots.slice()
+      setTimeout(() => toUnmount.forEach((r) => r.unmount()), 0)
+    }
   }, [html, path])
 
   // Double-click a rendered equation to copy its LaTeX source (KaTeX keeps

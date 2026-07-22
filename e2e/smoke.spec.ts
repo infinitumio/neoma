@@ -346,7 +346,9 @@ test('slash menu: fuzzy search, keyboard insert, categories', async ({ page }) =
   await page.keyboard.type('hea')
   await expect(menu.locator('.slash-item-title', { hasText: 'Heading 1' })).toBeVisible()
   await page.keyboard.press('Enter')
-  await expect(menu).toBeHidden()
+  // Wait for the menu to be fully removed (not just hidden) before clicking.
+  await expect(page.locator('.slash-menu')).toHaveCount(0)
+  await expect(page.locator('.cm-content')).toContainText('#')
   await page.getByRole('button', { name: 'Source', exact: true }).click()
   await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('#')
 })
@@ -475,15 +477,17 @@ test('attach a PDF: nests under the page, previews, and opens in-app', async ({ 
 
   // The file is nested under the page (the note became a folder-note).
   await expect(page.locator('.file-tree')).toContainText('lecture')
-  // The embed was inserted; reading view shows a PDF preview card.
+  // The embed renders the PDF inline (scrollable), not a download.
   await page.keyboard.press('ControlOrMeta+Shift+r')
-  await expect(page.locator('.pdf-embed-card')).toHaveCount(1)
+  await expect(page.locator('.pdf-viewer-inline')).toHaveCount(1)
+  await expect(page.locator('.pdf-viewer-inline .pdf-page canvas').first()).toBeVisible({
+    timeout: 10_000,
+  })
+  await expect(page.locator('.pdf-viewer-inline .pdf-toolbar')).toContainText('/ 6')
 
-  // Clicking the card opens the in-app viewer (not a download) with pages.
-  await page.locator('.pdf-embed-card').first().click()
-  await expect(page.locator('[data-testid="pdf-viewer"]')).toBeVisible()
-  await expect(page.locator('.pdf-page canvas').first()).toBeVisible({ timeout: 10_000 })
-  await expect(page.locator('.pdf-toolbar')).toContainText('/ 6')
+  // Opening the file from the tree opens the full viewer in a tab.
+  await page.locator('.file-tree').getByText('lecture', { exact: false }).first().click()
+  await expect(page.locator('[data-testid="pdf-viewer"]').last()).toBeVisible()
 })
 
 test('PDF viewer: text layer, find, thumbnails and split-with-note', async ({ page }) => {
@@ -497,9 +501,8 @@ test('PDF viewer: text layer, find, thumbnails and split-with-note', async ({ pa
   await page.getByRole('button', { name: /Choose a file/ }).click()
   await (await chooser).setFiles(new URL('./fixtures/lecture.pdf', import.meta.url).pathname)
   await expect(page.locator('.file-tree')).toContainText('lecture')
-  await page.keyboard.press('ControlOrMeta+Shift+r')
-  await expect(page.locator('.pdf-embed-card')).toHaveCount(1)
-  await page.locator('.pdf-embed-card').first().click()
+  // Open the full viewer in its own tab from the file tree.
+  await page.locator('.file-tree').getByText('lecture', { exact: false }).first().click()
 
   const viewer = page.locator('[data-testid="pdf-viewer"]')
   await expect(viewer).toBeVisible()

@@ -44,6 +44,16 @@ All notable changes to neoma are documented here. The format follows
   gains a **topic filter**.
 - **Task checkboxes are tickable in the reading view** — clicking a `- [ ]` toggles it and
   writes the change straight back to the markdown source.
+- **PDF embeds vs. links** — `![[file.pdf]]` (the "Embed PDF" command) now renders the PDF
+  **inline and scrollable** in the reading view (a compact zoom-only toolbar, sized to one
+  page, filling the width). The "PDF" command inserts a **link card** that opens the full
+  viewer instead — with a valid angle-bracket destination so paths with spaces/parentheses
+  work.
+- **Column layout** — `:::columns … ||| … :::` renders content side by side (text beside an
+  image or PDF, or two columns of prose); inner markdown is fully rendered. New "Columns"
+  slash command.
+- Long attachment and PDF names are truncated with an ellipsis in the attachment picker and
+  the Study dashboard instead of overflowing.
 
 ### Added (PDF & attachments round)
 

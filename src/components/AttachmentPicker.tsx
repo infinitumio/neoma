@@ -12,14 +12,18 @@ import { useUi } from '@/app/uiStore'
 import { useVault, listAttachments, attachToPage, refreshEntries } from '@/app/vaultStore'
 import { basename, isImage, isPdf } from '@/utils/paths'
 
-function embedFor(path: string): string {
-  // Images and PDFs embed; other files link.
+function embedFor(path: string, mode: 'embed' | 'link'): string {
+  // Link mode always links (renders a card that opens the viewer). The
+  // angle-bracket destination keeps the link valid even with spaces/parens.
+  if (mode === 'link') return `[${basename(path)}](<${path}>)`
+  // Embed mode embeds images and PDFs inline; other files still link.
   if (isImage(path) || isPdf(path)) return `![[${path}]]`
   return `[[${path}]]`
 }
 
 export function AttachmentPicker() {
   const notePath = useUi((s) => s.attachmentPickerFor)
+  const mode = useUi((s) => s.attachmentPickerMode)
   const close = () => useUi.getState().setAttachmentPickerFor(null)
   const ui = useUi()
   useVault((s) => s.entries)
@@ -37,7 +41,9 @@ export function AttachmentPicker() {
   if (!notePath) return null
 
   const insert = (path: string) => {
-    window.dispatchEvent(new CustomEvent('neoma:insert-text', { detail: { text: embedFor(path) } }))
+    window.dispatchEvent(
+      new CustomEvent('neoma:insert-text', { detail: { text: embedFor(path, mode) } }),
+    )
     ui.toast('Attachment inserted', 'success')
     close()
   }
@@ -106,10 +112,15 @@ export function AttachmentPicker() {
               </p>
             )}
             {attachments.map((a) => (
-              <button key={a.path} className="attachment-row" onClick={() => insert(a.path)}>
+              <button
+                key={a.path}
+                className="attachment-row"
+                title={a.path}
+                onClick={() => insert(a.path)}
+              >
                 {icon(a.path)}
                 <span className="attachment-name">{basename(a.path)}</span>
-                <span className="text-faint text-small">{a.path}</span>
+                <span className="attachment-path text-faint text-small">{a.path}</span>
               </button>
             ))}
           </div>

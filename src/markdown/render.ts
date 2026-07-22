@@ -17,6 +17,7 @@ import { visit } from 'unist-util-visit'
 import type { Root as HastRoot, Element } from 'hast'
 import { remarkInlineExtensions } from './inlineExtensions'
 import { remarkCallouts } from './callouts'
+import { remarkColumns, normalizeColumns } from './columns'
 import { remarkFlashcards } from './flashcardCard'
 import { getMarkdownExtensions } from './registry'
 import { parseFrontmatter } from './frontmatter'
@@ -82,6 +83,7 @@ function buildProcessor(
 ): Processor<any, any, any, any, string> {
   const processor: any = unified().use(remarkParse).use(remarkGfm).use(remarkMath)
   processor.use(remarkCallouts)
+  processor.use(remarkColumns)
   processor.use(remarkFlashcards)
   processor.use(remarkInlineExtensions, { resolveLink: options.resolveLink, wikiTokens })
   for (const ext of getMarkdownExtensions('remark')) {
@@ -101,7 +103,7 @@ function buildProcessor(
 /** Render a full note (frontmatter is stripped, not rendered). */
 export async function renderMarkdown(text: string, options: RenderOptions = {}): Promise<string> {
   const { body } = parseFrontmatter(text)
-  const { text: protectedBody, tokens } = protectWikiSpans(body)
+  const { text: protectedBody, tokens } = protectWikiSpans(normalizeColumns(body))
   const file = await buildProcessor(options, tokens).process(protectedBody)
   return String(file)
 }

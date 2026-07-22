@@ -27,10 +27,11 @@ const wrap = (b: string, a: string, ph?: string) => (ctx: { view: EditorView }) 
   wrapSelection(ctx.view, b, a, ph)
 
 /** Open the attachment picker for the active note. */
-function openAttachmentPicker(): void {
+function openAttachmentPicker(mode: 'embed' | 'link' = 'embed'): void {
   const tabs = useTabs.getState()
   const active = tabs.tabs.find((t) => t.id === tabs.activeId)
-  if (active?.type === 'note' && active.path) useUi.getState().setAttachmentPickerFor(active.path)
+  if (active?.type === 'note' && active.path)
+    useUi.getState().setAttachmentPickerFor(active.path, mode)
 }
 
 /** Review the flashcards in the active note. */
@@ -257,6 +258,16 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     keywords: ['hr', 'line', 'separator'],
     example: '---',
     run: snippet('---\n${}'),
+  },
+  {
+    id: 'text.columns',
+    title: 'Columns',
+    category: 'Basic Text',
+    icon: 'columns',
+    description: 'Two columns side by side (add ||| for more)',
+    keywords: ['column', 'layout', 'side by side', 'grid'],
+    example: ':::columns\nLeft\n|||\nRight\n:::',
+    run: snippet(':::columns\n${Left column}\n|||\n${Right column}\n:::\n'),
   },
 
   // ─────────────────────────── Lists ───────────────────────────
@@ -857,9 +868,10 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     title: 'PDF',
     category: 'Media',
     icon: 'file',
-    description: 'Insert a PDF (opens the picker)',
-    keywords: ['document', 'lecture'],
-    run: () => openAttachmentPicker(),
+    description: 'Insert a PDF as a card that opens the viewer',
+    keywords: ['document', 'lecture', 'link', 'card'],
+    example: '[Lecture.pdf](Lecture.pdf)',
+    run: () => openAttachmentPicker('link'),
   },
   {
     id: 'media.file',
@@ -958,10 +970,10 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     title: 'Embed PDF',
     category: 'Embeds',
     icon: 'file',
-    description: 'Embed a PDF with a preview card',
-    keywords: ['document'],
+    description: 'Embed a scrollable PDF inline in the page',
+    keywords: ['document', 'inline', 'scroll'],
     example: '![[Lecture.pdf]]',
-    run: () => openAttachmentPicker(),
+    run: () => openAttachmentPicker('embed'),
   },
   {
     id: 'embed.mermaid',
