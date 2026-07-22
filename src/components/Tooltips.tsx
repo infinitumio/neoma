@@ -55,10 +55,7 @@ export function Tooltips() {
       setTip(null)
     }
 
-    const labelFor = (el: HTMLElement): string | null => {
-      const source = el.closest<HTMLElement>('[data-tooltip], [aria-label], [title]')
-      if (!source || !source.closest(REGION)) return null
-      // Skip text inputs and the like — tooltips are for controls/icons.
+    const labelFor = (source: HTMLElement): string | null => {
       const text =
         source.dataset.tooltip ||
         source.getAttribute('aria-label') ||
@@ -77,7 +74,9 @@ export function Tooltips() {
     const onOver = (e: PointerEvent) => {
       if (e.pointerType && e.pointerType !== 'mouse') return
       const target = e.target as HTMLElement | null
-      const source = target?.closest<HTMLElement>('[data-tooltip], [aria-label], [title]')
+      // Only real controls get tooltips — never containers/landmarks (so
+      // hovering empty sidebar/rail space shows nothing).
+      const source = target?.closest<HTMLElement>('button, [role="button"], a[href], [data-tooltip]')
       if (!source || !source.closest(REGION) || !isIconOnly(source)) {
         clear()
         return

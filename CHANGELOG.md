@@ -59,6 +59,9 @@ All notable changes to neoma are documented here. The format follows
 - The PDF split-view note pane hides its breadcrumb trail (redundant while paraphrasing).
 - Graph: the node/link stats moved onto their own row beneath the options, and the hovered
   node name now floats separately so it no longer stretches the toolbar.
+- **PDF split view nests the companion note under the PDF** — the note is created in a folder
+  named after the PDF, and the file tree now shows a PDF that has a same-named sibling folder
+  as an expandable parent. The PDF is never moved, so its embed/link references stay valid.
 
 ### Added (PDF & attachments round)
 

@@ -22,7 +22,7 @@ import { SlashMenu } from '@/components/SlashMenu'
 import { Tooltips } from '@/components/Tooltips'
 import { Dialogs } from '@/components/Dialogs'
 import { Toasts } from '@/components/Toasts'
-import { useVault, flushAllSaves, openVault, createNote } from './vaultStore'
+import { useVault, flushAllSaves, openVault, createNote, createFolder } from './vaultStore'
 import { basename, dirname, joinPath } from '@/utils/paths'
 import { listVaults } from '@/storage/VaultManager'
 import { useTabs } from './tabsStore'
@@ -50,8 +50,11 @@ function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }
       setSplit(tab.id, undefined)
       return
     }
-    const folder = dirname(path)
+    // Put the companion note inside a folder named after the PDF, so the tree
+    // nests it under the PDF (see FileTree.buildTree) without moving the file.
     const stem = basename(path).replace(/\.pdf$/i, '')
+    const folder = joinPath(dirname(path), stem)
+    await createFolder(dirname(path), stem).catch(() => {})
     const desired = joinPath(folder, `${stem} — notes.md`)
     const existing = useVault.getState().entries.has(desired)
     const notePath = existing

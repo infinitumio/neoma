@@ -49,12 +49,12 @@ import { useSettings } from '@/settings/settingsStore'
 import { basename, dirname, folderNoteOf, isMarkdown, isPdf, stem } from '@/utils/paths'
 import { downloadBlob, importFiles } from '@/storage/import-export'
 
-interface TreeNode {
+export interface TreeNode {
   entry: FileEntry
   children: TreeNode[]
 }
 
-function buildTree(entries: Map<string, FileEntry>, sort: string): TreeNode[] {
+export function buildTree(entries: Map<string, FileEntry>, sort: string): TreeNode[] {
   const byFolder = new Map<string, TreeNode[]>()
   const nodes = new Map<string, TreeNode>()
   for (const entry of entries.values()) {
@@ -77,6 +77,23 @@ function buildTree(entries: Map<string, FileEntry>, sort: string): TreeNode[] {
     children.sort(compare)
     const parentNode = nodes.get(folder)
     if (parentNode) parentNode.children = children
+  }
+  // A PDF with a sibling folder of the same name (e.g. `Lecture.pdf` +
+  // `Lecture/`) adopts that folder's contents as its children — so companion
+  // notes nest under the PDF without moving the file (references stay valid).
+  for (const node of nodes.values()) {
+    if (node.entry.kind !== 'folder') continue
+    const dir = dirname(node.entry.path)
+    const name = basename(node.entry.path)
+    const siblings = byFolder.get(dir)
+    if (!siblings) continue
+    const pdfNode = siblings.find(
+      (n) => n.entry.kind === 'file' && isPdf(n.entry.path) && stem(n.entry.path) === name,
+    )
+    if (!pdfNode) continue
+    pdfNode.children = node.children
+    const idx = siblings.indexOf(node)
+    if (idx >= 0) siblings.splice(idx, 1)
   }
   return (byFolder.get('') ?? []).sort(compare)
 }
@@ -377,9 +394,12 @@ export function FileTree() {
     const children = isPageFolder
       ? node.children.filter((child) => child.entry.path !== indexNote)
       : node.children
+    // A non-folder node can have children too (a PDF that adopted a sibling
+    // folder's notes — see buildTree).
+    const expandable = isFolder || children.length > 0
     const droppable = isFolder || isMarkdown(entry.path)
     return (
-      <li key={entry.path} role="treeitem" aria-expanded={isFolder ? isOpen : undefined}>
+      <li key={entry.path} role="treeitem" aria-expanded={expandable ? isOpen : undefined}>
         <button
           className={`tree-item${isActive ? ' active' : ''}${dropTarget === entry.path ? ' drop-target' : ''}`}
           onClick={() => openEntry(entry)}
@@ -425,10 +445,33 @@ export function FileTree() {
                 <FolderIcon size={14} aria-hidden />
               )}
             </>
-          ) : isMarkdown(entry.path) ? (
-            <FileText size={14} aria-hidden style={{ marginLeft: 14, flexShrink: 0 }} />
           ) : (
-            <Paperclip size={14} aria-hidden style={{ marginLeft: 14, flexShrink: 0 }} />
+            <>
+              {expandable ? (
+                <ChevronRight
+                  size={14}
+                  className={`tree-chevron${isOpen ? ' open' : ''}`}
+                  aria-hidden
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleFolder(entry.path)
+                  }}
+                />
+              ) : null}
+              {isMarkdown(entry.path) ? (
+                <FileText
+                  size={14}
+                  aria-hidden
+                  style={{ marginLeft: expandable ? 0 : 14, flexShrink: 0 }}
+                />
+              ) : (
+                <Paperclip
+                  size={14}
+                  aria-hidden
+                  style={{ marginLeft: expandable ? 0 : 14, flexShrink: 0 }}
+                />
+              )}
+            </>
           )}
           <span className="tree-label">{isFolder ? basename(entry.path) : stem(entry.path)}</span>
           {(() => {
@@ -445,7 +488,7 @@ export function FileTree() {
             <Pin size={12} className="pin-indicator" aria-label="Pinned" />
           )}
         </button>
-        {isFolder && isOpen && children.length > 0 && (
+        {expandable && isOpen && children.length > 0 && (
           <ul role="group">{children.map((child) => renderNode(child))}</ul>
         )}
       </li>
