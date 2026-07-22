@@ -27,6 +27,12 @@ const KNOWN_TYPES = new Set([
   'example',
   'abstract',
   'todo',
+  // Academic block types (theorem environments used by the slash commands)
+  'theorem',
+  'definition',
+  'lemma',
+  'proof',
+  'toggle',
 ])
 
 export function remarkCallouts() {
@@ -44,6 +50,10 @@ export function remarkCallouts() {
       const rawType = match[1].toLowerCase()
       const type = KNOWN_TYPES.has(rawType) ? rawType : 'note'
       const title = match[3] || rawType.charAt(0).toUpperCase() + rawType.slice(1)
+      // `> [!type]-` (or the dedicated `toggle` type) folds: it renders as a
+      // native <details> element so sections can collapse without any script.
+      const foldable = match[2] === '-' || type === 'toggle'
+      const startOpen = match[2] === '+'
 
       // Remove the marker line from the first paragraph.
       if (newline === -1) {
@@ -56,7 +66,7 @@ export function remarkCallouts() {
       const titleNode: Paragraph = {
         type: 'paragraph',
         data: {
-          hName: 'p',
+          hName: foldable ? 'summary' : 'p',
           hProperties: { className: ['callout-title'] },
         },
         children: [{ type: 'text', value: title }],
@@ -64,10 +74,10 @@ export function remarkCallouts() {
       node.children.unshift(titleNode)
       node.data = {
         ...node.data,
-        hName: 'div',
+        hName: foldable ? 'details' : 'div',
         hProperties: {
           className: ['callout', `callout-${type}`],
-          role: 'note',
+          ...(foldable ? (startOpen ? { open: true } : {}) : { role: 'note' }),
           'aria-label': `${type} callout`,
         },
       }

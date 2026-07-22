@@ -6,8 +6,9 @@ import { useTabs } from '@/app/tabsStore'
 import {
   useVault,
   createNote,
+  createSubpage,
   saveNoteNow,
-  renameNote,
+  renamePage,
   closeVault,
   getAdapter,
 } from '@/app/vaultStore'
@@ -36,19 +37,54 @@ export function buildDefaultCommands(): Command[] {
     },
     {
       id: 'note.new',
-      title: 'Create note',
-      category: 'Notes',
+      title: 'Create page',
+      category: 'Pages',
       shortcut: 'Mod+Alt+N',
       isAvailable: hasVault,
       run: async () => {
         const path = await createNote('', 'Untitled')
-        if (path) useTabs.getState().openNote(path)
+        if (path) {
+          useTabs.getState().openNote(path)
+          useUi.getState().toast('Page created', 'success')
+        }
+      },
+    },
+    {
+      id: 'attachment.insert',
+      title: 'Insert attachment (choose or add a file)…',
+      category: 'Pages',
+      isAvailable: hasActiveNote,
+      run: () => {
+        const path = activeNotePath()
+        if (path) useUi.getState().setAttachmentPickerFor(path)
+      },
+    },
+    {
+      id: 'page.new-subpage',
+      title: 'Create subpage of current page',
+      category: 'Pages',
+      isAvailable: hasActiveNote,
+      run: () => {
+        const parent = activeNotePath()
+        if (!parent) return
+        useUi.getState().askPrompt({
+          title: 'New subpage',
+          label: 'Subpage title',
+          confirmLabel: 'Create',
+          onSubmit: async (value) => {
+            const created = await createSubpage(parent, value.trim() || 'Untitled')
+            if (created) {
+              useTabs.getState().openNote(created)
+              useUi.getState().toast('Subpage created', 'success')
+            }
+          },
+        })
       },
     },
     {
       id: 'note.quick-open',
-      title: 'Open note…',
-      category: 'Notes',
+      title: 'Open page…',
+      category: 'Pages',
       shortcut: 'Mod+O',
       isAvailable: hasVault,
       run: () => useUi.getState().openPalette('notes'),
@@ -66,8 +102,8 @@ export function buildDefaultCommands(): Command[] {
     },
     {
       id: 'note.save',
-      title: 'Save note now',
-      category: 'Notes',
+      title: 'Save page now',
+      category: 'Pages',
       shortcut: 'Mod+S',
       isAvailable: hasActiveNote,
       run: async () => {
@@ -151,19 +187,20 @@ export function buildDefaultCommands(): Command[] {
     },
     {
       id: 'note.rename',
-      title: 'Rename note…',
-      category: 'Notes',
+      title: 'Rename page…',
+      category: 'Pages',
       isAvailable: hasActiveNote,
       run: () => {
         const path = activeNotePath()
         if (!path) return
         useUi.getState().askPrompt({
-          title: 'Rename note',
+          title: 'Rename page',
           label: 'New name',
           initial: stem(path),
           onSubmit: async (value) => {
             try {
-              await renameNote(path, value)
+              await renamePage(path, value)
+              useUi.getState().toast('Page renamed', 'success')
             } catch (err) {
               useUi.getState().toast(err instanceof Error ? err.message : 'Rename failed', 'error')
             }
@@ -173,14 +210,14 @@ export function buildDefaultCommands(): Command[] {
     },
     {
       id: 'note.move',
-      title: 'Move note…',
-      category: 'Notes',
+      title: 'Move page…',
+      category: 'Pages',
       isAvailable: hasActiveNote,
       run: () => {
         const path = activeNotePath()
         if (!path) return
         useUi.getState().askPrompt({
-          title: 'Move note',
+          title: 'Move page',
           label: 'Target folder (empty for vault root)',
           initial: dirname(path),
           onSubmit: async (value) => {
@@ -254,6 +291,13 @@ export function buildDefaultCommands(): Command[] {
       run: () => useTabs.getState().openSpecial('graph'),
     },
     {
+      id: 'calendar.open',
+      title: 'Open calendar',
+      category: 'View',
+      isAvailable: hasVault,
+      run: () => useTabs.getState().openSpecial('calendar'),
+    },
+    {
       id: 'tab.close',
       title: 'Close active tab',
       category: 'Tabs',
@@ -282,8 +326,23 @@ export function buildDefaultCommands(): Command[] {
       run: () => useUi.getState().setShortcutsHelpOpen(true),
     },
     {
+      id: 'app.help',
+      title: 'Open Help',
+      category: 'Application',
+      shortcut: 'F1',
+      run: () => useUi.getState().setHelpOpen(true),
+    },
+    {
+      id: 'vault.switch',
+      title: 'Switch vault…',
+      category: 'Application',
+      shortcut: 'Mod+Shift+O',
+      isAvailable: hasVault,
+      run: () => useUi.getState().setVaultSwitcherOpen(true),
+    },
+    {
       id: 'vault.close',
-      title: 'Close vault',
+      title: 'Close vault (back to welcome)',
       category: 'Application',
       isAvailable: hasVault,
       run: () => closeVault(),

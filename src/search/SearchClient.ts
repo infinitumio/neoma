@@ -64,8 +64,17 @@ export class SearchClient implements SearchIndex {
     return this.call('rename', { oldPath, newPath })
   }
 
-  query(query: string, filters?: SearchFilters): Promise<SearchResultItem[]> {
-    return this.call('query', { query, filters })
+  async query(query: string, filters?: SearchFilters): Promise<SearchResultItem[]> {
+    const response = await this.queryWithStats(query, filters)
+    return response.items
+  }
+
+  /** Full search response including completion stats for the UI. */
+  queryWithStats(
+    query: string,
+    options?: SearchFilters & { mode?: 'broad' | 'word' | 'phrase'; caseSensitive?: boolean },
+  ): Promise<{ items: SearchResultItem[]; stats: { checked: number; matched: number } }> {
+    return this.call('query', { query, filters: options })
   }
 
   mentions(terms: string[], excludePath: string): Promise<SearchResultItem[]> {

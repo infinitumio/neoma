@@ -59,15 +59,17 @@ export function formatBytes(bytes: number): string {
 export const isMac =
   typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform ?? '')
 
-/** Render "Mod+K" as "⌘K" on macOS or "Ctrl+K" elsewhere. */
+/**
+ * Render "Mod+K" as "⌘ K" on macOS or "Ctrl + K" elsewhere. A thin gap
+ * between the modifier symbols/keys reads more clearly than running them
+ * together (⌘⇧F → ⌘ ⇧ F).
+ */
 export function formatShortcut(shortcut: string): string {
-  return shortcut
-    .split('+')
-    .map((part) => {
-      if (part === 'Mod') return isMac ? '⌘' : 'Ctrl'
-      if (part === 'Shift') return isMac ? '⇧' : 'Shift'
-      if (part === 'Alt') return isMac ? '⌥' : 'Alt'
-      return part
-    })
-    .join(isMac ? '' : '+')
+  const parts = shortcut.split('+').map((part) => {
+    if (part === 'Mod') return isMac ? '⌘' : 'Ctrl'
+    if (part === 'Shift') return isMac ? '⇧' : 'Shift'
+    if (part === 'Alt') return isMac ? '⌥' : 'Alt'
+    return part
+  })
+  return parts.join(isMac ? ' ' : ' + ')
 }

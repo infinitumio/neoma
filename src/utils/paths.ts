@@ -65,6 +65,28 @@ export function uniquePath(desired: string, exists: (p: string) => boolean): str
   }
 }
 
+/* ---- Page hierarchy (folder-note convention) --------------------------
+ * A "page with subpages" is stored portably as a folder plus an index note
+ * named after it:  Machine Learning/Machine Learning.md
+ * Nothing proprietary: any Markdown tool sees an ordinary folder layout.
+ */
+
+/** The index note that represents `folderPath` as a page. */
+export function folderNoteOf(folderPath: string): string {
+  return joinPath(folderPath, `${basename(folderPath)}.md`)
+}
+
+/** True when `path` is a folder's index note (e.g. `A/B/B.md`). */
+export function isFolderNote(path: string): boolean {
+  const dir = dirname(path)
+  return dir !== '' && isMarkdown(path) && stem(path) === basename(dir)
+}
+
+/** The folder a page owns when it has subpages, or null. */
+export function pageFolderOf(notePath: string): string | null {
+  return isFolderNote(notePath) ? dirname(notePath) : null
+}
+
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'avif', 'bmp'])
 
 export function isImage(path: string): boolean {

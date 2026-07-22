@@ -138,6 +138,9 @@ export interface SearchResultItem {
   path: string
   title: string
   score: number
+  /** parent folder of the note ('' for vault root) */
+  folder?: string
+  modifiedAt?: number
   /** matched excerpt with `start`/`end` highlighting offsets */
   snippets: Array<{ text: string; ranges: Array<[number, number]> }>
 }
@@ -220,14 +223,20 @@ export interface ApplicationSettings {
   fileSortOrder: SortOrder
   confirmBeforeDelete: boolean
   reducedMotion: 'system' | 'reduced' | 'full'
+  /** Show hover tooltips on toolbar/sidebar controls. */
+  showTooltips: boolean
   customShortcuts: Record<string, string>
 }
 
 export interface TabState {
   id: string
-  type: 'note' | 'graph' | 'settings'
+  type: 'note' | 'graph' | 'settings' | 'pdf' | 'calendar'
   path?: string
   pinned: boolean
+  /** For PDF tabs: the page to jump to (e.g. from a `#page=12` link). */
+  pdfPage?: number
+  /** For PDF tabs: a note opened beside the PDF in split view. */
+  pdfSplitNote?: string
 }
 
 export type SaveState = 'saved' | 'unsaved' | 'saving' | 'error'
