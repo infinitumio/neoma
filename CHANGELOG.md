@@ -6,6 +6,25 @@ All notable changes to neoma are documented here. The format follows
 
 ## [Unreleased]
 
+### Added (calendar, tasks & desktop round)
+
+- **Tasks** — a Today / Upcoming / Completed view over the vault's Markdown checkboxes,
+  with optional readable metadata (due `📅`/`[due::]`, priority `⏫🔼🔽`/`[priority::]`,
+  `#course/x`, a related `[[link]]`, recurrence `🔁`/`[repeat::]`). Ticking writes back to
+  the note; tasks stay plain Markdown.
+- **Calendar** — a new tab (rail button + "Open calendar" command) with a month grid and an
+  agenda list over events from note frontmatter (`date`/`due`/`exam-date`) and task due
+  dates. Events link to their page; colours by course or kind; filter by course. Offline —
+  external calendars remain an optional future add-on.
+- **Desktop app scaffold (Tauri 2)** in `src-tauri/` — native window, system tray,
+  single-instance focus, configurable close behaviour (quit / minimise-to-tray / ask),
+  optional launch-on-startup, native dialogs/notifications. Builds locally with a Rust
+  toolchain (see [DESKTOP.md](DESKTOP.md)); not yet compiled in CI.
+- **Trustworthy install docs** — [INSTALL.md](INSTALL.md) with checksum-verification steps,
+  build provenance, a plain-English unsigned-warning explanation, a no-telemetry privacy
+  statement, and uninstall instructions; plus a `desktop-release.yml` workflow that builds
+  installers and publishes SHA-256 checksums.
+
 ### Added (slash, PDF & study round)
 
 - **Complete slash-command system** — a Notion-style inline menu that opens beneath the

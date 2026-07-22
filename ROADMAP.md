@@ -18,20 +18,28 @@ before the next begins.
 - [x] Improved local search (broad / exact word / exact phrase, scope, case, stats)
 - [x] Beginner-facing "page" terminology and empty states
 
-## Phase 2 — desktop and study workflows (planned)
+## Phase 2 — desktop and study workflows (in progress)
 
-- [ ] Package neoma as a **desktop app** with Tauri (Windows first; macOS/Linux where
-      practical): native window, icon, taskbar pinning, Start-menu entry, system-tray
-      behaviour (close / minimise-to-tray / ask), optional launch on startup, native
-      file/save dialogs and notifications, offline startup, reopen last vault + tabs
-- [ ] Trustworthy installer: professional releases page with exact filenames, sizes,
-      versions, SHA-256 checksums, source/build links, signing (or an honest explanation
-      when unsigned), and uninstall instructions
-- [ ] **PDF support**: embed, dedicated viewer (zoom/fit/rotate/thumbnails/text search),
-      `[[file.pdf#page=12]]` links, and a PDF-left / notes-right split view
-- [ ] Calendar (month/week/agenda) driven by frontmatter dates; optional ICS import
-- [ ] Tasks (Markdown checkboxes) with due dates, priority, and Today/Upcoming views
-- [ ] Exam-study workflow: study dashboard, exam template, flashcard review, study mode
+- [x] **PDF support**: inline scrollable embed, dedicated viewer (zoom / fit-width /
+      fit-page / rotate / thumbnails / selectable text layer with find & copy / print /
+      fullscreen), `[[file.pdf#page=12]]` links, recent PDFs, and a PDF-left / notes-right
+      split view (companion note nests under the PDF)
+- [x] Tasks (Markdown checkboxes) with due date / priority / course / related page /
+      recurrence, and Today / Upcoming / Completed views; tasks stay readable Markdown
+- [x] Calendar (month + agenda) driven by frontmatter dates (`date` / `due` / `exam-date`)
+      and task due dates; events link to pages; colours/filters. _Week view and optional
+      ICS import next._
+- [x] Exam-study workflow: study dashboard, exam template, flashcard review (reader flip
+      cards + topics), study mode
+- [~] Package neoma as a **desktop app** with Tauri (Windows first; macOS/Linux where
+      practical): native window, system-tray behaviour (close / minimise-to-tray / ask),
+      optional launch on startup, native dialogs/notifications, offline startup, reopen
+      last vault + tabs. _Scaffolded in `src-tauri/` (see [DESKTOP.md](DESKTOP.md)); builds
+      locally with a Rust toolchain — not yet compiled in CI._
+- [~] Trustworthy installer: releases with exact filenames, sizes, versions, SHA-256
+      checksums, source/build links, and an honest unsigned-warning explanation.
+      _[INSTALL.md](INSTALL.md) + `desktop-release.yml` workflow in place; signing pending
+      certificates._
 
 ## Phase 3 — graph and organisation (planned)
 
