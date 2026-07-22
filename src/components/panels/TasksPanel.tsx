@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarClock, Flag, GraduationCap, FileText } from 'lucide-react'
 import { useVault } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
-import { tasksForVault, toggleTask } from '@/tasks/tasksStore'
+import { tasksForVault, toggleTask, setTaskDue } from '@/tasks/tasksStore'
 import { daysFromToday, PRIORITY_RANK, type Task } from '@/tasks/tasks'
 import { isoDate } from '@/utils/dates'
 
@@ -51,6 +51,12 @@ export function TasksBody() {
   const onToggle = async (task: Task) => {
     setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)))
     await toggleTask(task)
+    refresh()
+  }
+
+  const onSetDue = async (task: Task, due: string) => {
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, due: due || undefined } : t)))
+    await setTaskDue(task, due)
     refresh()
   }
 
@@ -154,6 +160,14 @@ export function TasksBody() {
                     </span>
                   </span>
                 </button>
+                <input
+                  type="date"
+                  className="task-due-input"
+                  value={task.due ?? ''}
+                  aria-label={`Due date for ${task.text}`}
+                  title="Set a due date"
+                  onChange={(e) => void onSetDue(task, e.target.value)}
+                />
               </li>
             )
           })}

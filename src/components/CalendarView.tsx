@@ -18,13 +18,14 @@ import {
   GraduationCap,
   CheckSquare,
   CalendarClock,
+  Link2,
   Plus,
   X,
 } from 'lucide-react'
-import { useVault, createNote } from '@/app/vaultStore'
+import { useVault } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
-import { useUi } from '@/app/uiStore'
 import { eventsFromMetas, eventColor, type CalEvent, type EventKind } from '@/calendar/events'
+import { promptNewEvent } from '@/calendar/newEvent'
 import { tasksForVault } from '@/tasks/tasksStore'
 import { loadIcs } from '@/calendar/icsStore'
 import { dailyNotePath, dailyNoteExists } from '@/templates/dailyNotes'
@@ -116,6 +117,20 @@ export default function CalendarView() {
     }
     return map
   }, [events])
+
+  // Dates that other notes reference by a wiki link (e.g. [[2026-07-25]] or
+  // [[Journal/2026-07-25]]) — shown with a small link marker on the day.
+  const referencedDates = useMemo(() => {
+    void metaVersion
+    const set = new Set<string>()
+    for (const meta of useVault.getState().metas.values()) {
+      for (const link of meta.links) {
+        const m = /(\d{4}-\d{2}-\d{2})/.exec(link.target)
+        if (m) set.add(m[1])
+      }
+    }
+    return set
+  }, [metaVersion])
 
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
@@ -231,6 +246,9 @@ export default function CalendarView() {
                           const Icon = KIND_ICON[k]
                           return <Icon key={k} size={11} style={{ color: KIND_COLOR[k] }} />
                         })}
+                        {referencedDates.has(iso) && (
+                          <Link2 size={11} style={{ color: 'var(--color-text-faint)' }} />
+                        )}
                       </span>
                       <span className="calendar-cell-num">{day.getDate()}</span>
                     </span>
@@ -306,21 +324,6 @@ function DaySummary({
   const journalPath = dailyNotePath(day)
   const hasJournal = dailyNoteExists(day)
 
-  const newEvent = () =>
-    useUi.getState().askPrompt({
-      title: 'New event',
-      label: 'Event title',
-      placeholder: 'e.g. Study group',
-      confirmLabel: 'Create',
-      onSubmit: async (value) => {
-        const name = value.trim()
-        if (!name) return
-        const content = `---\ntitle: ${name}\ntype: event\ndate: ${date}\ntags:\n  - event\n---\n\n`
-        const path = await createNote('Events', name, content)
-        if (path) openNote(path)
-      },
-    })
-
   const editedNotes = useMemo(() => {
     void metaVersion
     return [...useVault.getState().metas.values()]
@@ -340,7 +343,11 @@ function DaySummary({
         </button>
       </div>
 
-      <button className="btn btn-small" style={{ width: '100%', justifyContent: 'center' }} onClick={newEvent}>
+      <button
+        className="btn btn-small"
+        style={{ width: '100%', justifyContent: 'center' }}
+        onClick={() => promptNewEvent(date)}
+      >
         <Plus size={13} aria-hidden /> New event
       </button>
 

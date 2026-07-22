@@ -5,7 +5,7 @@
  */
 import { getAdapter, loadNote, updateNoteContent, useVault } from '@/app/vaultStore'
 import { isMarkdown } from '@/utils/paths'
-import { parseTasks, toggleTaskAtLine, type Task } from './tasks'
+import { parseTasks, toggleTaskAtLine, setTaskDueInLine, type Task } from './tasks'
 
 /** Every task in every Markdown note in the vault. */
 export async function tasksForVault(): Promise<Task[]> {
@@ -33,5 +33,14 @@ export async function toggleTask(task: Task): Promise<void> {
   const content = useVault.getState().notes.get(task.path)?.content
   if (content == null) return
   const next = toggleTaskAtLine(content, task.line)
+  if (next !== content) updateNoteContent(task.path, next)
+}
+
+/** Set or clear a task's due date (readable `📅` Markdown), then persist. */
+export async function setTaskDue(task: Task, dueIso: string): Promise<void> {
+  await loadNote(task.path)
+  const content = useVault.getState().notes.get(task.path)?.content
+  if (content == null) return
+  const next = setTaskDueInLine(content, task.line, dueIso)
   if (next !== content) updateNoteContent(task.path, next)
 }

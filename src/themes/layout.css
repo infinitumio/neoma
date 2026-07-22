@@ -3084,28 +3084,58 @@
 
 /* ---- Journal quick notes ---- */
 .quicknotes {
-  margin-top: var(--space-3);
+  margin-top: var(--space-4);
 }
 .quicknotes-input {
   display: flex;
+  align-items: center;
   gap: var(--space-1);
-  padding: 0 var(--space-1);
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  transition: border-color var(--transition-fast);
+}
+.quicknotes-input:focus-within {
+  border-color: var(--color-accent-muted);
 }
 .quicknotes-input .input {
   flex: 1;
   min-width: 0;
+  border: none;
+  background: none;
+  padding: 3px 6px;
+}
+.quicknotes-input .input:focus {
+  outline: none;
+  box-shadow: none;
+}
+.quicknotes-input .icon-btn {
+  flex: none;
 }
 .quicknotes-list {
   list-style: none;
   margin: var(--space-2) 0 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .quicknote {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 3px var(--space-1) 3px var(--space-2);
+  gap: var(--space-2);
+  padding: 5px var(--space-1) 5px var(--space-2);
   border-radius: var(--radius-sm);
+  position: relative;
+}
+.quicknote::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent-muted);
+  flex: none;
 }
 .quicknote:hover {
   background: var(--color-bg-hover);
@@ -3114,6 +3144,7 @@
   flex: 1;
   min-width: 0;
   font-size: var(--font-size-sm);
+  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3122,7 +3153,31 @@
   opacity: 0;
   width: 1.5rem;
   height: 1.5rem;
+  flex: none;
 }
-.quicknote:hover .quicknote-action {
+.quicknote:hover .quicknote-action,
+.quicknote:focus-within .quicknote-action {
   opacity: 1;
+}
+
+/* Compact per-task due-date picker */
+.task-due-input {
+  flex: none;
+  width: 1.7rem;
+  opacity: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+.task-row:hover .task-due-input,
+.task-due-input:focus,
+.task-due-input[value]:not([value='']) {
+  opacity: 0.85;
+}
+.task-due-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.6);
 }

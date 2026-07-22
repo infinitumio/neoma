@@ -95,6 +95,22 @@ export function parseTasks(path: string, markdown: string): Task[] {
   return tasks
 }
 
+/** Set (or clear, when `dueIso` is empty) a task's due date on a given line,
+ *  keeping it as readable `📅 YYYY-MM-DD` Markdown. */
+export function setTaskDueInLine(content: string, line: number, dueIso: string): string {
+  const lines = content.split('\n')
+  let target = lines[line]
+  if (target === undefined || !CHECKBOX_RE.test(target)) return content
+  // Drop any existing due marker (emoji or [due:: …]) first.
+  target = target
+    .replace(DUE_RE, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+$/, '')
+  if (dueIso) target = `${target} 📅 ${dueIso}`
+  lines[line] = target
+  return lines.join('\n')
+}
+
 /** Toggle the checkbox on a specific 0-based line, returning new content. */
 export function toggleTaskAtLine(content: string, line: number): string {
   const lines = content.split('\n')

@@ -59,3 +59,30 @@ export function removeQuickNote(vaultId: string | null | undefined, id: string):
     all(vaultId).filter((n) => n.id !== id),
   )
 }
+
+/**
+ * Insert `line` at the end of the `## <heading>` section, creating the section
+ * at the end of the document if it doesn't exist. Keeps promoted quick notes
+ * together under one heading in the day's note (instead of scattering them).
+ */
+export function insertUnderHeading(content: string, heading: string, line: string): string {
+  const lines = content.split('\n')
+  const re = new RegExp(`^#{1,6}\\s+${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i')
+  const headingIdx = lines.findIndex((l) => re.test(l))
+  if (headingIdx === -1) {
+    return `${content.replace(/\n+$/, '')}\n\n## ${heading}\n\n${line}\n`
+  }
+  // End of the section = the next heading of any level, or the document end.
+  let end = lines.length
+  for (let i = headingIdx + 1; i < lines.length; i++) {
+    if (/^#{1,6}\s/.test(lines[i])) {
+      end = i
+      break
+    }
+  }
+  // Insert after the last non-empty line within the section.
+  let insertAt = headingIdx
+  for (let i = headingIdx + 1; i < end; i++) if (lines[i].trim() !== '') insertAt = i
+  lines.splice(insertAt + 1, 0, line)
+  return lines.join('\n')
+}

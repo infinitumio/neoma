@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Task parsing and toggling from plain Markdown. */
 import { describe, expect, it } from 'vitest'
-import { parseTasks, toggleTaskAtLine, daysFromToday } from '@/tasks/tasks'
+import { parseTasks, toggleTaskAtLine, setTaskDueInLine, daysFromToday } from '@/tasks/tasks'
 
 describe('parseTasks', () => {
   it('parses a plain checkbox', () => {
@@ -68,6 +68,22 @@ describe('toggleTaskAtLine', () => {
   })
   it('is a no-op for a non-task line', () => {
     expect(toggleTaskAtLine(md, 0)).toBe(md)
+  })
+})
+
+describe('setTaskDueInLine', () => {
+  it('adds a due date to a task', () => {
+    expect(setTaskDueInLine('- [ ] Buy milk', 0, '2026-08-01')).toBe('- [ ] Buy milk 📅 2026-08-01')
+  })
+  it('replaces an existing due date', () => {
+    const out = setTaskDueInLine('- [ ] Buy milk 📅 2026-08-01', 0, '2026-08-05')
+    expect(out).toBe('- [ ] Buy milk 📅 2026-08-05')
+  })
+  it('clears the due date when empty', () => {
+    expect(setTaskDueInLine('- [ ] Buy milk 📅 2026-08-01', 0, '')).toBe('- [ ] Buy milk')
+  })
+  it('ignores non-task lines', () => {
+    expect(setTaskDueInLine('# Heading', 0, '2026-08-01')).toBe('# Heading')
   })
 })
 

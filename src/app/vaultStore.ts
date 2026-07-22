@@ -29,6 +29,7 @@ import {
   uniquePath,
 } from '@/utils/paths'
 import { useSettings } from '@/settings/settingsStore'
+import { insertUnderHeading } from '@/journal/quicknotes'
 import { useTabs } from './tabsStore'
 
 export type VaultStatus = 'closed' | 'opening' | 'ready' | 'permission' | 'error'
@@ -360,6 +361,19 @@ export async function appendToNote(path: string, text: string): Promise<void> {
   if (content === undefined) return
   const sep = content === '' || content.endsWith('\n') ? '' : '\n'
   updateNoteContent(path, `${content}${sep}${text}\n`)
+}
+
+/** Insert a line under a `## <heading>` section of a note (creating it if
+ *  needed), then autosave. */
+export async function appendUnderHeading(
+  path: string,
+  heading: string,
+  line: string,
+): Promise<void> {
+  await loadNote(path)
+  const content = useVault.getState().notes.get(path)?.content
+  if (content === undefined) return
+  updateNoteContent(path, insertUnderHeading(content, heading, line))
 }
 
 export function updateNoteContent(path: string, content: string): void {

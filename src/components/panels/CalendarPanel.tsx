@@ -10,6 +10,7 @@ import { addDays, formatDate, isoDate } from '@/utils/dates'
 import { useVault } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
 import { eventsFromMetas, eventColor, type CalEvent } from '@/calendar/events'
+import { promptNewEvent } from '@/calendar/newEvent'
 import { tasksForVault } from '@/tasks/tasksStore'
 import { loadIcs } from '@/calendar/icsStore'
 import type { NoteMeta } from '@/types'
@@ -127,12 +128,13 @@ function EventsBody() {
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                title={dayEvents.length ? dayEvents.map((e) => e.title).join('\n') : undefined}
-                onClick={() => {
-                  const ev = dayEvents.find((e) => e.path)
-                  if (ev) openNote(ev.path)
-                }}
-                aria-label={iso}
+                title={
+                  dayEvents.length
+                    ? `${dayEvents.map((e) => e.title).join('\n')}\n(click to add an event)`
+                    : 'Click to add an event'
+                }
+                onClick={() => promptNewEvent(iso, false)}
+                aria-label={`Add event on ${iso}`}
                 style={
                   dayEvents.length
                     ? ({ '--dot-color': eventColor(dayEvents[0]) } as React.CSSProperties)

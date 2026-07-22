@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { ChevronLeft, ChevronRight, CalendarDays, Plus, Trash2, ArrowUpRight } from 'lucide-react'
 import { addDays, formatDate, isoDate } from '@/utils/dates'
 import { dailyNoteExists, dailyNotePath, createDailyNote } from '@/templates/dailyNotes'
-import { useVault, appendToNote } from '@/app/vaultStore'
+import { useVault, appendUnderHeading } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 import { getQuickNotes, addQuickNote, removeQuickNote } from '@/journal/quicknotes'
@@ -68,9 +68,10 @@ function QuickNotes() {
   const promote = async (text: string, id: string) => {
     const created = await createDailyNote(new Date())
     const path = created ?? dailyNotePath(new Date())
-    await appendToNote(path, `- ${text}`)
+    // Keep promoted quick notes together under one "Quick notes" heading.
+    await appendUnderHeading(path, 'Quick notes', `- ${text}`)
     remove(id)
-    useUi.getState().toast('Added to today’s journal', 'success')
+    useUi.getState().toast('Added under “Quick notes” in today’s journal', 'success')
   }
   void version
 
