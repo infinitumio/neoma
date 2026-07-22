@@ -61,6 +61,7 @@
 .markdown-body li.task-list-item input[type='checkbox'] {
   margin-right: 0.45em;
   accent-color: var(--color-accent-strong);
+  cursor: pointer;
 }
 
 .markdown-body blockquote {

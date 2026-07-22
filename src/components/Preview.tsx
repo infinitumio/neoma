@@ -6,7 +6,7 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { renderMarkdown } from '@/markdown/render'
-import { getAdapter, getLinkGraph, useVault } from '@/app/vaultStore'
+import { getAdapter, getLinkGraph, updateNoteContent, useVault } from '@/app/vaultStore'
 import { useUi } from '@/app/uiStore'
 import { useTabs } from '@/app/tabsStore'
 import { openNoteByTarget } from '@/app/navigation'
@@ -17,6 +17,18 @@ import 'katex/dist/katex.min.css'
 interface PreviewProps {
   path: string
   content: string
+}
+
+/** Matches a GFM task-list marker at the start of a list item. */
+const TASK_MARKER_RE = /^(\s*(?:[-*+]|\d+[.)])\s+)\[([ xX])\]/gm
+
+/** Toggle the checked state of the nth task-list item in the markdown. */
+export function toggleTaskInMarkdown(content: string, index: number): string {
+  let i = 0
+  return content.replace(TASK_MARKER_RE, (full, prefix: string, mark: string) => {
+    if (i++ !== index) return full
+    return `${prefix}[${mark === ' ' ? 'x' : ' '}]`
+  })
 }
 
 /** Split a PDF reference like `lecture.pdf#page=12` into its path and page. */
@@ -117,6 +129,14 @@ export function Preview({ path, content }: PreviewProps) {
       if (!isPdf(internal)) continue
       link.replaceWith(makePdfCard(getLinkGraph().resolve(internal, path) ?? internal, internal))
     }
+    // Make task-list checkboxes tickable (GFM renders them disabled) and index
+    // them in document order so a click maps back to the right source line.
+    container
+      .querySelectorAll<HTMLInputElement>('li.task-list-item input[type="checkbox"]')
+      .forEach((box, i) => {
+        box.disabled = false
+        box.dataset.taskIndex = String(i)
+      })
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [html, path])
 
@@ -136,6 +156,16 @@ export function Preview({ path, content }: PreviewProps) {
   }
 
   const onClick = (event: React.MouseEvent) => {
+    // Task-list checkbox → toggle the matching `- [ ]` in the source.
+    const box = (event.target as HTMLElement).closest<HTMLInputElement>(
+      'li.task-list-item input[type="checkbox"]',
+    )
+    if (box?.dataset.taskIndex !== undefined) {
+      const index = Number(box.dataset.taskIndex)
+      const next = toggleTaskInMarkdown(content, index)
+      if (next !== content) updateNoteContent(path, next)
+      return
+    }
     // Flashcard → flip to reveal the answer.
     const card = (event.target as HTMLElement).closest<HTMLElement>('.flashcard-embed')
     if (card) {

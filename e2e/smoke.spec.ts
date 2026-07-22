@@ -595,6 +595,20 @@ test('PDF embed with special characters renders a card, not raw text', async ({ 
   await expect(page.locator('.preview-content')).not.toContainText('![[')
 })
 
+test('task checkboxes can be ticked in the reading view', async ({ page }) => {
+  await createVault(page)
+  await createNote(page, '# Tasks\n\n- [ ] Buy milk\n- [x] Done already\n')
+  await page.keyboard.press('ControlOrMeta+Shift+r')
+  const boxes = page.locator('li.task-list-item input[type="checkbox"]')
+  await expect(boxes.first()).toBeEnabled()
+  await expect(boxes.first()).not.toBeChecked()
+  await boxes.first().click()
+  await expect(boxes.first()).toBeChecked()
+  // The toggle is written back to the markdown source.
+  await page.getByRole('button', { name: 'Source', exact: true }).click()
+  await expect(page.locator('[data-testid="source-view"] .source-pre')).toContainText('- [x] Buy milk')
+})
+
 test('pinned item shows a context menu so it can be unpinned', async ({ page }) => {
   await createVault(page)
   await createNote(page, 'pin me')

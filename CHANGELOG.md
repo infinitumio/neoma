@@ -42,6 +42,8 @@ All notable changes to neoma are documented here. The format follows
   clickable 3-D flip card (keyboard-accessible), with an optional `Topic::` / `Category::`
   label. Cards also pick up the **nearest heading as their topic**, and the review session
   gains a **topic filter**.
+- **Task checkboxes are tickable in the reading view** — clicking a `- [ ]` toggles it and
+  writes the change straight back to the markdown source.
 
 ### Added (PDF & attachments round)
 
