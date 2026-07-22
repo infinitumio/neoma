@@ -36,6 +36,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery'
 
 // The graph loads only when opened, keeping it out of the initial bundle.
 const GraphView = lazy(() => import('@/graph/GraphView'))
+const CalendarView = lazy(() => import('@/components/CalendarView'))
 const PdfViewer = lazy(() =>
   import('@/components/PdfViewer').then((m) => ({ default: m.PdfViewer })),
 )
@@ -180,6 +181,17 @@ function Workspace() {
             }
           >
             <PdfTab key={`${vaultId}:${activeTab.id}`} tab={activeTab} vaultId={vaultId} />
+          </Suspense>
+        )}
+        {activeTab?.type === 'calendar' && (
+          <Suspense
+            fallback={
+              <div className="empty-state" aria-busy="true">
+                <p>Loading calendar…</p>
+              </div>
+            }
+          >
+            <CalendarView />
           </Suspense>
         )}
         <StatusBar />

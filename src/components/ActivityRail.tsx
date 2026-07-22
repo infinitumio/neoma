@@ -5,6 +5,7 @@
  */
 import {
   Waypoints,
+  CalendarRange,
   Settings,
   Github,
   HelpCircle,
@@ -55,6 +56,14 @@ export function ActivityRail() {
         onClick={() => openSpecial('graph')}
       >
         <Waypoints size={18} aria-hidden />
+      </button>
+      <button
+        className="rail-btn"
+        aria-label="Calendar"
+        title="Calendar"
+        onClick={() => openSpecial('calendar')}
+      >
+        <CalendarRange size={18} aria-hidden />
       </button>
       <div className="rail-spacer" />
       <button

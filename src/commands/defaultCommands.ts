@@ -291,6 +291,13 @@ export function buildDefaultCommands(): Command[] {
       run: () => useTabs.getState().openSpecial('graph'),
     },
     {
+      id: 'calendar.open',
+      title: 'Open calendar',
+      category: 'View',
+      isAvailable: hasVault,
+      run: () => useTabs.getState().openSpecial('calendar'),
+    },
+    {
       id: 'tab.close',
       title: 'Close active tab',
       category: 'Tabs',

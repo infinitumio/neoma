@@ -11,6 +11,7 @@ export type SidePanelId =
   | 'backlinks'
   | 'daily'
   | 'study'
+  | 'tasks'
   | 'templates'
   | 'trash'
 

@@ -17,7 +17,7 @@ interface TabsStore {
   recentlyClosed: TabState[]
 
   openNote: (path: string, options?: { newTab?: boolean }) => void
-  openSpecial: (type: 'graph' | 'settings') => void
+  openSpecial: (type: 'graph' | 'settings' | 'calendar') => void
   openPdf: (path: string, options?: { page?: number; splitNote?: string }) => void
   setPdfSplitNote: (id: string, note: string | undefined) => void
   close: (id: string) => void

@@ -12,6 +12,7 @@ import {
   LayoutTemplate,
   Trash2,
   GraduationCap,
+  ListTodo,
 } from 'lucide-react'
 import { registerPanel } from './registries'
 import { FilesPanel } from '@/components/panels/FilesPanel'
@@ -22,6 +23,7 @@ import { DailyPanel } from '@/components/panels/DailyPanel'
 import { TemplatesPanel } from '@/components/panels/TemplatesPanel'
 import { TrashPanel } from '@/components/panels/TrashPanel'
 import { StudyPanel } from '@/components/panels/StudyPanel'
+import { TasksPanel } from '@/components/panels/TasksPanel'
 
 let done = false
 
@@ -51,6 +53,13 @@ export function registerBuiltinPanels(): void {
     icon: GraduationCap,
     component: StudyPanel,
     order: 55,
+  })
+  registerPanel({
+    id: 'tasks',
+    label: 'Tasks',
+    icon: ListTodo,
+    component: TasksPanel,
+    order: 56,
   })
   registerPanel({
     id: 'templates',

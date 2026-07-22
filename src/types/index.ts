@@ -230,7 +230,7 @@ export interface ApplicationSettings {
 
 export interface TabState {
   id: string
-  type: 'note' | 'graph' | 'settings' | 'pdf'
+  type: 'note' | 'graph' | 'settings' | 'pdf' | 'calendar'
   path?: string
   pinned: boolean
   /** For PDF tabs: the page to jump to (e.g. from a `#page=12` link). */
