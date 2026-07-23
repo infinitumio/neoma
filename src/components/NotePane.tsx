@@ -67,11 +67,14 @@ export function NotePane({ path, hideBreadcrumbs }: NotePaneProps) {
   return (
     <div className="note-view">
       <div className="note-header">
-        {hideBreadcrumbs ? <span style={{ flex: 1 }} /> : <Breadcrumbs path={path} />}
-        {!hideBreadcrumbs && <span style={{ flex: 1 }} />}
-        <PageColorButton path={path} />
-        {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
-        <ViewModeSwitcher />
+        <div className="note-header-crumbs">
+          {hideBreadcrumbs ? <span style={{ flex: 1 }} /> : <Breadcrumbs path={path} />}
+        </div>
+        <div className="note-header-actions">
+          <PageColorButton path={path} />
+          {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
+          <ViewModeSwitcher />
+        </div>
       </div>
       <div className={`editor-area ${editorMode}`} data-mode={editorMode}>
         {(editorMode === 'edit' || editorMode === 'split') && (

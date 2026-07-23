@@ -24,6 +24,7 @@ import type { SlashCategory, SlashCommand } from '@/editor/slash/types'
 import { CATEGORY_ORDER } from '@/editor/slash/types'
 import { slashIconSvg } from '@/editor/slashIcons'
 import { formatShortcut } from '@/utils/misc'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 interface Group {
   category: SlashCategory
@@ -97,6 +98,10 @@ export function SlashMenu() {
 
   const listRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
+  // On phones the menu is a bottom sheet that sits above the on-screen
+  // keyboard (tracked via visualViewport), not a cursor-anchored popup.
+  const isMobile = useIsMobile()
+  const [sheetBottom, setSheetBottom] = useState(0)
 
   const groups = useMemo(() => buildGroups(query, context), [query, context])
   // Flatten to map selectedIndex → command (matches rankSlashCommands order).
@@ -108,8 +113,9 @@ export function SlashMenu() {
   // Favourites/Recent groups are duplicates shown first for discovery.
 
   // Position the menu beneath the cursor, flipping up if it would overflow.
+  // (Desktop only — the mobile sheet is anchored to the bottom.)
   useLayoutEffect(() => {
-    if (!open || !coords) return
+    if (!open || isMobile || !coords) return
     const width = 420
     const maxHeight = 460
     let left = coords.left
@@ -117,7 +123,22 @@ export function SlashMenu() {
     if (left + width > window.innerWidth - 8) left = window.innerWidth - width - 8
     if (top + maxHeight > window.innerHeight - 8) top = Math.max(8, coords.top - maxHeight - 6)
     setPos({ left: Math.max(8, left), top })
-  }, [open, coords])
+  }, [open, coords, isMobile])
+
+  // Keep the mobile sheet just above the on-screen keyboard.
+  useEffect(() => {
+    if (!open || !isMobile) return
+    const vv = window.visualViewport
+    const update = () =>
+      setSheetBottom(vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0)
+    update()
+    vv?.addEventListener('resize', update)
+    vv?.addEventListener('scroll', update)
+    return () => {
+      vv?.removeEventListener('resize', update)
+      vv?.removeEventListener('scroll', update)
+    }
+  }, [open, isMobile])
 
   // Keep the selected row in view.
   useEffect(() => {
@@ -127,15 +148,16 @@ export function SlashMenu() {
       ?.scrollIntoView({ block: 'nearest' })
   }, [selectedIndex, open])
 
-  if (!open || !pos) return null
+  if (!open) return null
+  if (!isMobile && !pos) return null
 
   const selectedCommand = flatCommands[selectedIndex]
   const indexOf = (id: string) => flatCommands.findIndex((c) => c.id === id)
 
   return createPortal(
     <div
-      className="slash-menu"
-      style={{ left: pos.left, top: pos.top }}
+      className={`slash-menu${isMobile ? ' slash-menu-sheet' : ''}`}
+      style={isMobile ? { bottom: sheetBottom } : { left: pos!.left, top: pos!.top }}
       role="listbox"
       aria-label="Slash commands"
       // Never steal focus from the editor.

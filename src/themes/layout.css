@@ -268,6 +268,34 @@
   min-width: 0;
 }
 
+.note-header-crumbs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.note-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Phones: breadcrumbs get their own row above the controls so nothing is
+   squished, and the controls sit on a full-width row beneath. */
+@media (max-width: 900px) {
+  .note-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+  }
+  .note-header-actions {
+    justify-content: flex-end;
+  }
+}
+
 /* Breadcrumbs */
 .breadcrumbs {
   display: flex;
@@ -377,6 +405,32 @@
 @media (prefers-reduced-motion: reduce) {
   .slash-menu {
     animation: none;
+  }
+}
+
+/* Phone: the slash menu is a bottom sheet sitting above the keyboard, not a
+   cursor popup. Full width, rounded top, safe-area aware, list scrolls. */
+.slash-menu-sheet {
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 45vh;
+  flex-direction: column;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+  animation: slash-sheet-in 160ms ease;
+}
+
+.slash-menu-sheet .slash-list {
+  flex: 1;
+  padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+}
+
+@keyframes slash-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
 }
 
@@ -1977,8 +2031,8 @@
 }
 
 .welcome-logo img {
-  width: 3rem;
-  height: 3rem;
+  width: 3.75rem;
+  height: 3.75rem;
   border-radius: var(--radius-lg);
 }
 
