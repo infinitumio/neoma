@@ -2274,6 +2274,51 @@
 }
 
 /* ============================================================
+   Native / touch (iOS, Android, small screens)
+   Safe-area insets keep the rail, tabs and status bar clear of the
+   notch and home indicator. env(safe-area-inset-*) is 0 on the desktop
+   web build, so max() leaves those layouts unchanged.
+   ============================================================ */
+.activity-rail {
+  padding-top: max(var(--space-2), env(safe-area-inset-top));
+  padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+}
+
+@media (max-width: 900px) {
+  .main-area {
+    /* Keep the top tab bar below the status bar / notch. */
+    padding-top: env(safe-area-inset-top);
+  }
+  .status-bar {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+  /* The context (backlinks) sidebar is opt-in on phones — it opens as a
+     drawer from its toggle, never docked, so the editor keeps full width. */
+  .right-sidebar:not(.open) {
+    box-shadow: none;
+  }
+}
+
+/* Coarse pointers (touch) get larger hit targets per the platform HIGs. */
+@media (pointer: coarse) {
+  .rail-btn,
+  .icon-btn,
+  .tree-item,
+  .tab,
+  .btn,
+  .toolbar-btn {
+    min-height: 2.75rem;
+  }
+  /* Avoid the iOS tap flash and accidental text scaling. */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* ============================================================
    Study workflow: dashboard panel, flashcard review, study mode
    ============================================================ */
 

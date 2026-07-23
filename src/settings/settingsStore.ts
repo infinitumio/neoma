@@ -24,6 +24,8 @@ export const DEFAULT_SETTINGS: ApplicationSettings = {
   confirmBeforeDelete: true,
   reducedMotion: 'system',
   showTooltips: true,
+  desktopCloseBehavior: 'tray',
+  launchOnStartup: false,
   customShortcuts: {},
 }
 

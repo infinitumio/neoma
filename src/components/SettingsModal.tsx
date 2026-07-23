@@ -10,6 +10,7 @@ import { useVault } from '@/app/vaultStore'
 import { parseIcs } from '@/calendar/ics'
 import { loadIcs, saveIcs, clearIcs } from '@/calendar/icsStore'
 import { useSettings, exportSettingsJson, importSettingsJson } from '@/settings/settingsStore'
+import { isTauri, setLaunchOnStartup } from '@/desktop/tauri'
 import type { ApplicationSettings } from '@/types'
 import { BUILTIN_TEMPLATES } from '@/templates/builtins'
 import { listCommands } from '@/commands/registry'
@@ -50,7 +51,7 @@ function IcsImportRow() {
   return (
     <Row
       name="Import a calendar (.ics)"
-      desc="Bring events from an exported/subscribed Google, Outlook or Apple calendar into neoma. Read-only, stored locally, never fetched from the network."
+      desc="Bring events from an exported/subscribed Google, Outlook or Apple calendar into Neoma. Read-only, stored locally, never fetched from the network."
     >
       <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
         <input
@@ -123,6 +124,7 @@ const SECTIONS = [
   'Daily notes',
   'Templates',
   'Search',
+  'Desktop',
   'Backups',
   'Keyboard shortcuts',
   'Privacy',
@@ -151,7 +153,7 @@ export function SettingsModal() {
     <Modal title="Settings" onClose={() => setOpen(false)} wide initialFocus={false}>
       <div className="settings-layout">
         <nav className="settings-nav" aria-label="Settings sections">
-          {SECTIONS.map((name) => (
+          {SECTIONS.filter((name) => name !== 'Desktop' || isTauri()).map((name) => (
             <button key={name} aria-current={section === name} onClick={() => setSection(name)}>
               {name}
             </button>
@@ -160,15 +162,15 @@ export function SettingsModal() {
         <div className="settings-content">
           {section === 'Appearance' && (
             <>
-              <Row name="Theme" desc="neoma Dark is the default; both use the same design tokens">
+              <Row name="Theme" desc="Neoma Dark is the default; both use the same design tokens">
                 <select
                   className="input"
                   value={settings.theme}
                   aria-label="Theme"
                   onChange={(e) => set('theme', e.target.value as 'dark' | 'light')}
                 >
-                  <option value="dark">neoma Dark</option>
-                  <option value="light">neoma Light</option>
+                  <option value="dark">Neoma Dark</option>
+                  <option value="light">Neoma Light</option>
                 </select>
               </Row>
               <Row name="Editor font size" desc={`${settings.editorFontSize}px`}>
@@ -373,6 +375,41 @@ export function SettingsModal() {
               <code>tag:name</code>, <code>path:Folder</code>, <code>type:experiment</code>, plus
               created/modified date filters in the search panel.
             </p>
+          )}
+
+          {section === 'Desktop' && isTauri() && (
+            <>
+              <p className="text-small text-secondary" style={{ marginBottom: 'var(--space-3)' }}>
+                These options apply to the Neoma desktop app only and are stored locally.
+              </p>
+              <Row name="When I close the window" desc="Choose what the close button does">
+                <select
+                  className="input"
+                  value={settings.desktopCloseBehavior}
+                  aria-label="Close behaviour"
+                  onChange={(e) =>
+                    set(
+                      'desktopCloseBehavior',
+                      e.target.value as ApplicationSettings['desktopCloseBehavior'],
+                    )
+                  }
+                >
+                  <option value="tray">Minimise to the tray</option>
+                  <option value="quit">Quit Neoma completely</option>
+                  <option value="ask">Ask me each time</option>
+                </select>
+              </Row>
+              <Row name="Launch on startup" desc="Open Neoma automatically when you log in">
+                <Toggle
+                  checked={settings.launchOnStartup}
+                  onChange={(v) => {
+                    set('launchOnStartup', v)
+                    void setLaunchOnStartup(v)
+                  }}
+                  label="Launch on startup"
+                />
+              </Row>
+            </>
           )}
 
           {section === 'Backups' && (

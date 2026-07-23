@@ -53,12 +53,12 @@ export function WelcomeScreen() {
   const exploreDemo = async () => {
     setBusy(true)
     try {
-      const existing = vaults.find((v) => v.name === 'neoma demo' && v.kind === 'browser')
+      const existing = vaults.find((v) => v.name === 'Neoma demo' && v.kind === 'browser')
       if (existing) {
         await openVault(existing)
         return
       }
-      const vault = await createBrowserVault('neoma demo')
+      const vault = await createBrowserVault('Neoma demo')
       await openVault(vault)
       const adapter = getAdapter()
       if (!adapter) return
@@ -66,7 +66,7 @@ export function WelcomeScreen() {
         await adapter.writeText(note.path, note.content)
       }
       await refreshEntries()
-      useTabs.getState().openNote('Welcome to neoma.md')
+      useTabs.getState().openNote('Welcome to Neoma.md')
     } finally {
       setBusy(false)
     }
@@ -107,7 +107,7 @@ export function WelcomeScreen() {
       message:
         vault.kind === 'browser'
           ? `"${vault.name}" and all its notes will be permanently deleted from this browser. Export it first if you need a copy.`
-          : `neoma will forget "${vault.name}". The folder and its files on disk are not touched.`,
+          : `Neoma will forget "${vault.name}". The folder and its files on disk are not touched.`,
       confirmLabel: vault.kind === 'browser' ? 'Delete vault' : 'Forget',
       danger: vault.kind === 'browser',
       onConfirm: async () => {
@@ -245,7 +245,7 @@ export function WelcomeScreen() {
       {showNewVault && <NewVaultDialog onClose={() => setShowNewVault(false)} />}
 
       {showStorageHelp && (
-        <Modal title="How neoma stores your notes" onClose={() => setShowStorageHelp(false)}>
+        <Modal title="How Neoma stores your notes" onClose={() => setShowStorageHelp(false)}>
           <div className="text-small" style={{ display: 'grid', gap: 'var(--space-3)' }}>
             <p>
               <strong>Browser vault.</strong> Notes are saved in this browser's local database
@@ -254,7 +254,7 @@ export function WelcomeScreen() {
             </p>
             <p>
               <strong>Local folder vault.</strong> Notes are ordinary <code>.md</code> files in a
-              folder you pick. neoma asks the browser for permission after you choose the folder,
+              folder you pick. Neoma asks the browser for permission after you choose the folder,
               and never uploads anything. Works in Chromium-based browsers (Chrome, Edge, Brave,
               Arc).
             </p>

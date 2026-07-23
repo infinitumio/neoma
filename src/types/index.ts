@@ -225,6 +225,10 @@ export interface ApplicationSettings {
   reducedMotion: 'system' | 'reduced' | 'full'
   /** Show hover tooltips on toolbar/sidebar controls. */
   showTooltips: boolean
+  /** Desktop app only: what closing the main window does. */
+  desktopCloseBehavior: 'quit' | 'tray' | 'ask'
+  /** Desktop app only: launch neoma on system login. */
+  launchOnStartup: boolean
   customShortcuts: Record<string, string>
 }
 

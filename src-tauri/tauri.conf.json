@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "neoma",
+  "productName": "Neoma",
   "version": "0.2.0",
-  "identifier": "app.neoma.desktop",
+  "identifier": "app.neoma",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "neoma",
+        "title": "Neoma",
         "width": 1280,
         "height": 820,
         "minWidth": 720,
@@ -38,7 +38,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "copyright": "© neoma contributors — AGPL-3.0-or-later",
+    "copyright": "© Neoma contributors — AGPL-3.0-or-later",
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
+    "iOS": {
+      "minimumSystemVersion": "13.0"
+    },
     "windows": {
       "nsis": {
         "installMode": "currentUser"

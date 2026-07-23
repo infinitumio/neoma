@@ -74,7 +74,7 @@ export function StatusBar() {
         <button
           className="network-badge update"
           onClick={() => void applyUpdate()}
-          title="A new version of neoma is ready. Click to reload."
+          title="A new version of Neoma is ready. Click to reload."
         >
           <span className="dot" aria-hidden />
           Update available

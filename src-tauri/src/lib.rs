@@ -61,12 +61,12 @@ pub fn run() {
         .manage(CloseBehavior(AtomicU8::new(DEFAULT_BEHAVIOR)))
         .invoke_handler(tauri::generate_handler![set_close_behavior, quit_app])
         .setup(|app| {
-            let show = MenuItem::with_id(app, "show", "Show neoma", true, None::<&str>)?;
+            let show = MenuItem::with_id(app, "show", "Show Neoma", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &quit])?;
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("neoma")
+                .tooltip("Neoma")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -103,5 +103,5 @@ pub fn run() {
             }
         })
         .run(tauri::generate_context!())
-        .expect("error while running neoma");
+        .expect("error while running Neoma");
 }

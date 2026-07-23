@@ -51,12 +51,8 @@ jobs:
           workspaces: src-tauri
 
       - name: Install dependencies
-        run: |
-          npm ci
-          npm i -D @tauri-apps/cli
+        run: npm ci # @tauri-apps/cli and the icon set are committed to the repo
 
-      # Requires src-tauri/icons/ to exist. Generate them from a source PNG
-      # locally (see DESKTOP.md) and commit them, or add an icon step here.
       - name: Build desktop app
         uses: tauri-apps/tauri-action@v0
         env:

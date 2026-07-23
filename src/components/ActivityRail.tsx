@@ -119,7 +119,7 @@ export function ActivityRail() {
         href={REPOSITORY_URL}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="neoma on GitHub (opens in new tab)"
+        aria-label="Neoma on GitHub (opens in new tab)"
         title="GitHub repository"
       >
         <Github size={18} aria-hidden />

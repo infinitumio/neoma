@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'neoma',
-        short_name: 'neoma',
+        name: 'Neoma',
+        short_name: 'Neoma',
         description:
           'A lightweight, open-source research journal and linked-note application. Your knowledge, rooted locally.',
         theme_color: '#141817',

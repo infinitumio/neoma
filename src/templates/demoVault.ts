@@ -14,9 +14,9 @@ export function demoNotes(): DemoNote[] {
   const today = isoDate()
   return [
     {
-      path: 'Welcome to neoma.md',
+      path: 'Welcome to Neoma.md',
       content: `---
-title: Welcome to neoma
+title: Welcome to Neoma
 created: ${today}
 tags:
   - meta
@@ -376,8 +376,8 @@ Use \`#\` through \`######\`.
 
 ## Links
 
-- Wiki link: [[Welcome to neoma]]
-- Aliased: [[Welcome to neoma|the welcome note]]
+- Wiki link: [[Welcome to Neoma]]
+- Aliased: [[Welcome to Neoma|the welcome note]]
 - Heading link: [[Markdown guide#Tables]]
 - External: [CommonMark](https://commonmark.org)
 

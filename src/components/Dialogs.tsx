@@ -102,7 +102,7 @@ function ConflictDialog() {
   if (!conflict) return null
   return (
     <Modal
-      title="File changed outside neoma"
+      title="File changed outside Neoma"
       onClose={() => void resolveConflict('keep-mine')}
       wide
       footer={
@@ -168,7 +168,7 @@ function LinkUpdateDialog() {
     >
       <p>
         The note was renamed to <strong>{plan.newName}</strong>. {plan.affected.length} note
-        {plan.affected.length === 1 ? '' : 's'} still link to the old name. neoma can rewrite those
+        {plan.affected.length === 1 ? '' : 's'} still link to the old name. Neoma can rewrite those
         links — only the link targets change, nothing else in your notes.
       </p>
       <ul style={{ marginTop: 'var(--space-3)', paddingLeft: '1.2rem' }}>

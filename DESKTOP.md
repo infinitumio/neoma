@@ -1,82 +1,100 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
-# Building the neoma desktop app (Tauri)
+# Building the Neoma app (Tauri) — macOS, iOS, and desktop
 
-neoma's desktop build wraps the exact same offline web app in a native
-[Tauri 2](https://tauri.app) shell — a native window, a system tray,
-single-instance focus, optional launch-on-startup, and native
-dialogs/notifications. **No network access and no telemetry are added.** The
-web app remains the source of truth; your notes stay plain Markdown files on
-your disk.
+Neoma's native builds wrap the exact same offline web app in a
+[Tauri 2](https://tauri.app) shell. On the desktop that adds a native window, a
+system tray, single-instance focus, optional launch-on-startup, and native
+dialogs/notifications. On iOS it runs as a normal app. **No network access and
+no telemetry are added.** The web app remains the source of truth; your notes
+stay plain Markdown on your device.
 
-> **Status:** the `src-tauri/` crate is a scaffold. The repository's CI builds
-> the PWA only — it does **not** compile Rust. The steps below build the desktop
-> app locally. Nothing in the app claims to be a signed release until it is (see
-> [INSTALL.md](INSTALL.md)).
+> **Status:** the `src-tauri/` crate builds locally with a Rust toolchain; the
+> repository's CI builds the PWA only and does **not** compile Rust. Nothing in
+> the app claims to be a signed release until it is (see [INSTALL.md](INSTALL.md)).
+> **macOS and iOS are the current focus** — Windows/Linux/Android configuration
+> is present but not the priority.
 
 ## Prerequisites
 
-- **Node 20+** and the repo's JS dependencies (`npm ci`)
+- **Node 20+** and the JS dependencies (`npm ci`)
 - **Rust** (stable) via [rustup](https://rustup.rs)
-- Platform toolchains required by Tauri — see
-  <https://tauri.app/start/prerequisites/>:
-  - **Windows:** Microsoft C++ Build Tools + WebView2 (preinstalled on Win 11)
-  - **macOS:** Xcode Command Line Tools
-  - **Linux:** `webkit2gtk`, `libayatana-appindicator`, etc.
-- The Tauri CLI: `npm i -D @tauri-apps/cli` (kept out of the default
-  dependencies so PWA-only installs stay lean)
+- The Tauri CLI is already a dev dependency (`@tauri-apps/cli`)
+- Platform toolchains — see <https://tauri.app/start/prerequisites/>:
+  - **macOS app:** Xcode Command Line Tools (`xcode-select --install`)
+  - **iOS app:** the **full Xcode** (not just CLT), an iOS Simulator or device,
+    and — for signing/distribution — a paid **Apple Developer** account
+  - **Windows:** MSVC Build Tools + WebView2 · **Linux:** `webkit2gtk`, etc.
 
 ## Icons
 
-Generate the native icon set once from a square source PNG (≥ 512×512):
+The full icon set (`.icns`, `.ico`, PNGs, the iOS `AppIcon` set, Android
+mipmaps) is **already generated and committed** under `src-tauri/icons/`. Only
+re-run this when the logo changes:
 
 ```bash
-npm run tauri icon path/to/neoma-logo.png
+npx tauri icon src-tauri/icon-source.svg   # regenerates every size from one source
 ```
 
-This writes `src-tauri/icons/` (`.ico`, `.icns`, PNGs) referenced by
-`tauri.conf.json`.
-
-## Develop
+## Desktop (macOS)
 
 ```bash
-npm run desktop:dev     # tauri dev — hot-reloads the Vite dev server in a native window
+npm run desktop:dev     # hot-reloads the Vite dev server in a native window
+npm run desktop:build   # produces a .app + .dmg under src-tauri/target/release/bundle/
 ```
 
-## Build installers
+Typical outputs (filenames derive from the product name **Neoma**):
+
+| OS      | Artifact                                               |
+| ------- | ------------------------------------------------------ |
+| macOS   | `bundle/dmg/Neoma_0.2.0_aarch64.dmg` (or `_universal`) |
+| Windows | `bundle/nsis/Neoma_0.2.0_x64-setup.exe`                |
+| Linux   | `bundle/appimage/Neoma_0.2.0_amd64.AppImage`, `.deb`   |
+
+## iOS
 
 ```bash
-npm run desktop:build   # tauri build — produces installers under src-tauri/target/release/bundle/
+npm run ios:init        # one-time: generates the Xcode project at src-tauri/gen/apple
+npm run ios:dev         # run in the Simulator (or a connected device)
+npm run ios:build       # archive an .ipa (needs your Apple Team ID)
 ```
 
-Typical outputs:
+Notes:
 
-| OS      | Artifact                                              |
-| ------- | ----------------------------------------------------- |
-| Windows | `bundle/nsis/neoma_0.2.0_x64-setup.exe`               |
-| macOS   | `bundle/dmg/neoma_0.2.0_universal.dmg` (or `aarch64`) |
-| Linux   | `bundle/appimage/neoma_0.2.0_amd64.AppImage`, `.deb`  |
+- `ios:init` scaffolds `src-tauri/gen/apple/` (a real Xcode project). It is
+  generated, so it is git-ignored by default; commit it only if you want the
+  Xcode settings under version control.
+- Signing uses your Apple Team ID. Provide it via the
+  `TAURI_APPLE_DEVELOPMENT_TEAM` environment variable, or open the project in
+  Xcode (`src-tauri/gen/apple/Neoma.xcodeproj`) and pick your team under
+  _Signing & Capabilities_. TestFlight / App Store distribution is done from
+  Xcode as usual.
+- The UI is responsive and touch-friendly (the activity rail collapses, the file
+  tree becomes a drawer). See the mobile breakpoints in `src/themes/layout.css`.
 
-## What the shell does
+## What the desktop shell does
 
-- **Single instance** — launching neoma again focuses the existing window.
-- **System tray** — a tray icon with _Show neoma_ / _Quit_.
-- **Close behaviour** — configurable (quit completely / minimise to tray / ask).
-  The native close handler reads the preference the web app sends via the
-  `set_close_behavior` command; the default is _minimise to tray_. Restore from
-  the tray icon or by relaunching.
+- **Single instance** — relaunching focuses the existing window.
+- **System tray** — a tray icon with _Show Neoma_ / _Quit_.
+- **Close behaviour** — configurable in **Settings → Desktop** (quit / minimise
+  to tray / ask). The native close handler reads the preference the web app
+  sends via the `set_close_behavior` command; default is _minimise to tray_.
 - **Launch on startup** — optional, via `tauri-plugin-autostart` (off by
-  default; the web app toggles it).
-- **Offline startup** — the app boots with no network and reopens your last
-  vault and tabs (already true in the PWA; carried over here).
+  default; toggled in **Settings → Desktop**).
+- **Offline startup** — boots with no network and reopens your last vault and
+  tabs.
 
 ## Signing
 
-Installers are **unsigned** until signing certificates are configured — see the
-honest note in [INSTALL.md](INSTALL.md). To sign later:
+Desktop installers and the iOS app are **unsigned by default**. See the honest
+note in [INSTALL.md](INSTALL.md). To sign:
 
-- **Windows:** an Authenticode certificate (`tauri.conf.json → bundle.windows.certificateThumbprint`).
-- **macOS:** an Apple Developer ID + notarisation.
+- **macOS:** an Apple Developer ID certificate + notarisation
+  (`APPLE_CERTIFICATE`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` env vars in
+  CI, or Xcode locally).
+- **iOS:** required for any device install — your Apple Team ID as above.
+- **Windows:** an Authenticode certificate
+  (`tauri.conf.json → bundle.windows.certificateThumbprint`).
 
-Until then, the releases page states plainly that the installer is unsigned and
-explains the OS warning users will see.
+Until a target is signed, the releases page states so plainly and explains the
+OS warning users will see.

@@ -19,7 +19,7 @@ interface Topic {
 const TOPICS: Topic[] = [
   {
     q: 'What is a vault?',
-    a: 'A vault is the folder where neoma keeps a collection of related pages, attachments and settings. You can have several — for example one for your degree and one for personal notes. A vault lives on this device (in the browser, or in a real folder you pick) and is never uploaded.',
+    a: 'A vault is the folder where Neoma keeps a collection of related pages, attachments and settings. You can have several — for example one for your degree and one for personal notes. A vault lives on this device (in the browser, or in a real folder you pick) and is never uploaded.',
   },
   {
     q: 'How are my pages stored?',
@@ -27,7 +27,7 @@ const TOPICS: Topic[] = [
   },
   {
     q: 'How does offline mode work?',
-    a: 'After your first visit neoma caches itself, so it opens and works with no internet — creating, editing, searching, linking, maths, the graph, exports and settings all work offline. The status bar simply shows “Offline”; it is a normal state, not an error.',
+    a: 'After your first visit Neoma caches itself, so it opens and works with no internet — creating, editing, searching, linking, maths, the graph, exports and settings all work offline. The status bar simply shows “Offline”; it is a normal state, not an error.',
   },
   {
     q: 'How do I create a subpage?',

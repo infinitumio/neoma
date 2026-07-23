@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="public/favicon.svg" alt="neoma logo" width="96" height="96" />
+<img src="public/favicon.svg" alt="Neoma logo" width="96" height="96" />
 
-# neoma
+# Neoma
 
 **Your knowledge, rooted locally.**
 
-neoma is a lightweight, open-source research journal and linked-note application.
+Neoma is a lightweight, open-source research journal and linked-note application.
 It works in your browser, runs offline and keeps your knowledge in portable Markdown files.
 
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-4ade80.svg)](LICENSE)
@@ -16,13 +16,13 @@ It works in your browser, runs offline and keeps your knowledge in portable Mark
 [![PWA](https://img.shields.io/badge/PWA-installable-4ade80.svg)](#installation)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-2f9e6e.svg)](CONTRIBUTING.md)
 
-<img src="docs/screenshots/reading-text.png" alt="neoma reading view: formatting, coloured highlights, callouts and side-by-side columns" width="820" />
+<img src="docs/screenshots/reading-text.png" alt="Neoma reading view: formatting, coloured highlights, callouts and side-by-side columns" width="820" />
 
 </div>
 
 ---
 
-neoma is for people who want the essentials of a linked-note tool — Markdown files,
+Neoma is for people who want the essentials of a linked-note tool — Markdown files,
 wiki links, backlinks, tags, frontmatter, daily notes, templates, search and a graph —
 with **complete data ownership**: no account, no cloud, no telemetry, and notes that stay
 readable in any text editor.
@@ -81,7 +81,7 @@ readable in any text editor.
 - **Recently deleted** with restore; conflict detection for external file edits
 - **Citation-friendly**: `[@citekey]` recognised and searchable, DOI/BibTeX-key/Zotero-URI
   note properties, Pandoc syntax preserved
-- **neoma Dark & neoma Light** themes, built entirely on CSS variables
+- **Neoma Dark & Neoma Light** themes, built entirely on CSS variables
 - **Installable PWA** with full offline operation and update notifications
 
 ## Screenshots
@@ -138,7 +138,7 @@ colours matching page/file colours, zoom/pan, filters and a depth limit.
 
 ### Quick start (one command)
 
-If you just want to run neoma, clone the repo and run the bootstrap script for your OS.
+If you just want to run Neoma, clone the repo and run the bootstrap script for your OS.
 It checks Node, installs dependencies, builds the app, opens your browser and serves it —
 no other steps needed.
 
@@ -161,7 +161,7 @@ npm ci
 npm run dev          # http://localhost:5173
 ```
 
-To install it **as an app**: open neoma in a Chromium-based browser and use the browser's
+To install it **as an app**: open Neoma in a Chromium-based browser and use the browser's
 _Install_ action (or the install button in Settings → About). Once installed it launches
 in its own window and works fully offline.
 
@@ -195,13 +195,13 @@ docker build -t neoma .
 docker run --rm -p 8080:80 neoma
 ```
 
-The container serves the static production build with nginx. neoma has **no backend** —
+The container serves the static production build with nginx. Neoma has **no backend** —
 self-hosting is just serving files; all data still stays in each visitor's own browser
 or local folder.
 
 ## Offline use
 
-neoma registers a service worker that precaches the application shell. After your first
+Neoma registers a service worker that precaches the application shell. After your first
 visit you can open the app, create/edit/search notes, follow links, use templates, change
 settings, and export data with no connection at all. The status bar shows **Local**,
 **Offline** or **Update available** — offline is a normal, supported state, never an error.
@@ -214,8 +214,8 @@ settings, and export data with no connection at all. The status bar shows **Loca
 | **Local folder**  | Real `.md` files in a folder you pick (File System Access API, Chromium browsers) | Git, sync tools, file-level backups |
 
 Both are fully local. Browser vaults should be exported to ZIP occasionally (clearing the
-site's browsing data deletes them — neoma tells you this up front). Local-folder vaults
-are ordinary files; neoma asks for folder permission only after you explicitly choose a
+site's browsing data deletes them — Neoma tells you this up front). Local-folder vaults
+are ordinary files; Neoma asks for folder permission only after you explicitly choose a
 folder, and never uploads anything. Details: [docs/storage.md](docs/storage.md).
 
 ## Markdown compatibility
@@ -229,7 +229,7 @@ Details: [docs/markdown-compatibility.md](docs/markdown-compatibility.md) and
 
 ## Privacy
 
-> neoma does not collect, transmit or sell your notes or usage data. Your vault remains
+> Neoma does not collect, transmit or sell your notes or usage data. Your vault remains
 > on your device unless you deliberately export or synchronise it using another tool.
 
 No accounts, no analytics, no telemetry, no ads, no tracking pixels, no external API
@@ -246,22 +246,22 @@ encrypted sync, deeper Zotero integration, canvas, publish-to-web, local AI inte
 
 Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for setup, project
 architecture, and the checklists (accessibility, privacy, dependency licensing) that
-keep neoma trustworthy. Contributions must not introduce telemetry, tracking, mandatory
+keep Neoma trustworthy. Contributions must not introduce telemetry, tracking, mandatory
 cloud services, proprietary note formats, undocumented external requests, or dependencies
 that compromise the open-source licence.
 
 ## Licence
 
-[AGPL-3.0-or-later](LICENSE). neoma is free software: you can run, study, share and
+[AGPL-3.0-or-later](LICENSE). Neoma is free software: you can run, study, share and
 improve it, and network-hosted versions must offer their source to users.
 
 ## Creator
 
-neoma was created by **Iwan** as an open-source project for researchers, students,
+Neoma was created by **Iwan** as an open-source project for researchers, students,
 developers and anyone who wants complete ownership of their notes.
 
 - Repository: `https://github.com/infinitumio/neoma`
 - Contact: Discord `panda2187`
 
-_neoma is an independent, community-driven project. It is not affiliated with Obsidian,
+_Neoma is an independent, community-driven project. It is not affiliated with Obsidian,
 Notion, or any other organisation._

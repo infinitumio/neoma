@@ -34,6 +34,7 @@ import { buildDefaultCommands } from '@/commands/defaultCommands'
 import { handleGlobalKeydown } from '@/commands/shortcuts'
 import { formatShortcut } from '@/utils/misc'
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import { initDesktopIntegration, syncCloseBehavior } from '@/desktop/tauri'
 
 // The graph loads only when opened, keeping it out of the initial bundle.
 const GraphView = lazy(() => import('@/graph/GraphView'))
@@ -230,6 +231,21 @@ export default function App() {
   useEffect(() => {
     useUi.getState().setEditorMode(useSettings.getState().settings.defaultEditorMode)
   }, [])
+
+  // Desktop (Tauri) native integration — a no-op in the browser build.
+  useEffect(() => {
+    let cleanup = () => {}
+    void initDesktopIntegration(() => useSettings.getState().settings.desktopCloseBehavior).then(
+      (fn) => {
+        cleanup = fn
+      },
+    )
+    return () => cleanup()
+  }, [])
+  // Keep the native close handler in sync with the setting.
+  useEffect(() => {
+    void syncCloseBehavior(settings.desktopCloseBehavior)
+  }, [settings.desktopCloseBehavior])
 
   // Global shortcuts + never lose unsaved work on tab close.
   useEffect(() => {
