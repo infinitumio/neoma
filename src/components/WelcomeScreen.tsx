@@ -126,7 +126,7 @@ export function WelcomeScreen() {
   }
 
   return (
-    <main className={`welcome${mobile ? ' welcome-mobile' : ''}`}>
+    <main className="welcome">
       <div className="welcome-card">
         <div className="welcome-logo">
           <img src="/favicon.svg" alt="" aria-hidden />
@@ -134,7 +134,7 @@ export function WelcomeScreen() {
             <h1>{APP_NAME}</h1>
           </div>
         </div>
-        {!mobile && <p className="welcome-tagline">{APP_TAGLINE}</p>}
+        <p className="welcome-tagline">{APP_TAGLINE}</p>
 
         <div className="welcome-actions">
           <button className="welcome-action" onClick={() => setShowNewVault(true)} disabled={busy}>
