@@ -222,6 +222,16 @@ export function SettingsModal() {
                   label="Hover tooltips"
                 />
               </Row>
+              <Row
+                name="Notification close button"
+                desc="Show a × on notifications (they auto-dismiss either way)"
+              >
+                <Toggle
+                  checked={settings.showToastIcons}
+                  onChange={(v) => set('showToastIcons', v)}
+                  label="Notification close button"
+                />
+              </Row>
             </>
           )}
 

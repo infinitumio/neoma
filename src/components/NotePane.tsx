@@ -4,12 +4,15 @@
  * (edit / split / reading). Listens for heading-scroll requests from links.
  */
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { ListTree } from 'lucide-react'
 import { Editor } from './Editor'
 import { SourceView } from './SourceView'
 import { ViewModeSwitcher } from './ViewModeSwitcher'
 import { Breadcrumbs } from './Breadcrumbs'
 import { MathSymbolMenu } from './MathSymbolMenu'
 import { PageColorButton } from './PageColorButton'
+import { Outline } from './Outline'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 // The preview pulls in the markdown pipeline + KaTeX; load it on demand so
 // the initial bundle stays small for people who just want to type.
@@ -29,7 +32,9 @@ export function NotePane({ path, hideBreadcrumbs }: NotePaneProps) {
   const editorMode = useUi((s) => s.editorMode)
   const note = useVault((s) => s.notes.get(path))
   const showBreadcrumbs = useSettings((s) => s.settings.showBreadcrumbs)
+  const isMobile = useIsMobile()
   const [missing, setMissing] = useState(false)
+  const [outlineOpen, setOutlineOpen] = useState(false)
 
   useEffect(() => {
     setMissing(false)
@@ -41,9 +46,11 @@ export function NotePane({ path, hideBreadcrumbs }: NotePaneProps) {
   // Scroll to a heading when a `[[Note#Heading]]` link targeted this note.
   useEffect(() => {
     const handler = (event: Event) => {
-      const detail = (event as CustomEvent<{ path: string; heading: string }>).detail
+      const detail = (
+        event as CustomEvent<{ path: string; heading: string; slug?: string; line?: number }>
+      ).detail
       if (detail.path !== path) return
-      const slug = slugify(detail.heading)
+      const slug = detail.slug ?? slugify(detail.heading)
       document.getElementById(slug)?.scrollIntoView({ block: 'start' })
     }
     window.addEventListener('neoma:scroll-to-heading', handler)
@@ -77,9 +84,27 @@ export function NotePane({ path, hideBreadcrumbs }: NotePaneProps) {
             <PageColorButton path={path} />
             {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
           </div>
-          <ViewModeSwitcher />
+          <div className="note-header-view">
+            <ViewModeSwitcher />
+            <button
+              className={`icon-btn${outlineOpen ? ' active' : ''}`}
+              aria-label="Outline"
+              title="Outline"
+              aria-pressed={outlineOpen}
+              onClick={() => setOutlineOpen((v) => !v)}
+            >
+              <ListTree size={16} aria-hidden />
+            </button>
+          </div>
         </div>
       </div>
+      <Outline
+        path={path}
+        content={note.content}
+        open={outlineOpen}
+        onClose={() => setOutlineOpen(false)}
+        closeOnJump={isMobile}
+      />
       <div className={`editor-area ${editorMode}`} data-mode={editorMode}>
         {(editorMode === 'edit' || editorMode === 'split') && (
           <Editor path={path} content={note.content} />

@@ -14,6 +14,7 @@ import { updateNoteContent, saveNoteNow, saveAttachment } from '@/app/vaultStore
 import { useSettings } from '@/settings/settingsStore'
 import { useUi } from '@/app/uiStore'
 import { SelectionToolbar, type ToolbarPosition } from './SelectionToolbar'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 /** Position the toolbar above the current selection, capturing its range. */
 function toolbarPositionFor(view: EditorView): ToolbarPosition | null {
@@ -51,6 +52,9 @@ export function Editor({ path, content }: EditorProps) {
   pathRef.current = path
   const showLineNumbers = useSettings((s) => s.settings.showLineNumbers)
   const spellcheck = useSettings((s) => s.settings.spellcheck)
+  // On phones the native selection menu (Cut/Copy/Paste) handles selections, so
+  // the custom floating format toolbar is disabled to avoid overlapping it.
+  const isMobile = useIsMobile()
   const [toolbar, setToolbar] = useState<ToolbarPosition | null>(null)
 
   useEffect(() => {
@@ -120,12 +124,25 @@ export function Editor({ path, content }: EditorProps) {
       insertAtCursor(view, text, cursorOffset)
     }
     window.addEventListener('neoma:insert-text', onInsert)
+    // Jump to a heading line when the outline is used while editing.
+    const onGotoHeading = (event: Event) => {
+      const d = (event as CustomEvent<{ path: string; line?: number }>).detail
+      if (d.path !== pathRef.current || d.line == null) return
+      const line = view.state.doc.line(Math.min(d.line + 1, view.state.doc.lines))
+      view.dispatch({
+        selection: { anchor: line.from },
+        effects: EditorView.scrollIntoView(line.from, { y: 'start' }),
+      })
+      view.focus()
+    }
+    window.addEventListener('neoma:scroll-to-heading', onGotoHeading)
 
     return () => {
       dom.removeEventListener('paste', onPaste)
       dom.removeEventListener('drop', onDrop)
       view.scrollDOM.removeEventListener('scroll', onScroll)
       window.removeEventListener('neoma:insert-text', onInsert)
+      window.removeEventListener('neoma:scroll-to-heading', onGotoHeading)
       setToolbar(null)
       setActiveView(null)
       stateCache.set(pathRef.current, view.state)
@@ -149,7 +166,7 @@ export function Editor({ path, content }: EditorProps) {
   return (
     <>
       <div ref={container} className="editor-pane" data-testid="editor" />
-      {toolbar && viewRef.current && (
+      {toolbar && !isMobile && viewRef.current && (
         <SelectionToolbar
           view={viewRef.current}
           position={toolbar}

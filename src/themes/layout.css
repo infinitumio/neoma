@@ -282,10 +282,161 @@
   flex-shrink: 0;
 }
 
-.note-header-tools {
+.note-header-tools,
+.note-header-view {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* ---- Heading outline: a right-side drawer ---- */
+.outline-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 108;
+  background: rgba(0, 0, 0, 0.25);
+  border: none;
+}
+.outline-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 109;
+  width: min(20rem, 82vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-sidebar);
+  border-left: 1px solid var(--color-border);
+  box-shadow: var(--shadow-overlay);
+  transform: translateX(100%);
+  transition: transform var(--transition-medium);
+}
+.outline-drawer.open {
+  transform: translateX(0);
+}
+.outline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  padding-top: max(var(--space-3), env(safe-area-inset-top));
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 650;
+}
+.outline-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+  padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+}
+.outline-item {
+  --ol: color-mix(in srgb, var(--color-text) 16%, transparent);
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px var(--space-2) 7px 0.75rem;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Continuous vertical guide lines for each ancestor level. */
+  background-repeat: no-repeat;
+  background-size: 1px 100%;
+}
+.outline-item:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text);
+}
+.outline-l1 {
+  font-weight: 650;
+  color: var(--color-text);
+}
+/* Horizontal connector tick from the guide line to the text (levels 2+). */
+.outline-item::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 0.5rem;
+  height: 1px;
+  background: var(--ol);
+}
+.outline-l1::before {
+  display: none;
+}
+.outline-l2 {
+  padding-left: 2rem;
+  background-image: linear-gradient(var(--ol), var(--ol));
+  background-position: 0.9rem 0;
+}
+.outline-l2::before {
+  left: 0.9rem;
+}
+.outline-l3 {
+  padding-left: 3rem;
+  background-image: linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol));
+  background-position:
+    0.9rem 0,
+    1.9rem 0;
+}
+.outline-l3::before {
+  left: 1.9rem;
+}
+.outline-l4 {
+  padding-left: 4rem;
+  background-image:
+    linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol)),
+    linear-gradient(var(--ol), var(--ol));
+  background-position:
+    0.9rem 0,
+    1.9rem 0,
+    2.9rem 0;
+}
+.outline-l4::before {
+  left: 2.9rem;
+}
+.outline-l5 {
+  padding-left: 5rem;
+  background-image:
+    linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol)),
+    linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol));
+  background-position:
+    0.9rem 0,
+    1.9rem 0,
+    2.9rem 0,
+    3.9rem 0;
+}
+.outline-l5::before {
+  left: 3.9rem;
+}
+.outline-l6 {
+  padding-left: 6rem;
+  background-image:
+    linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol)),
+    linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol)),
+    linear-gradient(var(--ol), var(--ol));
+  background-position:
+    0.9rem 0,
+    1.9rem 0,
+    2.9rem 0,
+    3.9rem 0,
+    4.9rem 0;
+}
+.outline-l6::before {
+  left: 4.9rem;
+}
+@media (max-width: 900px) {
+  .outline-drawer {
+    background: color-mix(in srgb, var(--color-bg-sidebar) 82%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(22px) saturate(180%);
+  }
 }
 
 /* Phones: breadcrumbs get their own row above the controls so nothing is
@@ -1859,6 +2010,49 @@
   flex: 1;
 }
 
+@media (max-width: 900px) {
+  /* Toasts sit above the floating tab bar, full-width and centred, instead of
+     tucked into the bottom-right where they collide with the bar. */
+  .toast-region {
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: calc(var(--bottom-bar-h) + var(--space-2));
+    max-width: none;
+    align-items: stretch;
+  }
+  .toast {
+    width: 100%;
+  }
+  /* The colour button is on the left of the mobile toolbar, so open its picker
+     to the right (left-aligned) instead of off the left edge, and let it wrap. */
+  .color-picker-anchor {
+    left: 0;
+    right: auto;
+  }
+  /* A tidy 4-column grid of larger, evenly-spaced swatches. */
+  .color-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-2);
+    max-width: calc(100vw - 2 * var(--space-3));
+  }
+  .color-swatch {
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+  /* Leaner settings: drop helper text and tighten rows (iOS-style list). */
+  .setting-desc {
+    display: none;
+  }
+  .setting-row {
+    padding: var(--space-2) 0;
+  }
+  .settings-content {
+    padding: var(--space-3);
+  }
+}
+
 /* ---- Search panel ---- */
 .search-result {
   display: block;
@@ -2481,6 +2675,18 @@
   .tree-item,
   .tab {
     min-height: 2.5rem;
+  }
+  /* Icon buttons stay square (they were tall + skinny — min-height without a
+     matching width). */
+  .icon-btn {
+    min-width: 2.5rem;
+  }
+  /* Popovers anchored to left-side toolbar buttons open rightward, not off the
+     left edge (colour picker handled separately). */
+  .math-menu {
+    left: 0;
+    right: auto;
+    max-width: calc(100vw - 2 * var(--space-3));
   }
   /* Tabs keep a readable width and scroll left/right (momentum) instead of
      shrinking to fit when several files are open. Locked to the horizontal

@@ -11,6 +11,10 @@ html,
 body,
 #root {
   height: 100%;
+  /* The app manages its own scroll regions; the page itself never scrolls or
+     rubber-bands (important on iOS). */
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {

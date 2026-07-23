@@ -231,6 +231,8 @@ export interface ApplicationSettings {
   showSourceView: boolean
   /** Show the breadcrumb trail above notes. */
   showBreadcrumbs: boolean
+  /** Show the dismiss (×) button on toasts. Off by default — toasts auto-hide. */
+  showToastIcons: boolean
   /** Desktop app only: what closing the main window does. */
   desktopCloseBehavior: 'quit' | 'tray' | 'ask'
   /** Desktop app only: launch neoma on system login. */

@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS: ApplicationSettings = {
   showTooltips: true,
   showSourceView: false,
   showBreadcrumbs: false,
+  showToastIcons: false,
   desktopCloseBehavior: 'tray',
   launchOnStartup: false,
   customShortcuts: {},

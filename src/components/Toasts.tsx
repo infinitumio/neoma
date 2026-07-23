@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { X } from 'lucide-react'
 import { useUi } from '@/app/uiStore'
+import { useSettings } from '@/settings/settingsStore'
 
 export function Toasts() {
   const toasts = useUi((s) => s.toasts)
   const dismiss = useUi((s) => s.dismissToast)
+  const showDismiss = useSettings((s) => s.settings.showToastIcons)
   if (!toasts.length) return null
   return (
     <div className="toast-region" role="status" aria-live="polite">
@@ -22,13 +24,15 @@ export function Toasts() {
               {toast.action.label}
             </button>
           )}
-          <button
-            className="icon-btn"
-            onClick={() => dismiss(toast.id)}
-            aria-label="Dismiss notification"
-          >
-            <X size={14} aria-hidden />
-          </button>
+          {showDismiss && (
+            <button
+              className="icon-btn"
+              onClick={() => dismiss(toast.id)}
+              aria-label="Dismiss notification"
+            >
+              <X size={14} aria-hidden />
+            </button>
+          )}
         </div>
       ))}
     </div>
