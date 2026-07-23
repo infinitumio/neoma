@@ -87,7 +87,10 @@ Notes:
 ## Signing
 
 Desktop installers and the iOS app are **unsigned by default**. See the honest
-note in [INSTALL.md](INSTALL.md). To sign:
+note in [INSTALL.md](INSTALL.md). Signing variables are documented in
+[`.env.example`](.env.example) — copy it to a git-ignored `.env`, fill in your
+Apple Developer values, then `set -a; source .env; set +a` before a signed
+build. To sign:
 
 - **macOS:** an Apple Developer ID certificate + notarisation
   (`APPLE_CERTIFICATE`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` env vars in
