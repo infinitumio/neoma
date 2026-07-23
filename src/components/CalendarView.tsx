@@ -31,6 +31,7 @@ import { loadIcs } from '@/calendar/icsStore'
 import { dailyNotePath, dailyNoteExists } from '@/templates/dailyNotes'
 import { openDaily } from './panels/DailyPanel'
 import { addDays, formatDate, isoDate } from '@/utils/dates'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 import type { NoteMeta } from '@/types'
 
 type Mode = 'month' | 'agenda'
@@ -59,6 +60,7 @@ export default function CalendarView() {
   const metaVersion = useVault((s) => s.metaVersion)
   const vaultId = useVault((s) => s.vault?.id)
   const openNote = useTabs((s) => s.openNote)
+  const isMobile = useIsMobile()
   const [viewDate, setViewDate] = useState(() => new Date())
   const [mode, setMode] = useState<Mode>('month')
   const [course, setCourse] = useState('')
@@ -284,12 +286,22 @@ export default function CalendarView() {
             </div>
           </div>
           {selected && (
-            <DaySummary
-              date={selected}
-              events={byDate.get(selected) ?? []}
-              onOpen={openEvent}
-              onClose={() => setSelected(null)}
-            />
+            <>
+              {isMobile && (
+                <button
+                  className="drawer-backdrop"
+                  aria-label="Close day"
+                  onClick={() => setSelected(null)}
+                />
+              )}
+              <DaySummary
+                date={selected}
+                events={byDate.get(selected) ?? []}
+                onOpen={openEvent}
+                onClose={() => setSelected(null)}
+                mobile={isMobile}
+              />
+            </>
           )}
         </div>
       ) : (
@@ -313,11 +325,13 @@ function DaySummary({
   events,
   onOpen,
   onClose,
+  mobile,
 }: {
   date: string
   events: CalEvent[]
   onOpen: (e: CalEvent) => void
   onClose: () => void
+  mobile?: boolean
 }) {
   const metaVersion = useVault((s) => s.metaVersion)
   const openNote = useTabs((s) => s.openNote)
@@ -337,7 +351,11 @@ function DaySummary({
   const empty = events.length === 0 && !hasJournal && editedNotes.length === 0
 
   return (
-    <aside className="calendar-summary" aria-label={`Summary for ${date}`}>
+    <aside
+      className={`calendar-summary${mobile ? ' calendar-summary-sheet' : ''}`}
+      aria-label={`Summary for ${date}`}
+    >
+      {mobile && <div className="more-sheet-handle" aria-hidden />}
       <div className="calendar-summary-head">
         <span>{formatDate(day, 'dddd, DD MMMM YYYY')}</span>
         <button className="icon-btn" aria-label="Close day summary" onClick={onClose}>

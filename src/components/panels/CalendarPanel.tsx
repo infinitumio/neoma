@@ -155,20 +155,28 @@ function EventsBody() {
         </div>
       )}
 
-      <div className="calendar-panel-daybar">
-        <span className="sidebar-section-label" style={{ padding: 0 }}>
-          {formatDate(new Date(dayShown), 'ddd, DD MMM')}
-        </span>
-        {isMobile ? (
-          <button
-            className="icon-btn"
-            onClick={() => openSpecial('calendar')}
-            title="Open full calendar"
-            aria-label="Open full calendar"
-          >
-            <CalendarDays size={16} aria-hidden />
-          </button>
-        ) : (
+      {isMobile ? (
+        <button
+          className="cal-hero"
+          onClick={() => openSpecial('calendar')}
+          aria-label="Open full calendar"
+        >
+          <span className="cal-hero-num">{new Date(dayShown).getDate()}</span>
+          <span className="cal-hero-meta">
+            <span className="cal-hero-dow">{formatDate(new Date(dayShown), 'dddd')}</span>
+            <span className="cal-hero-sub">
+              {formatDate(new Date(dayShown), 'MMMM YYYY')} ·{' '}
+              {(eventsByDate.get(dayShown) ?? []).length || 'no'} event
+              {(eventsByDate.get(dayShown) ?? []).length === 1 ? '' : 's'}
+            </span>
+          </span>
+          <CalendarDays size={20} className="cal-hero-icon" aria-hidden />
+        </button>
+      ) : (
+        <div className="calendar-panel-daybar">
+          <span className="sidebar-section-label" style={{ padding: 0 }}>
+            {formatDate(new Date(dayShown), 'ddd, DD MMM')}
+          </span>
           <button
             className="btn btn-small"
             onClick={() => promptNewEvent(selected)}
@@ -176,8 +184,11 @@ function EventsBody() {
           >
             <Plus size={13} aria-hidden /> Event
           </button>
-        )}
-      </div>
+        </div>
+      )}
+      {isMobile && (eventsByDate.get(dayShown) ?? []).length > 0 && (
+        <div className="sidebar-section-label">Today</div>
+      )}
       {(eventsByDate.get(dayShown) ?? []).length === 0 ? (
         <p className="text-small text-faint" style={{ padding: '0 var(--space-2)' }}>
           {isMobile

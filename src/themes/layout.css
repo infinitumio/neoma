@@ -2482,6 +2482,20 @@
   .tab {
     min-height: 2.5rem;
   }
+  /* Tabs keep a readable width and scroll left/right (momentum) instead of
+     shrinking to fit when several files are open. Locked to the horizontal
+     axis — no vertical drag/bounce. */
+  .tabs-bar {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    overflow-y: hidden;
+    touch-action: pan-x;
+    overscroll-behavior: contain;
+  }
+  .tab {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
   .preview-pane {
     padding: var(--space-4);
   }
@@ -3403,9 +3417,30 @@
 .calendar-summary section {
   margin-bottom: var(--space-3);
 }
-@media (max-width: 720px) {
-  .calendar-summary {
-    display: none;
+/* Phone: the day summary is a glass bottom sheet, not a side panel. */
+.calendar-summary-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 97;
+  width: auto;
+  max-height: 72vh;
+  overflow-y: auto;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+  border-bottom: none;
+  background: color-mix(in srgb, var(--color-bg-raised) 82%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--shadow-overlay);
+  padding: var(--space-2) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom));
+  animation: slash-sheet-in 200ms ease;
+}
+@media (max-width: 900px) {
+  /* The month grid runs full-width and clears the floating tab bar. */
+  .calendar-month-wrap {
+    padding-bottom: var(--bottom-bar-h);
   }
 }
 
@@ -3622,4 +3657,60 @@
   gap: var(--space-2);
   margin-top: var(--space-3);
   padding: 0 var(--space-2);
+}
+
+/* Phone calendar sidebar: a "today" hero card + richer event chips. */
+.cal-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent) 16%, transparent),
+    color-mix(in srgb, var(--color-accent) 5%, transparent)
+  );
+  color: var(--color-text);
+  cursor: pointer;
+}
+.cal-hero-num {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-accent);
+  min-width: 2.2rem;
+  text-align: center;
+}
+.cal-hero-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.cal-hero-dow {
+  font-weight: 650;
+}
+.cal-hero-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.cal-hero-icon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+@media (max-width: 900px) {
+  /* Event rows become tappable cards with a colour accent. */
+  .sidebar .study-link {
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-raised);
+  }
 }
