@@ -173,6 +173,9 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  /* Let the inner editor/preview be the scroll boundary so the tab bar and
+     note header stay pinned instead of scrolling away. */
+  min-height: 0;
   background: var(--color-bg);
 }
 
@@ -2733,6 +2736,13 @@
 }
 
 @media (max-width: 900px) {
+  /* Pin the whole shell to the viewport so the browser can't scroll the layout
+     (e.g. when the editor is focused) — the tab bar and note header stay put,
+     and only the note body scrolls. */
+  .app-shell {
+    position: fixed;
+    inset: 0;
+  }
   .main-area {
     /* Keep the top tab bar below the status bar / notch. */
     padding-top: env(safe-area-inset-top);
