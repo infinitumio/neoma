@@ -258,6 +258,23 @@ export function SettingsModal() {
                   label="Enable spellcheck"
                 />
               </Row>
+              <Row name="Breadcrumbs" desc="Show the folder trail above each note">
+                <Toggle
+                  checked={settings.showBreadcrumbs}
+                  onChange={(v) => set('showBreadcrumbs', v)}
+                  label="Show breadcrumbs"
+                />
+              </Row>
+              <Row
+                name="Source view"
+                desc="Add a read-only Markdown source mode to the view switcher"
+              >
+                <Toggle
+                  checked={settings.showSourceView}
+                  onChange={(v) => set('showSourceView', v)}
+                  label="Show source view"
+                />
+              </Row>
               <Row
                 name="Autosave delay"
                 desc={`${settings.autosaveDelayMs} ms after you stop typing`}

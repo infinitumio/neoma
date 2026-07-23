@@ -16,6 +16,7 @@ import { PageColorButton } from './PageColorButton'
 const Preview = lazy(() => import('./Preview').then((m) => ({ default: m.Preview })))
 import { loadNote, useVault } from '@/app/vaultStore'
 import { useUi } from '@/app/uiStore'
+import { useSettings } from '@/settings/settingsStore'
 import { slugify } from '@/utils/misc'
 
 interface NotePaneProps {
@@ -27,6 +28,7 @@ interface NotePaneProps {
 export function NotePane({ path, hideBreadcrumbs }: NotePaneProps) {
   const editorMode = useUi((s) => s.editorMode)
   const note = useVault((s) => s.notes.get(path))
+  const showBreadcrumbs = useSettings((s) => s.settings.showBreadcrumbs)
   const [missing, setMissing] = useState(false)
 
   useEffect(() => {
@@ -68,11 +70,13 @@ export function NotePane({ path, hideBreadcrumbs }: NotePaneProps) {
     <div className="note-view">
       <div className="note-header">
         <div className="note-header-crumbs">
-          {hideBreadcrumbs ? <span style={{ flex: 1 }} /> : <Breadcrumbs path={path} />}
+          {showBreadcrumbs && !hideBreadcrumbs && <Breadcrumbs path={path} />}
         </div>
         <div className="note-header-actions">
-          <PageColorButton path={path} />
-          {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
+          <div className="note-header-tools">
+            <PageColorButton path={path} />
+            {editorMode !== 'reading' && editorMode !== 'source' && <MathSymbolMenu />}
+          </div>
           <ViewModeSwitcher />
         </div>
       </div>

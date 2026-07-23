@@ -5,7 +5,8 @@
  * three panels in the rail's "Planner" group (alongside Journal and Tasks).
  */
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Maximize2, CircleDot, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Maximize2, CircleDot, Plus, CalendarDays } from 'lucide-react'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 import { addDays, formatDate, isoDate } from '@/utils/dates'
 import { useVault } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
@@ -33,6 +34,7 @@ function EventsBody() {
   const vaultId = useVault((s) => s.vault?.id)
   const openNote = useTabs((s) => s.openNote)
   const openSpecial = useTabs((s) => s.openSpecial)
+  const isMobile = useIsMobile()
   const [viewDate, setViewDate] = useState(() => new Date())
   const [dynamic, setDynamic] = useState<CalEvent[]>([])
   const [selected, setSelected] = useState(() => isoDate())
@@ -40,6 +42,9 @@ function EventsBody() {
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
   const today = isoDate()
+  // On phones there's no mini grid — the panel is always "today", and the
+  // calendar icon jumps to the full calendar to browse other days.
+  const dayShown = isMobile ? today : selected
 
   useEffect(() => {
     let cancelled = false
@@ -84,86 +89,103 @@ function EventsBody() {
 
   return (
     <div className="sidebar-body">
-      <button
-        className="btn btn-small"
-        style={{ width: '100%', justifyContent: 'center', marginBottom: 'var(--space-2)' }}
-        onClick={() => openSpecial('calendar')}
-      >
-        <Maximize2 size={13} aria-hidden /> Open full calendar
-      </button>
-      <div className="calendar" role="application" aria-label="Calendar">
-        <div className="calendar-header">
-          <button
-            className="icon-btn"
-            onClick={() => setViewDate(new Date(year, month - 1, 1))}
-            aria-label="Previous month"
-          >
-            <ChevronLeft size={16} aria-hidden />
-          </button>
-          <span aria-live="polite">{formatDate(viewDate, 'MMMM YYYY')}</span>
-          <button
-            className="icon-btn"
-            onClick={() => setViewDate(new Date(year, month + 1, 1))}
-            aria-label="Next month"
-          >
-            <ChevronRight size={16} aria-hidden />
-          </button>
+      {!isMobile && (
+        <button
+          className="btn btn-small"
+          style={{ width: '100%', justifyContent: 'center', marginBottom: 'var(--space-2)' }}
+          onClick={() => openSpecial('calendar')}
+        >
+          <Maximize2 size={13} aria-hidden /> Open full calendar
+        </button>
+      )}
+      {!isMobile && (
+        <div className="calendar" role="application" aria-label="Calendar">
+          <div className="calendar-header">
+            <button
+              className="icon-btn"
+              onClick={() => setViewDate(new Date(year, month - 1, 1))}
+              aria-label="Previous month"
+            >
+              <ChevronLeft size={16} aria-hidden />
+            </button>
+            <span aria-live="polite">{formatDate(viewDate, 'MMMM YYYY')}</span>
+            <button
+              className="icon-btn"
+              onClick={() => setViewDate(new Date(year, month + 1, 1))}
+              aria-label="Next month"
+            >
+              <ChevronRight size={16} aria-hidden />
+            </button>
+          </div>
+          <div className="calendar-grid">
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+              <span key={d} className="dow" aria-hidden>
+                {d}
+              </span>
+            ))}
+            {days.map((day) => {
+              const iso = isoDate(day)
+              const dayEvents = eventsByDate.get(iso) ?? []
+              return (
+                <button
+                  key={iso}
+                  className={[
+                    'calendar-day',
+                    day.getMonth() !== month ? 'other-month' : '',
+                    iso === today ? 'today' : '',
+                    iso === selected ? 'selected' : '',
+                    dayEvents.length ? 'has-note' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  title={dayEvents.map((e) => e.title).join('\n') || undefined}
+                  onClick={() => setSelected(iso)}
+                  aria-label={iso}
+                  style={
+                    dayEvents.length
+                      ? ({ '--dot-color': eventColor(dayEvents[0]) } as React.CSSProperties)
+                      : undefined
+                  }
+                >
+                  {day.getDate()}
+                </button>
+              )
+            })}
+          </div>
         </div>
-        <div className="calendar-grid">
-          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-            <span key={d} className="dow" aria-hidden>
-              {d}
-            </span>
-          ))}
-          {days.map((day) => {
-            const iso = isoDate(day)
-            const dayEvents = eventsByDate.get(iso) ?? []
-            return (
-              <button
-                key={iso}
-                className={[
-                  'calendar-day',
-                  day.getMonth() !== month ? 'other-month' : '',
-                  iso === today ? 'today' : '',
-                  iso === selected ? 'selected' : '',
-                  dayEvents.length ? 'has-note' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                title={dayEvents.map((e) => e.title).join('\n') || undefined}
-                onClick={() => setSelected(iso)}
-                aria-label={iso}
-                style={
-                  dayEvents.length
-                    ? ({ '--dot-color': eventColor(dayEvents[0]) } as React.CSSProperties)
-                    : undefined
-                }
-              >
-                {day.getDate()}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      )}
 
       <div className="calendar-panel-daybar">
         <span className="sidebar-section-label" style={{ padding: 0 }}>
-          {formatDate(new Date(selected), 'ddd, DD MMM')}
+          {formatDate(new Date(dayShown), 'ddd, DD MMM')}
         </span>
-        <button
-          className="btn btn-small"
-          onClick={() => promptNewEvent(selected)}
-          title="Add an event on this day"
-        >
-          <Plus size={13} aria-hidden /> Event
-        </button>
+        {isMobile ? (
+          <button
+            className="icon-btn"
+            onClick={() => openSpecial('calendar')}
+            title="Open full calendar"
+            aria-label="Open full calendar"
+          >
+            <CalendarDays size={16} aria-hidden />
+          </button>
+        ) : (
+          <button
+            className="btn btn-small"
+            onClick={() => promptNewEvent(selected)}
+            title="Add an event on this day"
+          >
+            <Plus size={13} aria-hidden /> Event
+          </button>
+        )}
       </div>
-      {(eventsByDate.get(selected) ?? []).length === 0 ? (
+      {(eventsByDate.get(dayShown) ?? []).length === 0 ? (
         <p className="text-small text-faint" style={{ padding: '0 var(--space-2)' }}>
-          Nothing on this day. Add an event, or pick another date.
+          {isMobile
+            ? 'Nothing today. Tap the calendar icon to browse other days.'
+            : 'Nothing on this day. Add an event, or pick another date.'}
         </p>
       ) : (
-        (eventsByDate.get(selected) ?? []).map((e, i) => (
+        (eventsByDate.get(dayShown) ?? []).map((e, i) => (
           <button
             key={i}
             className="study-link"

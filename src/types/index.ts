@@ -227,6 +227,10 @@ export interface ApplicationSettings {
   reducedMotion: 'system' | 'reduced' | 'full'
   /** Show hover tooltips on toolbar/sidebar controls. */
   showTooltips: boolean
+  /** Show the read-only Markdown "Source" view mode in the switcher. */
+  showSourceView: boolean
+  /** Show the breadcrumb trail above notes. */
+  showBreadcrumbs: boolean
   /** Desktop app only: what closing the main window does. */
   desktopCloseBehavior: 'quit' | 'tray' | 'ask'
   /** Desktop app only: launch neoma on system login. */

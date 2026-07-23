@@ -8,6 +8,7 @@ import { Pencil, Columns2, BookOpen, FileCode } from 'lucide-react'
 import type { EditorMode } from '@/types'
 import { useUi } from '@/app/uiStore'
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useSettings } from '@/settings/settingsStore'
 
 const MODES: Array<{ id: EditorMode; label: string; icon: typeof Pencil }> = [
   { id: 'edit', label: 'Edit', icon: Pencil },
@@ -20,8 +21,11 @@ export function ViewModeSwitcher() {
   const editorMode = useUi((s) => s.editorMode)
   const setEditorMode = useUi((s) => s.setEditorMode)
   const isMobile = useIsMobile()
-  // Side-by-side split doesn't fit a phone — offer Edit / Reading / Source only.
-  const modes = isMobile ? MODES.filter((m) => m.id !== 'split') : MODES
+  const showSource = useSettings((s) => s.settings.showSourceView)
+  // Split doesn't fit a phone; Source is opt-in (Settings → Editor).
+  const modes = MODES.filter(
+    (m) => (m.id !== 'split' || !isMobile) && (m.id !== 'source' || showSource),
+  )
 
   return (
     <div className="view-switcher" role="group" aria-label="View mode">

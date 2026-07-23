@@ -282,8 +282,15 @@
   flex-shrink: 0;
 }
 
+.note-header-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 /* Phones: breadcrumbs get their own row above the controls so nothing is
-   squished, and the controls sit on a full-width row beneath. */
+   squished, and the controls sit on a full-width row beneath — colour/equation
+   tools on the left, the Edit/Reading switcher on the right. */
 @media (max-width: 900px) {
   .note-header {
     flex-direction: column;
@@ -292,7 +299,7 @@
     padding: var(--space-2) var(--space-3);
   }
   .note-header-actions {
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 }
 
@@ -2287,7 +2294,7 @@
   .right-sidebar {
     position: fixed;
     top: 0;
-    bottom: var(--bottom-bar-h);
+    bottom: 0;
     z-index: 90;
     box-shadow: var(--shadow-overlay);
     transition: transform var(--transition-medium);
@@ -2296,6 +2303,12 @@
   .sidebar .sidebar-header,
   .right-sidebar .right-tabs {
     padding-top: max(var(--space-2), env(safe-area-inset-top));
+  }
+  /* Drawers run full-height under the floating bar; their scroll bodies get
+     bottom padding so the last item clears it. */
+  .sidebar-body,
+  .right-body {
+    padding-bottom: var(--bottom-bar-h);
   }
   .sidebar {
     left: 0;
@@ -2315,13 +2328,16 @@
     display: block;
     position: fixed;
     inset: 0;
-    bottom: var(--bottom-bar-h);
     z-index: 80;
     background: rgba(0, 0, 0, 0.4);
     border: none;
   }
-  /* Keep note content clear of the fixed bottom bar. */
-  .main-area {
+  /* Content flows full-height *under* the floating glass bar. Each scroll
+     region gets bottom padding so its last line can still be scrolled clear
+     of the bar, rather than the whole app reserving a gap. */
+  .preview-pane,
+  .source-view,
+  .cm-scroller {
     padding-bottom: var(--bottom-bar-h);
   }
 
