@@ -12,6 +12,7 @@ import { createBrowserVault } from '@/storage/VaultManager'
 import { openVault, getAdapter, refreshEntries } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
+import { isMobileApp } from '@/desktop/tauri'
 
 const ICONS: Record<StarterId, typeof FileText> = {
   demo: Sparkles,
@@ -30,6 +31,8 @@ export function NewVaultDialog({ onClose }: NewVaultDialogProps) {
   const [starter, setStarter] = useState<StarterId>('university')
   const [busy, setBusy] = useState(false)
   const ui = useUi()
+  // The phone app skips the explainer and starter blurbs — less is more.
+  const mobile = isMobileApp()
 
   const create = async () => {
     setBusy(true)
@@ -72,11 +75,13 @@ export function NewVaultDialog({ onClose }: NewVaultDialogProps) {
         </>
       }
     >
-      <p className="text-secondary" style={{ marginBottom: 'var(--space-4)' }}>
-        A <strong>vault</strong> is the folder where Neoma keeps a collection of related pages,
-        attachments and settings. You might keep separate vaults for your degree, work, research, or
-        personal notes. Everything stays on this device.
-      </p>
+      {!mobile && (
+        <p className="text-secondary" style={{ marginBottom: 'var(--space-4)' }}>
+          A <strong>vault</strong> is the folder where Neoma keeps a collection of related pages,
+          attachments and settings. You might keep separate vaults for your degree, work, research,
+          or personal notes. Everything stays on this device.
+        </p>
+      )}
 
       <div className="form-row">
         <label htmlFor="vault-name">Vault name</label>
@@ -104,7 +109,7 @@ export function NewVaultDialog({ onClose }: NewVaultDialogProps) {
               >
                 <Icon size={18} className="starter-icon" aria-hidden />
                 <span className="starter-name">{option.name}</span>
-                <span className="starter-desc">{option.description}</span>
+                {!mobile && <span className="starter-desc">{option.description}</span>}
               </button>
             )
           })}

@@ -20,9 +20,26 @@ export function isTauri(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 }
 
+/** True in the native mobile app (iOS/Android). */
+export function isMobileApp(): boolean {
+  return (
+    isTauri() &&
+    typeof navigator !== 'undefined' &&
+    /iphone|ipad|ipod|android/i.test(navigator.userAgent)
+  )
+}
+
+/**
+ * True only in the desktop app (not iOS/Android). Tray, launch-on-startup and
+ * close-to-tray are desktop concepts and are compiled out of the mobile shell.
+ */
+export function isDesktopApp(): boolean {
+  return isTauri() && !isMobileApp()
+}
+
 /** Push the close/tray preference down to the native window handler. */
 export async function syncCloseBehavior(behavior: CloseBehavior): Promise<void> {
-  if (!isTauri()) return
+  if (!isDesktopApp()) return
   try {
     const { invoke } = await import('@tauri-apps/api/core')
     await invoke('set_close_behavior', { behavior: BEHAVIOR_CODE[behavior] })
@@ -33,7 +50,7 @@ export async function syncCloseBehavior(behavior: CloseBehavior): Promise<void> 
 
 /** Enable or disable launch-on-login. */
 export async function setLaunchOnStartup(enabled: boolean): Promise<void> {
-  if (!isTauri()) return
+  if (!isDesktopApp()) return
   try {
     const { enable, disable } = await import('@tauri-apps/plugin-autostart')
     if (enabled) await enable()
@@ -45,7 +62,7 @@ export async function setLaunchOnStartup(enabled: boolean): Promise<void> {
 
 /** Whether launch-on-login is currently enabled (false off-desktop). */
 export async function isLaunchOnStartupEnabled(): Promise<boolean> {
-  if (!isTauri()) return false
+  if (!isDesktopApp()) return false
   try {
     const { isEnabled } = await import('@tauri-apps/plugin-autostart')
     return await isEnabled()
@@ -63,7 +80,7 @@ export async function isLaunchOnStartupEnabled(): Promise<boolean> {
 export async function initDesktopIntegration(
   getBehavior: () => CloseBehavior,
 ): Promise<() => void> {
-  if (!isTauri()) return () => {}
+  if (!isDesktopApp()) return () => {}
   await syncCloseBehavior(getBehavior())
   try {
     const { listen } = await import('@tauri-apps/api/event')

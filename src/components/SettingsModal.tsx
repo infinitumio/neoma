@@ -10,7 +10,7 @@ import { useVault } from '@/app/vaultStore'
 import { parseIcs } from '@/calendar/ics'
 import { loadIcs, saveIcs, clearIcs } from '@/calendar/icsStore'
 import { useSettings, exportSettingsJson, importSettingsJson } from '@/settings/settingsStore'
-import { isTauri, setLaunchOnStartup } from '@/desktop/tauri'
+import { isDesktopApp, setLaunchOnStartup } from '@/desktop/tauri'
 import type { ApplicationSettings } from '@/types'
 import { BUILTIN_TEMPLATES } from '@/templates/builtins'
 import { listCommands } from '@/commands/registry'
@@ -153,7 +153,7 @@ export function SettingsModal() {
     <Modal title="Settings" onClose={() => setOpen(false)} wide initialFocus={false}>
       <div className="settings-layout">
         <nav className="settings-nav" aria-label="Settings sections">
-          {SECTIONS.filter((name) => name !== 'Desktop' || isTauri()).map((name) => (
+          {SECTIONS.filter((name) => name !== 'Desktop' || isDesktopApp()).map((name) => (
             <button key={name} aria-current={section === name} onClick={() => setSection(name)}>
               {name}
             </button>
@@ -377,7 +377,7 @@ export function SettingsModal() {
             </p>
           )}
 
-          {section === 'Desktop' && isTauri() && (
+          {section === 'Desktop' && isDesktopApp() && (
             <>
               <p className="text-small text-secondary" style={{ marginBottom: 'var(--space-3)' }}>
                 These options apply to the Neoma desktop app only and are stored locally.

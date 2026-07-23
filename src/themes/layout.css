@@ -2288,6 +2288,8 @@
   .main-area {
     /* Keep the top tab bar below the status bar / notch. */
     padding-top: env(safe-area-inset-top);
+    /* Never let a note scroll the whole app sideways. */
+    overflow-x: hidden;
   }
   .status-bar {
     padding-bottom: max(0px, env(safe-area-inset-bottom));
@@ -2296,6 +2298,42 @@
      drawer from its toggle, never docked, so the editor keeps full width. */
   .right-sidebar:not(.open) {
     box-shadow: none;
+  }
+
+  /* No side-by-side split on phones — there isn't room. Show a single pane:
+     the editor for note split, the PDF for a PDF split. The Split view button
+     and the PDF split toggle are hidden on mobile (see ViewModeSwitcher /
+     PdfTab), so this is a belt-and-braces fallback. */
+  .editor-area.split .preview-pane {
+    display: none;
+  }
+  .editor-area.split .editor-pane {
+    border-right: none;
+  }
+  .pdf-split {
+    flex-direction: column;
+  }
+  .pdf-split-note {
+    display: none;
+  }
+
+  /* Wide content (code blocks, tables, math) scrolls inside its own box
+     instead of stretching the page. */
+  .preview-content pre,
+  .preview-content table,
+  .preview-content .katex-display {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+/* Absolute guard against horizontal page scroll on small screens. */
+@media (max-width: 900px) {
+  html,
+  body,
+  #root {
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 }
 

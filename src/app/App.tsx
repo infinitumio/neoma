@@ -47,6 +47,8 @@ const PdfViewer = lazy(() =>
 function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }) {
   const setSplit = useTabs((s) => s.setPdfSplitNote)
   const path = tab.path as string
+  // Side-by-side PDF + note doesn't fit a phone — show the PDF alone there.
+  const isMobile = useIsMobile()
 
   const toggleSplit = async () => {
     if (tab.pdfSplitNote) {
@@ -82,7 +84,7 @@ function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }
     </button>
   )
 
-  if (tab.pdfSplitNote) {
+  if (tab.pdfSplitNote && !isMobile) {
     return (
       <div className="pdf-split">
         <div className="pdf-split-pane">
@@ -98,7 +100,13 @@ function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }
       </div>
     )
   }
-  return <PdfViewer path={path} initialPage={tab.pdfPage} toolbarExtra={splitButton} />
+  return (
+    <PdfViewer
+      path={path}
+      initialPage={tab.pdfPage}
+      toolbarExtra={isMobile ? undefined : splitButton}
+    />
+  )
 }
 
 function EmptyWorkspace() {

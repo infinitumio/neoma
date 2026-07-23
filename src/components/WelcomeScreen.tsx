@@ -15,7 +15,7 @@ import {
   removeVault,
 } from '@/storage/VaultManager'
 import { supportsLocalFolders } from '@/storage/local-folder/LocalFolderAdapter'
-import { isTauri } from '@/desktop/tauri'
+import { isTauri, isMobileApp } from '@/desktop/tauri'
 import { openVault, getAdapter, refreshEntries } from '@/app/vaultStore'
 import { importFiles } from '@/storage/import-export'
 import { demoNotes } from '@/templates/demoVault'
@@ -33,6 +33,9 @@ export function WelcomeScreen() {
   const importInput = useRef<HTMLInputElement>(null)
   const ui = useUi()
   const desktop = isTauri()
+  // On the phone app, keep the welcome actions terse (short titles, no long
+  // descriptions) so everything fits comfortably on a small screen.
+  const mobile = isMobileApp()
   // Chromium browsers use the File System Access API; the desktop app uses
   // Tauri's native filesystem, so folder vaults work there too.
   const localFoldersSupported = supportsLocalFolders() || desktop
@@ -137,11 +140,13 @@ export function WelcomeScreen() {
           <button className="welcome-action" onClick={() => setShowNewVault(true)} disabled={busy}>
             <Database className="action-icon" size={20} aria-hidden />
             <span className="action-text">
-              <span className="action-title">Create my first vault</span>
-              <span className="action-desc">
-                A private home for your pages, stored on this device. Pick a starter for study,
-                research or personal notes.
-              </span>
+              <span className="action-title">{mobile ? 'New vault' : 'Create my first vault'}</span>
+              {!mobile && (
+                <span className="action-desc">
+                  A private home for your pages, stored on this device. Pick a starter for study,
+                  research or personal notes.
+                </span>
+              )}
             </span>
             <ChevronRight size={16} aria-hidden />
           </button>
@@ -158,12 +163,14 @@ export function WelcomeScreen() {
           >
             <FolderOpen className="action-icon" size={20} aria-hidden />
             <span className="action-text">
-              <span className="action-title">Open local folder</span>
-              <span className="action-desc">
-                {localFoldersSupported
-                  ? 'Plain .md files in a folder you choose — great with Git.'
-                  : 'Unavailable in this browser (needs the File System Access API, or use the desktop app).'}
-              </span>
+              <span className="action-title">{mobile ? 'Open folder' : 'Open local folder'}</span>
+              {!mobile && (
+                <span className="action-desc">
+                  {localFoldersSupported
+                    ? 'Plain .md files in a folder you choose — great with Git.'
+                    : 'Unavailable in this browser (needs the File System Access API, or use the desktop app).'}
+                </span>
+              )}
             </span>
             <ChevronRight size={16} aria-hidden />
           </button>
@@ -171,8 +178,10 @@ export function WelcomeScreen() {
           <button className="welcome-action" onClick={importVault} disabled={busy}>
             <Upload className="action-icon" size={20} aria-hidden />
             <span className="action-text">
-              <span className="action-title">Import vault</span>
-              <span className="action-desc">From a ZIP export or individual Markdown files.</span>
+              <span className="action-title">{mobile ? 'Import' : 'Import vault'}</span>
+              {!mobile && (
+                <span className="action-desc">From a ZIP export or individual Markdown files.</span>
+              )}
             </span>
             <ChevronRight size={16} aria-hidden />
           </button>
@@ -180,10 +189,12 @@ export function WelcomeScreen() {
           <button className="welcome-action" onClick={() => void exploreDemo()} disabled={busy}>
             <Compass className="action-icon" size={20} aria-hidden />
             <span className="action-text">
-              <span className="action-title">Explore demo vault</span>
-              <span className="action-desc">
-                A small research vault showing links, templates and search.
-              </span>
+              <span className="action-title">{mobile ? 'Demo vault' : 'Explore demo vault'}</span>
+              {!mobile && (
+                <span className="action-desc">
+                  A small research vault showing links, templates and search.
+                </span>
+              )}
             </span>
             <ChevronRight size={16} aria-hidden />
           </button>
