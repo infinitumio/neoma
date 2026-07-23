@@ -46,6 +46,12 @@ async function seedSettings(page: Page, settings: Record<string, unknown>): Prom
   }, settings)
 }
 
+// Source view and Breadcrumbs are opt-in (off by default); the suite exercises
+// both, so enable them for every test before the app loads.
+test.beforeEach(async ({ page }) => {
+  await seedSettings(page, { showSourceView: true, showBreadcrumbs: true })
+})
+
 test('welcome flow creates a browser vault and shows the workspace', async ({ page }) => {
   await createVault(page)
   await expect(page.locator('.activity-rail')).toBeVisible()
@@ -245,7 +251,6 @@ test('reading mode renders markdown and the app works offline after reload', asy
 })
 
 test('Markdown source view shows the raw .md including frontmatter', async ({ page }) => {
-  await seedSettings(page, { showSourceView: true })
   await createVault(page)
   await createNote(page, '---\ntitle: Raw\n---\n\n# Heading\n\n**bold** text')
   await expect(page.locator('.status-bar')).toContainText('Saved')
@@ -261,7 +266,6 @@ test('Markdown source view shows the raw .md including frontmatter', async ({ pa
 })
 
 test('selection toolbar formats highlighted text in place', async ({ page }) => {
-  await seedSettings(page, { showSourceView: true })
   await createVault(page)
   await createNote(page, 'format me')
   await expect(page.locator('.status-bar')).toContainText('Saved')
@@ -320,7 +324,6 @@ test('coloured highlight survives reopening the page', async ({ page }) => {
 })
 
 test('create a subpage; breadcrumbs show the hierarchy', async ({ page }) => {
-  await seedSettings(page, { showBreadcrumbs: true })
   await createVault(page)
   await createNote(page, 'Parent page content')
   // Rename to a stable parent name.
@@ -356,8 +359,9 @@ test('slash menu: fuzzy search, keyboard insert, categories', async ({ page }) =
   const menu = page.locator('.slash-menu')
   await expect(menu).toBeVisible()
   await expect(menu.locator('.slash-group-label').first()).toBeVisible()
-  await expect(menu.locator('.slash-item-title', { hasText: 'Heading 1' })).toBeVisible()
-  await page.keyboard.press('Enter')
+  // Insert Heading 1 explicitly (clicking the item is deterministic; relying on
+  // the selected index is not, since usage/recents can reorder the ranking).
+  await menu.locator('.slash-item', { hasText: 'Heading 1' }).first().click()
   await expect(page.locator('.slash-menu')).toHaveCount(0)
   // The Source view reads the note content (authoritative).
   await page.getByRole('button', { name: 'Source', exact: true }).click()
