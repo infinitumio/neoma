@@ -12,6 +12,8 @@ import {
   supportsLocalFolders,
   verifyHandlePermission,
 } from './local-folder/LocalFolderAdapter'
+import { TauriFsAdapter } from './tauri-fs/TauriFsAdapter'
+import { isTauri } from '@/desktop/tauri'
 import { generateId } from '@/utils/misc'
 
 export async function listVaults(): Promise<Vault[]> {
@@ -75,10 +77,44 @@ export async function openLocalFolderVault(): Promise<Vault | null> {
   return vault
 }
 
+/**
+ * Open a real folder as a vault in the desktop app, using the native folder
+ * picker and Tauri's filesystem (the webview has no File System Access API).
+ * Returns null if the user cancels. Desktop only.
+ */
+export async function openTauriFolderVault(): Promise<Vault | null> {
+  if (!isTauri()) throw new Error('Native folders are only available in the desktop app')
+  const { open } = await import('@tauri-apps/plugin-dialog')
+  const selected = await open({
+    directory: true,
+    multiple: false,
+    title: 'Open a folder as a Neoma vault',
+  })
+  if (!selected || typeof selected !== 'string') return null
+  const rootPath = selected.replace(/\/+$/, '')
+
+  // Re-use the existing vault if this folder was opened before.
+  const existing = (await db.vaults.toArray()).find(
+    (v) => v.kind === 'tauri-fs' && v.rootPath === rootPath,
+  )
+  if (existing) return existing
+
+  const vault: Vault = {
+    id: generateId(),
+    name: rootPath.split('/').pop() || 'Vault',
+    kind: 'tauri-fs',
+    createdAt: Date.now(),
+    lastOpenedAt: Date.now(),
+    rootPath,
+  }
+  await db.vaults.add(vault)
+  return vault
+}
+
 export function createAdapter(vault: Vault): StorageAdapter {
-  return vault.kind === 'browser'
-    ? new BrowserVaultAdapter(vault.id)
-    : new LocalFolderAdapter(vault.id)
+  if (vault.kind === 'browser') return new BrowserVaultAdapter(vault.id)
+  if (vault.kind === 'tauri-fs') return new TauriFsAdapter(vault.id)
+  return new LocalFolderAdapter(vault.id)
 }
 
 export async function touchVault(id: string): Promise<void> {

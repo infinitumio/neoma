@@ -6,7 +6,7 @@
  * `/`. Markdown files (`.md`) are notes; everything else is an attachment.
  */
 
-export type VaultKind = 'browser' | 'local-folder'
+export type VaultKind = 'browser' | 'local-folder' | 'tauri-fs'
 
 export interface Vault {
   id: string
@@ -14,6 +14,8 @@ export interface Vault {
   kind: VaultKind
   createdAt: number
   lastOpenedAt: number
+  /** Absolute folder path on disk — only for `tauri-fs` vaults (desktop app). */
+  rootPath?: string
 }
 
 export interface FileEntry {

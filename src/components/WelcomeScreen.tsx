@@ -11,9 +11,11 @@ import {
   listVaults,
   createBrowserVault,
   openLocalFolderVault,
+  openTauriFolderVault,
   removeVault,
 } from '@/storage/VaultManager'
 import { supportsLocalFolders } from '@/storage/local-folder/LocalFolderAdapter'
+import { isTauri } from '@/desktop/tauri'
 import { openVault, getAdapter, refreshEntries } from '@/app/vaultStore'
 import { importFiles } from '@/storage/import-export'
 import { demoNotes } from '@/templates/demoVault'
@@ -30,7 +32,10 @@ export function WelcomeScreen() {
   const [busy, setBusy] = useState(false)
   const importInput = useRef<HTMLInputElement>(null)
   const ui = useUi()
-  const localFoldersSupported = supportsLocalFolders()
+  const desktop = isTauri()
+  // Chromium browsers use the File System Access API; the desktop app uses
+  // Tauri's native filesystem, so folder vaults work there too.
+  const localFoldersSupported = supportsLocalFolders() || desktop
 
   useEffect(() => {
     void listVaults().then(setVaults)
@@ -41,7 +46,7 @@ export function WelcomeScreen() {
   const openFolder = async () => {
     try {
       setBusy(true)
-      const vault = await openLocalFolderVault()
+      const vault = desktop ? await openTauriFolderVault() : await openLocalFolderVault()
       if (vault) await openVault(vault)
     } catch (err) {
       ui.toast(err instanceof Error ? err.message : 'Could not open folder', 'error')
@@ -148,7 +153,7 @@ export function WelcomeScreen() {
             title={
               localFoldersSupported
                 ? undefined
-                : 'Not supported by this browser — use a Chromium-based browser for folder vaults'
+                : 'Not supported by this browser — use a Chromium-based browser, or the desktop app'
             }
           >
             <FolderOpen className="action-icon" size={20} aria-hidden />
@@ -156,8 +161,8 @@ export function WelcomeScreen() {
               <span className="action-title">Open local folder</span>
               <span className="action-desc">
                 {localFoldersSupported
-                  ? 'Plain .md files in a folder you choose. Great with Git and sync tools.'
-                  : 'Unavailable in this browser (needs the File System Access API).'}
+                  ? 'Plain .md files in a folder you choose — great with Git.'
+                  : 'Unavailable in this browser (needs the File System Access API, or use the desktop app).'}
               </span>
             </span>
             <ChevronRight size={16} aria-hidden />
