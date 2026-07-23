@@ -1967,6 +1967,18 @@
   max-width: 30rem;
 }
 
+/* Phone app: no tagline, so centre the logo/title and sit it higher up. */
+.welcome-mobile {
+  align-items: flex-start;
+}
+.welcome-mobile .welcome-card {
+  margin-top: 12vh;
+}
+.welcome-mobile .welcome-logo {
+  justify-content: center;
+  margin-bottom: var(--space-5);
+}
+
 .welcome-logo {
   display: flex;
   align-items: center;

@@ -126,7 +126,7 @@ export function WelcomeScreen() {
   }
 
   return (
-    <main className="welcome">
+    <main className={`welcome${mobile ? ' welcome-mobile' : ''}`}>
       <div className="welcome-card">
         <div className="welcome-logo">
           <img src="/favicon.svg" alt="" aria-hidden />
@@ -134,7 +134,7 @@ export function WelcomeScreen() {
             <h1>{APP_NAME}</h1>
           </div>
         </div>
-        <p className="welcome-tagline">{APP_TAGLINE}</p>
+        {!mobile && <p className="welcome-tagline">{APP_TAGLINE}</p>}
 
         <div className="welcome-actions">
           <button className="welcome-action" onClick={() => setShowNewVault(true)} disabled={busy}>
@@ -151,29 +151,31 @@ export function WelcomeScreen() {
             <ChevronRight size={16} aria-hidden />
           </button>
 
-          <button
-            className="welcome-action"
-            onClick={() => void openFolder()}
-            disabled={busy || !localFoldersSupported}
-            title={
-              localFoldersSupported
-                ? undefined
-                : 'Not supported by this browser — use a Chromium-based browser, or the desktop app'
-            }
-          >
-            <FolderOpen className="action-icon" size={20} aria-hidden />
-            <span className="action-text">
-              <span className="action-title">{mobile ? 'Open folder' : 'Open local folder'}</span>
-              {!mobile && (
+          {/* Native folder vaults need the sandboxed document picker on iOS,
+              which isn't wired up yet — offer Import there instead. */}
+          {!mobile && (
+            <button
+              className="welcome-action"
+              onClick={() => void openFolder()}
+              disabled={busy || !localFoldersSupported}
+              title={
+                localFoldersSupported
+                  ? undefined
+                  : 'Not supported by this browser — use a Chromium-based browser, or the desktop app'
+              }
+            >
+              <FolderOpen className="action-icon" size={20} aria-hidden />
+              <span className="action-text">
+                <span className="action-title">Open local folder</span>
                 <span className="action-desc">
                   {localFoldersSupported
                     ? 'Plain .md files in a folder you choose — great with Git.'
                     : 'Unavailable in this browser (needs the File System Access API, or use the desktop app).'}
                 </span>
-              )}
-            </span>
-            <ChevronRight size={16} aria-hidden />
-          </button>
+              </span>
+              <ChevronRight size={16} aria-hidden />
+            </button>
+          )}
 
           <button className="welcome-action" onClick={importVault} disabled={busy}>
             <Upload className="action-icon" size={20} aria-hidden />
@@ -201,14 +203,14 @@ export function WelcomeScreen() {
         </div>
 
         <p className="welcome-privacy">
-          No account is required. Your notes remain on this device.{' '}
+          {!mobile && 'No account is required. Your notes remain on this device. '}
           <button
             className="text-secondary"
             style={{ textDecoration: 'underline' }}
             onClick={() => setShowStorageHelp(true)}
           >
-            <HelpCircle size={12} aria-hidden style={{ verticalAlign: '-2px' }} /> Learn how storage
-            works
+            <HelpCircle size={12} aria-hidden style={{ verticalAlign: '-2px' }} />{' '}
+            {mobile ? 'How storage works' : 'Learn how storage works'}
           </button>
         </p>
 
