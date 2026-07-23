@@ -2736,12 +2736,30 @@
 }
 
 @media (max-width: 900px) {
-  /* Pin the whole shell to the viewport so the browser can't scroll the layout
-     (e.g. when the editor is focused) — the tab bar and note header stay put,
-     and only the note body scrolls. */
+  /* Pin the document and shell to the viewport so the browser can't scroll or
+     rubber-band the layout (e.g. dragging the header, or focusing the editor) —
+     the tab bar and note header stay static, and only the note body scrolls. */
+  html,
+  body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
   .app-shell {
     position: fixed;
     inset: 0;
+  }
+  /* Scroll stays inside each region; no chaining/bounce to the page. */
+  .cm-scroller,
+  .preview-pane,
+  .source-view,
+  .sidebar-body,
+  .right-body,
+  .outline-body,
+  .calendar-month-wrap {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .main-area {
     /* Keep the top tab bar below the status bar / notch. */
