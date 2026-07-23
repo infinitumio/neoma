@@ -29,12 +29,12 @@ import { listVaults } from '@/storage/VaultManager'
 import { useTabs } from './tabsStore'
 import { useUi } from './uiStore'
 import { useSettings, applyAppearance } from '@/settings/settingsStore'
-import { registerCommands } from '@/commands/registry'
+import { registerCommands, runCommand } from '@/commands/registry'
 import { buildDefaultCommands } from '@/commands/defaultCommands'
 import { handleGlobalKeydown } from '@/commands/shortcuts'
 import { formatShortcut } from '@/utils/misc'
 import { useIsMobile } from '@/hooks/useMediaQuery'
-import { initDesktopIntegration, syncCloseBehavior } from '@/desktop/tauri'
+import { initDesktopIntegration, syncCloseBehavior, isMobileApp } from '@/desktop/tauri'
 
 // The graph loads only when opened, keeping it out of the initial bundle.
 const GraphView = lazy(() => import('@/graph/GraphView'))
@@ -110,6 +110,27 @@ function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }
 }
 
 function EmptyWorkspace() {
+  const isMobile = useIsMobile()
+  // No hardware keyboard on phones, so offer tappable buttons instead of
+  // keyboard-shortcut hints.
+  if (isMobile) {
+    return (
+      <div className="empty-state">
+        <p>No note open</p>
+        <div className="empty-actions">
+          <button className="btn" onClick={() => useUi.getState().openPalette('notes')}>
+            Open a note
+          </button>
+          <button className="btn" onClick={() => void runCommand('note.new')}>
+            Create a note
+          </button>
+          <button className="btn" onClick={() => useUi.getState().openPalette('commands')}>
+            Command palette
+          </button>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="empty-state">
       <p>No note open</p>
@@ -254,6 +275,42 @@ export default function App() {
   useEffect(() => {
     void syncCloseBehavior(settings.desktopCloseBehavior)
   }, [settings.desktopCloseBehavior])
+
+  // iOS: the WKWebView scrolls/bounces the whole page. Lock it so drags only do
+  // something inside genuinely scrollable regions (or editable/selectable text)
+  // — the tab bar, note header and tab bar stay static.
+  useEffect(() => {
+    if (!isMobileApp()) return
+    const canScroll = (target: EventTarget | null): boolean => {
+      let el = target as HTMLElement | null
+      while (el && el !== document.body) {
+        if (
+          el.matches?.(
+            '.cm-content, .markdown-body, .preview-content, input, textarea, [contenteditable="true"]',
+          )
+        )
+          return true
+        const s = getComputedStyle(el)
+        if (/(auto|scroll)/.test(s.overflowY) && el.scrollHeight > el.clientHeight) return true
+        if (/(auto|scroll)/.test(s.overflowX) && el.scrollWidth > el.clientWidth) return true
+        el = el.parentElement
+      }
+      return false
+    }
+    let allow = false
+    const onStart = (e: TouchEvent) => {
+      allow = canScroll(e.target)
+    }
+    const onMove = (e: TouchEvent) => {
+      if (!allow) e.preventDefault()
+    }
+    document.addEventListener('touchstart', onStart, { passive: true })
+    document.addEventListener('touchmove', onMove, { passive: false })
+    return () => {
+      document.removeEventListener('touchstart', onStart)
+      document.removeEventListener('touchmove', onMove)
+    }
+  }, [])
 
   // Global shortcuts + never lose unsaved work on tab close.
   useEffect(() => {

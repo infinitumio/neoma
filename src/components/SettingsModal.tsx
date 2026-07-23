@@ -10,7 +10,7 @@ import { useVault } from '@/app/vaultStore'
 import { parseIcs } from '@/calendar/ics'
 import { loadIcs, saveIcs, clearIcs } from '@/calendar/icsStore'
 import { useSettings, exportSettingsJson, importSettingsJson } from '@/settings/settingsStore'
-import { isDesktopApp, setLaunchOnStartup } from '@/desktop/tauri'
+import { isDesktopApp, isMobileApp, setLaunchOnStartup } from '@/desktop/tauri'
 import type { ApplicationSettings } from '@/types'
 import { BUILTIN_TEMPLATES } from '@/templates/builtins'
 import { listCommands } from '@/commands/registry'
@@ -143,6 +143,12 @@ export function SettingsModal() {
   const [section, setSection] = useState<Section>('Appearance')
   const importInput = useRef<HTMLInputElement>(null)
   const { canInstall, promptInstall } = useInstallPrompt()
+  const mobile = isMobileApp()
+  // Sections that don't apply to the phone app (no hardware keyboard, no
+  // desktop window).
+  const hidden = new Set<Section>()
+  if (mobile) hidden.add('Keyboard shortcuts')
+  if (!isDesktopApp()) hidden.add('Desktop')
 
   if (!open) return null
 
@@ -153,7 +159,7 @@ export function SettingsModal() {
     <Modal title="Settings" onClose={() => setOpen(false)} wide initialFocus={false}>
       <div className="settings-layout">
         <nav className="settings-nav" aria-label="Settings sections">
-          {SECTIONS.filter((name) => name !== 'Desktop' || isDesktopApp()).map((name) => (
+          {SECTIONS.filter((name) => !hidden.has(name)).map((name) => (
             <button key={name} aria-current={section === name} onClick={() => setSection(name)}>
               {name}
             </button>
@@ -212,16 +218,18 @@ export function SettingsModal() {
                   <option value="full">Full</option>
                 </select>
               </Row>
-              <Row
-                name="Hover tooltips"
-                desc="Show labels when hovering toolbar and sidebar buttons"
-              >
-                <Toggle
-                  checked={settings.showTooltips}
-                  onChange={(v) => set('showTooltips', v)}
-                  label="Hover tooltips"
-                />
-              </Row>
+              {!mobile && (
+                <Row
+                  name="Hover tooltips"
+                  desc="Show labels when hovering toolbar and sidebar buttons"
+                >
+                  <Toggle
+                    checked={settings.showTooltips}
+                    onChange={(v) => set('showTooltips', v)}
+                    label="Hover tooltips"
+                  />
+                </Row>
+              )}
               <Row
                 name="Notification close button"
                 desc="Show a × on notifications (they auto-dismiss either way)"
