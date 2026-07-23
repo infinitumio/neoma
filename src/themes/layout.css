@@ -1970,6 +1970,7 @@
 .welcome-logo {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-3);
   margin-bottom: var(--space-2);
 }
@@ -1988,6 +1989,7 @@
 
 .welcome-tagline {
   color: var(--color-text-secondary);
+  text-align: center;
   margin-bottom: var(--space-5);
 }
 
