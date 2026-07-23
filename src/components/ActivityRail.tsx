@@ -12,21 +12,144 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LayoutDashboard,
+  MoreHorizontal,
+  X,
 } from 'lucide-react'
 import { useUi } from '@/app/uiStore'
 import { useTabs } from '@/app/tabsStore'
 import { REPOSITORY_URL } from '@/app/about'
 import { listPanels } from '@/app/registries'
 import { registerBuiltinPanels } from '@/app/registerBuiltins'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 registerBuiltinPanels()
 
 const GROUP_LABELS: Record<string, string> = { planner: 'Planner' }
 
+/** The panels promoted to bottom-bar tabs on phones (iOS-style, ≤5 items). */
+const MOBILE_TABS = ['files', 'search', 'calendar', 'study'] as const
+
+/**
+ * iOS-style bottom tab bar. The four most-used panels are tabs; everything else
+ * (other panels, graph, help, settings) lives behind a "More" sheet, so we stay
+ * within the ~5-item convention instead of a cramped left rail.
+ */
+function MobileTabBar() {
+  const ui = useUi()
+  const openSpecial = useTabs((s) => s.openSpecial)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const panels = listPanels()
+  const panel = (id: string) => panels.find((p) => p.id === id)
+
+  const openPanel = (id: string) => {
+    ui.setSidePanel(id as Parameters<typeof ui.setSidePanel>[0])
+    setMoreOpen(false)
+  }
+
+  // "More" destinations: every panel not on the tab bar, then Graph.
+  const morePanels = panels.filter((p) => !MOBILE_TABS.includes(p.id as never))
+
+  return (
+    <>
+      <nav className="activity-rail activity-rail-bottom" aria-label="Primary">
+        {MOBILE_TABS.map((id) => {
+          const p = panel(id)
+          if (!p) return null
+          const Icon = p.icon
+          const active = ui.sidePanel === id && ui.sidebarOpen
+          return (
+            <button
+              key={id}
+              className={`tab-btn${active ? ' active' : ''}`}
+              aria-label={p.label}
+              title={p.label}
+              aria-pressed={active}
+              onClick={() => ui.setSidePanel(id)}
+            >
+              <Icon size={22} aria-hidden />
+            </button>
+          )
+        })}
+        <button
+          className={`tab-btn${moreOpen ? ' active' : ''}`}
+          aria-label="More"
+          title="More"
+          aria-expanded={moreOpen}
+          onClick={() => setMoreOpen((v) => !v)}
+        >
+          <MoreHorizontal size={22} aria-hidden />
+        </button>
+      </nav>
+
+      {moreOpen && (
+        <>
+          <button
+            className="more-sheet-backdrop"
+            aria-label="Close menu"
+            onClick={() => setMoreOpen(false)}
+          />
+          <div className="more-sheet" role="dialog" aria-label="More">
+            <div className="more-sheet-handle" aria-hidden />
+            <div className="more-sheet-grid">
+              {morePanels.map((p) => {
+                const Icon = p.icon
+                return (
+                  <button key={p.id} className="more-item" onClick={() => openPanel(p.id)}>
+                    <Icon size={22} aria-hidden />
+                    <span>{p.label}</span>
+                  </button>
+                )
+              })}
+              <button
+                className="more-item"
+                onClick={() => {
+                  openSpecial('graph')
+                  setMoreOpen(false)
+                }}
+              >
+                <Waypoints size={22} aria-hidden />
+                <span>Graph</span>
+              </button>
+              <button
+                className="more-item"
+                onClick={() => {
+                  ui.setHelpOpen(true)
+                  setMoreOpen(false)
+                }}
+              >
+                <HelpCircle size={22} aria-hidden />
+                <span>Help</span>
+              </button>
+              <button
+                className="more-item"
+                onClick={() => {
+                  ui.setSettingsOpen(true)
+                  setMoreOpen(false)
+                }}
+              >
+                <Settings size={22} aria-hidden />
+                <span>Settings</span>
+              </button>
+            </div>
+            <button className="btn more-sheet-close" onClick={() => setMoreOpen(false)}>
+              <X size={16} aria-hidden /> Close
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
 export function ActivityRail() {
   const ui = useUi()
   const openSpecial = useTabs((s) => s.openSpecial)
+  const isMobile = useIsMobile()
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set())
+
+  // Phones get an iOS-style bottom tab bar instead of the left rail.
+  if (isMobile) return <MobileTabBar />
+
   const toggleGroup = (g: string) =>
     setOpenGroups((prev) => {
       const next = new Set(prev)

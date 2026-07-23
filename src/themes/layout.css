@@ -419,6 +419,9 @@
   flex-direction: column;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   border-bottom: none;
+  background: color-mix(in srgb, var(--color-bg-raised) 80%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   animation: slash-sheet-in 160ms ease;
 }
 
@@ -2274,18 +2277,24 @@
 }
 
 @media (max-width: 900px) {
+  /* Space reserved for the floating bottom tab bar (bar + margin + inset). */
+  :root {
+    --bottom-bar-h: calc(4.25rem + env(safe-area-inset-bottom));
+  }
+  /* The left rail is gone on phones; panels open as drawers that stop above
+     the bottom tab bar so it stays tappable. */
   .sidebar,
   .right-sidebar {
     position: fixed;
     top: 0;
-    bottom: 0;
+    bottom: var(--bottom-bar-h);
     z-index: 90;
     box-shadow: var(--shadow-overlay);
     transition: transform var(--transition-medium);
   }
   .sidebar {
-    left: var(--rail-width);
-    transform: translateX(calc(-100% - var(--rail-width)));
+    left: 0;
+    transform: translateX(-100%);
   }
   .sidebar.open {
     transform: translateX(0);
@@ -2301,9 +2310,129 @@
     display: block;
     position: fixed;
     inset: 0;
+    bottom: var(--bottom-bar-h);
     z-index: 80;
     background: rgba(0, 0, 0, 0.4);
     border: none;
+  }
+  /* Keep note content clear of the fixed bottom bar. */
+  .main-area {
+    padding-bottom: var(--bottom-bar-h);
+  }
+
+  /* ---- Bottom tab bar: a floating "Liquid Glass" pill (iOS 26 style) ---- */
+  .activity-rail-bottom {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom) + var(--space-2));
+    z-index: 95;
+    width: auto;
+    max-width: calc(100vw - 2 * var(--space-3));
+    height: 3.5rem;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 2px;
+    padding: 0 var(--space-1);
+    background: color-mix(in srgb, var(--color-bg-rail) 62%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(22px) saturate(180%);
+    border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+    border-radius: 999px;
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .tab-btn {
+    position: relative;
+    width: 3.25rem;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 999px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+  }
+  .tab-btn.active {
+    color: var(--color-accent);
+  }
+  /* A soft "glass" highlight behind the active tab. */
+  .tab-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  }
+  .tab-btn svg {
+    position: relative;
+  }
+
+  /* ---- "More" sheet ---- */
+  .more-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 96;
+    background: rgba(0, 0, 0, 0.4);
+    border: none;
+  }
+  .more-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 97;
+    background: color-mix(in srgb, var(--color-bg-raised) 78%, transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: var(--shadow-overlay);
+    padding: var(--space-2) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom));
+    animation: slash-sheet-in 160ms ease;
+  }
+  .more-sheet-handle {
+    width: 2.25rem;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--color-border-strong);
+    margin: 0 auto var(--space-3);
+  }
+  .more-sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-2);
+  }
+  .more-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .more-item svg {
+    color: var(--color-accent);
+  }
+  .more-sheet-close {
+    width: 100%;
+    justify-content: center;
+    margin-top: var(--space-3);
   }
   .rail-btn,
   .icon-btn,
@@ -2336,7 +2465,7 @@
    notch and home indicator. env(safe-area-inset-*) is 0 on the desktop
    web build, so max() leaves those layouts unchanged.
    ============================================================ */
-.activity-rail {
+.activity-rail:not(.activity-rail-bottom) {
   padding-top: max(var(--space-2), env(safe-area-inset-top));
   padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
 }
@@ -2348,8 +2477,11 @@
     /* Never let a note scroll the whole app sideways. */
     overflow-x: hidden;
   }
+  /* The desktop status bar (vault type, save state, word count) is redundant
+     chrome on a phone — hide it and let content run full-height under the
+     floating tab bar. */
   .status-bar {
-    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    display: none;
   }
   /* The context (backlinks) sidebar is opt-in on phones — it opens as a
      drawer from its toggle, never docked, so the editor keeps full width. */
