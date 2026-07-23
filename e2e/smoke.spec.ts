@@ -37,6 +37,15 @@ async function createNote(page: Page, content: string): Promise<void> {
   await editor.pressSequentially(content)
 }
 
+/** Seed persisted settings before the app loads. Used to turn on opt-in
+ *  features (Source view, Breadcrumbs) that are off by default. Call BEFORE
+ *  createVault (which navigates). */
+async function seedSettings(page: Page, settings: Record<string, unknown>): Promise<void> {
+  await page.addInitScript((s) => {
+    localStorage.setItem('neoma.settings', JSON.stringify({ state: { settings: s }, version: 0 }))
+  }, settings)
+}
+
 test('welcome flow creates a browser vault and shows the workspace', async ({ page }) => {
   await createVault(page)
   await expect(page.locator('.activity-rail')).toBeVisible()
@@ -236,6 +245,7 @@ test('reading mode renders markdown and the app works offline after reload', asy
 })
 
 test('Markdown source view shows the raw .md including frontmatter', async ({ page }) => {
+  await seedSettings(page, { showSourceView: true })
   await createVault(page)
   await createNote(page, '---\ntitle: Raw\n---\n\n# Heading\n\n**bold** text')
   await expect(page.locator('.status-bar')).toContainText('Saved')
@@ -251,6 +261,7 @@ test('Markdown source view shows the raw .md including frontmatter', async ({ pa
 })
 
 test('selection toolbar formats highlighted text in place', async ({ page }) => {
+  await seedSettings(page, { showSourceView: true })
   await createVault(page)
   await createNote(page, 'format me')
   await expect(page.locator('.status-bar')).toContainText('Saved')
@@ -309,6 +320,7 @@ test('coloured highlight survives reopening the page', async ({ page }) => {
 })
 
 test('create a subpage; breadcrumbs show the hierarchy', async ({ page }) => {
+  await seedSettings(page, { showBreadcrumbs: true })
   await createVault(page)
   await createNote(page, 'Parent page content')
   // Rename to a stable parent name.
