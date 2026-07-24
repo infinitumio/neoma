@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Neoma — your knowledge, rooted locally</title>
+    <meta
+      name="description"
+      content="Neoma is a local-first, offline research notebook. Your notes stay plain Markdown on your own device — no account, no telemetry, no cloud."
+    />
+    <meta property="og:title" content="Neoma — your knowledge, rooted locally" />
+    <meta
+      property="og:description"
+      content="A local-first, offline research notebook. Plain Markdown on your device — no account, no telemetry, no cloud."
+    />
+    <meta property="og:type" content="website" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%8C%B1%3C/text%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #101413;
+        --bg-rail: #0d1110;
+        --bg-sidebar: #151a18;
+        --raised: #1b211f;
+        --hover: #222927;
+        --border: #262d2a;
+        --accent: #4ade80;
+        --accent-strong: #22c55e;
+        --accent-subtle: rgba(74, 222, 128, 0.12);
+        --text: #ece9e2;
+        --text-2: #98a39d;
+        --text-faint: #6b7672;
+        --radius: 16px;
+        --maxw: 1080px;
+        --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--text);
+        background: var(--bg);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .wrap {
+        width: 100%;
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      /* Ambient glow behind the hero. */
+      body::before {
+        content: '';
+        position: fixed;
+        top: -30vh;
+        left: 50%;
+        width: 90vw;
+        height: 90vh;
+        transform: translateX(-50%);
+        background: radial-gradient(closest-side, rgba(74, 222, 128, 0.16), transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ---- Nav ---- */
+      header.nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(14px) saturate(160%);
+        -webkit-backdrop-filter: blur(14px) saturate(160%);
+        background: color-mix(in srgb, var(--bg) 72%, transparent);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-in {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        font-size: 1.15rem;
+      }
+      .brand svg {
+        width: 26px;
+        height: 26px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .nav-links a {
+        color: var(--text-2);
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition:
+          color 0.15s,
+          background 0.15s;
+      }
+      .nav-links a:hover {
+        color: var(--text);
+        background: var(--hover);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: 1px solid var(--border);
+        background: var(--raised);
+        color: var(--text);
+        cursor: pointer;
+        transition:
+          transform 0.12s ease,
+          background 0.15s,
+          border-color 0.15s;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: var(--accent-strong);
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #05130b;
+        border-color: var(--accent);
+      }
+      .btn-primary:hover {
+        background: var(--accent-strong);
+        border-color: var(--accent-strong);
+      }
+      .nav-links .btn {
+        padding: 9px 16px;
+      }
+
+      /* ---- Hero ---- */
+      .hero {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 96px 0 72px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: var(--accent-subtle);
+        border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+        color: var(--accent);
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 28px;
+      }
+      .hero h1 {
+        font-size: clamp(2.6rem, 6vw, 4.4rem);
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+        margin: 0 0 20px;
+        font-weight: 800;
+      }
+      .hero h1 .grad {
+        background: linear-gradient(120deg, var(--accent), #a7f3d0);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .hero p.lead {
+        font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+        color: var(--text-2);
+        max-width: 620px;
+        margin: 0 auto 36px;
+      }
+      .hero-cta {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .hero-note {
+        margin-top: 20px;
+        color: var(--text-faint);
+        font-size: 0.9rem;
+      }
+
+      /* ---- App mockup ---- */
+      .shot {
+        position: relative;
+        z-index: 1;
+        margin: 24px auto 0;
+        max-width: 940px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--bg-sidebar);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+      }
+      .shot-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: var(--bg-rail);
+        border-bottom: 1px solid var(--border);
+      }
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #3a423f;
+      }
+      .shot-body {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        min-height: 340px;
+      }
+      .shot-side {
+        background: var(--bg-sidebar);
+        border-right: 1px solid var(--border);
+        padding: 16px 12px;
+      }
+      .shot-side .s-item {
+        height: 12px;
+        border-radius: 6px;
+        background: var(--hover);
+        margin-bottom: 12px;
+      }
+      .shot-side .s-item.accent {
+        background: var(--accent-subtle);
+        width: 70%;
+      }
+      .shot-side .s-item.w1 {
+        width: 85%;
+      }
+      .shot-side .s-item.w2 {
+        width: 60%;
+      }
+      .shot-side .s-item.w3 {
+        width: 75%;
+      }
+      .shot-main {
+        padding: 28px 32px;
+        text-align: left;
+      }
+      .shot-main .m-h {
+        height: 22px;
+        width: 45%;
+        border-radius: 7px;
+        background: linear-gradient(90deg, var(--accent), transparent 80%);
+        margin-bottom: 22px;
+      }
+      .shot-main .m-l {
+        height: 11px;
+        border-radius: 6px;
+        background: var(--hover);
+        margin-bottom: 13px;
+      }
+      .shot-main .m-l.w1 {
+        width: 92%;
+      }
+      .shot-main .m-l.w2 {
+        width: 78%;
+      }
+      .shot-main .m-l.w3 {
+        width: 86%;
+      }
+      .shot-main .m-l.w4 {
+        width: 64%;
+      }
+      .shot-main .m-tag {
+        display: inline-block;
+        height: 20px;
+        width: 64px;
+        border-radius: 999px;
+        background: var(--accent-subtle);
+        margin-right: 8px;
+        margin-top: 8px;
+      }
+
+      /* ---- Sections ---- */
+      section {
+        position: relative;
+        z-index: 1;
+        padding: 80px 0;
+      }
+      .section-head {
+        text-align: center;
+        max-width: 640px;
+        margin: 0 auto 52px;
+      }
+      .section-head h2 {
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        letter-spacing: -0.03em;
+        margin: 0 0 14px;
+        font-weight: 800;
+      }
+      .section-head p {
+        color: var(--text-2);
+        font-size: 1.08rem;
+        margin: 0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .card {
+        background: var(--raised);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 26px;
+        transition:
+          transform 0.15s ease,
+          border-color 0.15s;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+      }
+      .card .ico {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: var(--accent-subtle);
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 1.15rem;
+        letter-spacing: -0.01em;
+      }
+      .card p {
+        margin: 0;
+        color: var(--text-2);
+        font-size: 0.97rem;
+      }
+
+      /* ---- Privacy band ---- */
+      .band {
+        background: linear-gradient(180deg, var(--bg-sidebar), var(--bg));
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+      }
+      .band .split {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 48px;
+        align-items: center;
+      }
+      .band h2 {
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        letter-spacing: -0.03em;
+        margin: 0 0 16px;
+        font-weight: 800;
+      }
+      .band p {
+        color: var(--text-2);
+        font-size: 1.05rem;
+        margin: 0 0 14px;
+      }
+      .checklist {
+        list-style: none;
+        margin: 24px 0 0;
+        padding: 0;
+      }
+      .checklist li {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 14px;
+        color: var(--text);
+      }
+      .checklist svg {
+        flex: 0 0 auto;
+        color: var(--accent);
+        margin-top: 3px;
+      }
+      .terminal {
+        background: var(--bg-rail);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 22px;
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        color: var(--text-2);
+        line-height: 1.9;
+      }
+      .terminal .c {
+        color: var(--accent);
+      }
+      .terminal .k {
+        color: var(--text);
+      }
+
+      /* ---- Download ---- */
+      .dl-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .dl {
+        background: var(--raised);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+        text-align: center;
+      }
+      .dl .plat {
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 16px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: var(--accent-subtle);
+        color: var(--accent);
+      }
+      .dl h3 {
+        margin: 0 0 4px;
+        font-size: 1.2rem;
+      }
+      .dl .file {
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        color: var(--accent);
+        margin-bottom: 6px;
+      }
+      .dl .sub {
+        color: var(--text-faint);
+        font-size: 0.85rem;
+        margin: 0 0 18px;
+        min-height: 34px;
+      }
+      .dl .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* ---- Footer ---- */
+      footer {
+        position: relative;
+        z-index: 1;
+        border-top: 1px solid var(--border);
+        padding: 44px 0;
+        color: var(--text-faint);
+        font-size: 0.9rem;
+      }
+      .foot-in {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .foot-links {
+        display: flex;
+        gap: 20px;
+      }
+      .foot-links a:hover {
+        color: var(--text);
+      }
+
+      @media (max-width: 860px) {
+        .grid,
+        .dl-grid {
+          grid-template-columns: 1fr;
+        }
+        .band .split {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+        .nav-links a:not(.btn) {
+          display: none;
+        }
+        .shot-body {
+          grid-template-columns: 1fr;
+        }
+        .shot-side {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-in">
+        <a class="brand" href="#top" aria-label="Neoma home">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M16 29V15" stroke="#4ade80" stroke-width="2.4" stroke-linecap="round" />
+            <path
+              d="M16 16C16 10 12 6 5 6c0 7 5 10 11 10Z"
+              fill="#22c55e"
+              fill-opacity="0.35"
+              stroke="#4ade80"
+              stroke-width="2.2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M16 13c0-6 4-10 11-10 0 6.5-5 10-11 10Z"
+              fill="#4ade80"
+              fill-opacity="0.55"
+              stroke="#4ade80"
+              stroke-width="2.2"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Neoma
+        </a>
+        <nav class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#download">Download</a>
+          <a class="btn" href="https://github.com/infinitumio/neoma" target="_blank" rel="noopener"
+            >GitHub</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <a id="top"></a>
+    <main>
+      <section class="hero">
+        <div class="wrap">
+          <span class="pill">🌱 Local-first · Offline · Open source</span>
+          <h1>Your knowledge,<br /><span class="grad">rooted locally.</span></h1>
+          <p class="lead">
+            Neoma is a research notebook that keeps your notes as plain Markdown files on your own
+            device. No account, no telemetry, no cloud required — just your knowledge, where it
+            belongs.
+          </p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="#download">Download for free</a>
+            <a
+              class="btn"
+              href="https://github.com/infinitumio/neoma"
+              target="_blank"
+              rel="noopener"
+              >View source</a
+            >
+          </div>
+          <div class="hero-note">macOS · iOS · Windows · Linux — free and AGPL-licensed</div>
+        </div>
+
+        <div class="wrap">
+          <div class="shot" role="img" aria-label="Neoma app interface preview">
+            <div class="shot-bar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <div class="shot-body">
+              <div class="shot-side">
+                <div class="s-item accent"></div>
+                <div class="s-item w1"></div>
+                <div class="s-item w2"></div>
+                <div class="s-item w3"></div>
+                <div class="s-item w1"></div>
+                <div class="s-item w2"></div>
+              </div>
+              <div class="shot-main">
+                <div class="m-h"></div>
+                <div class="m-l w1"></div>
+                <div class="m-l w2"></div>
+                <div class="m-l w3"></div>
+                <div class="m-l w1"></div>
+                <div class="m-l w4"></div>
+                <div><span class="m-tag"></span><span class="m-tag"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>A notebook that respects your data</h2>
+            <p>Everything you need to think, write and study — running entirely on your machine.</p>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <div class="ico">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              </div>
+              <h3>Local-first &amp; offline</h3>
+              <p>
+                Boots with no network and reopens your last vault and tabs. Your files never leave
+                the device unless you move them.
+              </p>
+            </div>
+            <div class="card">
+              <div class="ico">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                  <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" />
+                </svg>
+              </div>
+              <h3>Plain Markdown</h3>
+              <p>
+                Every page is a portable <code>.md</code> file. No lock-in, no proprietary database
+                — read and edit them with anything.
+              </p>
+            </div>
+            <div class="card">
+              <div class="ico">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <circle cx="19" cy="5" r="2" />
+                  <circle cx="5" cy="19" r="2" />
+                  <path d="m10.5 10.5-4 5m8.5-8.5-1.5 2" />
+                </svg>
+              </div>
+              <h3>Linked notes &amp; graph</h3>
+              <p>
+                Wiki-links, backlinks and a live graph view connect your ideas so nothing gets lost
+                in a folder.
+              </p>
+            </div>
+            <div class="card">
+              <div class="ico">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+              </div>
+              <h3>Calendar &amp; daily notes</h3>
+              <p>
+                A built-in calendar, daily journals and .ics import keep your writing tied to your
+                days and deadlines.
+              </p>
+            </div>
+            <div class="card">
+              <div class="ico">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M12 6.5C10.5 5 8 4 5 4v13c3 0 5.5 1 7 2.5 1.5-1.5 4-2.5 7-2.5V4c-3 0-5.5 1-7 2.5Z"
+                  />
+                  <path d="M12 6.5V19" />
+                </svg>
+              </div>
+              <h3>Study &amp; flashcards</h3>
+              <p>
+                Turn notes into spaced-repetition flashcards, track exams and revise weak cards —
+                all offline.
+              </p>
+            </div>
+            <div class="card">
+              <div class="ico">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="5" y="2" width="14" height="20" rx="2" />
+                  <path d="M12 18h.01" />
+                </svg>
+              </div>
+              <h3>Native apps</h3>
+              <p>
+                A real Mac and iOS app (plus Windows &amp; Linux) with a touch-native,
+                gesture-driven interface — not just a browser tab.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="privacy" class="band">
+        <div class="wrap split">
+          <div>
+            <h2>Your data never leaves your device</h2>
+            <p>
+              Most note apps sync your private thinking to someone else's servers. Neoma doesn't.
+              There's no account to create and nothing phones home — the app works exactly the same
+              with your Wi-Fi switched off.
+            </p>
+            <ul class="checklist">
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                No account, no sign-up, no email
+              </li>
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Zero telemetry or tracking
+              </li>
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Open source under the AGPL — audit every line
+              </li>
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Your notes are just files you already own
+              </li>
+            </ul>
+          </div>
+          <div class="terminal" aria-hidden="true">
+            <div><span class="c">$</span> <span class="k">ls</span> ~/my-vault</div>
+            <div>ideas.md&nbsp;&nbsp;&nbsp;reading.md</div>
+            <div>2026-07-24.md&nbsp;&nbsp;graph.md</div>
+            <div><span class="c">$</span> <span class="k">cat</span> ideas.md</div>
+            <div># Rooted locally</div>
+            <div>Plain text. Yours. Forever.</div>
+            <div><span class="c">$</span> <span style="color: var(--text-faint)">▍</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="download">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Download Neoma</h2>
+            <p>Free on every platform. Grab the latest release from GitHub.</p>
+          </div>
+          <div class="dl-grid">
+            <div class="dl">
+              <div class="plat">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M16.5 1.6c.1 1-.3 2-.9 2.8-.7.8-1.7 1.4-2.7 1.3-.1-1 .4-2 .9-2.7.7-.8 1.8-1.3 2.7-1.4ZM19 17c-.5 1.2-.8 1.7-1.5 2.7-1 1.5-2.4 3.3-4.1 3.3-1.5 0-1.9-1-4-1-2 0-2.5 1-4 1-1.7 0-3-1.7-4-3.1C-.4 15.6-.6 10.3 2 7.6c1-1 2.4-1.7 3.8-1.7 1.6 0 2.6 1 4 1 1.3 0 2-1 4-1 1.2 0 2.5.4 3.5 1.4-3 1.7-2.6 6.1 1.7 7.7Z"
+                  />
+                </svg>
+              </div>
+              <h3>macOS</h3>
+              <div class="file">Neoma.dmg</div>
+              <p class="sub">
+                Universal (Apple&nbsp;Silicon&nbsp;+&nbsp;Intel). Signed &amp; notarised — no
+                Gatekeeper warning.
+              </p>
+              <a
+                class="btn btn-primary"
+                href="https://github.com/infinitumio/neoma/releases/latest"
+                target="_blank"
+                rel="noopener"
+                >Download .dmg</a
+              >
+            </div>
+            <div class="dl">
+              <div class="plat">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M3 4.5 10.5 3.4v7.6H3V4.5ZM11.5 3.3 21 2v9h-9.5V3.3ZM3 12h7.5v7.6L3 18.5V12Zm8.5 0H21v9l-9.5-1.3V12Z"
+                  />
+                </svg>
+              </div>
+              <h3>Windows</h3>
+              <div class="file">Neoma-setup.exe</div>
+              <p class="sub">
+                Windows&nbsp;10 &amp; 11 installer. Unsigned — SmartScreen may warn on first run.
+              </p>
+              <a
+                class="btn"
+                href="https://github.com/infinitumio/neoma/releases/latest"
+                target="_blank"
+                rel="noopener"
+                >Download .exe</a
+              >
+            </div>
+            <div class="dl">
+              <div class="plat">
+                <svg
+                  width="26"
+                  height="26"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M12 2a5 5 0 0 0-5 5c0 2 .5 3 .5 5S6 20 6 21h12c0-1-1.5-2-1.5-4s.5-3 .5-5a5 5 0 0 0-5-5Z"
+                  />
+                  <path d="M9.5 9h.01M14.5 9h.01" />
+                </svg>
+              </div>
+              <h3>Linux</h3>
+              <div class="file">neoma.deb</div>
+              <p class="sub">Debian &amp; Ubuntu package. Unsigned.</p>
+              <a
+                class="btn"
+                href="https://github.com/infinitumio/neoma/releases/latest"
+                target="_blank"
+                rel="noopener"
+                >Download .deb</a
+              >
+            </div>
+          </div>
+          <p
+            style="
+              text-align: center;
+              color: var(--text-faint);
+              margin-top: 28px;
+              font-size: 0.9rem;
+            "
+          >
+            Prefer to build it yourself? Clone the repo and run
+            <code style="font-family: var(--mono)">npm run desktop:build</code>. Always verify
+            downloads against the <code style="font-family: var(--mono)">SHA256SUMS</code> files on
+            the release.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap foot-in">
+        <div class="brand" style="font-size: 1rem">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M16 29V15" stroke="#4ade80" stroke-width="2.4" stroke-linecap="round" />
+            <path
+              d="M16 16C16 10 12 6 5 6c0 7 5 10 11 10Z"
+              fill="#22c55e"
+              fill-opacity="0.35"
+              stroke="#4ade80"
+              stroke-width="2.2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M16 13c0-6 4-10 11-10 0 6.5-5 10-11 10Z"
+              fill="#4ade80"
+              fill-opacity="0.55"
+              stroke="#4ade80"
+              stroke-width="2.2"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Neoma
+        </div>
+        <div class="foot-links">
+          <a href="https://github.com/infinitumio/neoma" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/infinitumio/neoma/releases" target="_blank" rel="noopener"
+            >Releases</a
+          >
+          <a
+            href="https://github.com/infinitumio/neoma/blob/main/INSTALL.md"
+            target="_blank"
+            rel="noopener"
+            >Install guide</a
+          >
+          <a
+            href="https://github.com/infinitumio/neoma/blob/main/LICENSE"
+            target="_blank"
+            rel="noopener"
+            >AGPL-3.0</a
+          >
+        </div>
+        <div>© 2026 Neoma contributors · Your knowledge, rooted locally.</div>
+      </div>
+    </footer>
+  </body>
+</html>
