@@ -321,21 +321,17 @@ export default function App() {
     const vv = window.visualViewport
     if (!vv) return
     const root = document.documentElement
-    // Track the visual viewport (height + top offset) rather than fighting
-    // iOS's scroll — the app-shell follows it exactly, so it stays put with no
-    // up-then-back jitter when the keyboard opens.
+    // Only shrink the shell's HEIGHT to the visible area. The shell stays
+    // pinned at top:0, so the editor's own (bounded) scroller reveals the caret
+    // and the document itself never needs to move — no up/down jitter.
     const fit = () => {
       root.style.setProperty('--app-vh', `${vv.height}px`)
-      root.style.setProperty('--app-top', `${vv.offsetTop}px`)
     }
     fit()
     vv.addEventListener('resize', fit)
-    vv.addEventListener('scroll', fit)
     return () => {
       vv.removeEventListener('resize', fit)
-      vv.removeEventListener('scroll', fit)
       root.style.removeProperty('--app-vh')
-      root.style.removeProperty('--app-top')
     }
   }, [])
 
