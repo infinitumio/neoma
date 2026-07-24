@@ -28,3 +28,6 @@ blob-report/
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Vercel site build output
+dist-site/
