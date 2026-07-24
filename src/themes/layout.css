@@ -2759,7 +2759,12 @@
   }
   .app-shell {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* --app-vh tracks the visual viewport (set in App.tsx) so the app fits
+       above the on-screen keyboard instead of being pushed up behind it. */
+    height: var(--app-vh, 100%);
   }
   /* Scroll stays inside each region; no chaining/bounce to the page. */
   .cm-scroller,

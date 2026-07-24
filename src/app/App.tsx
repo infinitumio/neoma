@@ -312,6 +312,31 @@ export default function App() {
     }
   }, [])
 
+  // iOS: when the on-screen keyboard opens, WKWebView shifts the whole page up
+  // to reveal the caret. Size the app to the visible (visual viewport) height
+  // and cancel the document scroll, so the tab bar/header stay pinned and the
+  // editor's own scroller keeps the caret in view.
+  useEffect(() => {
+    if (!isMobileApp()) return
+    const vv = window.visualViewport
+    if (!vv) return
+    const root = document.documentElement
+    const fit = () => {
+      root.style.setProperty('--app-vh', `${vv.height}px`)
+      if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0)
+    }
+    fit()
+    vv.addEventListener('resize', fit)
+    vv.addEventListener('scroll', fit)
+    window.addEventListener('scroll', fit, { passive: true })
+    return () => {
+      vv.removeEventListener('resize', fit)
+      vv.removeEventListener('scroll', fit)
+      window.removeEventListener('scroll', fit)
+      root.style.removeProperty('--app-vh')
+    }
+  }, [])
+
   // Global shortcuts + never lose unsaved work on tab close.
   useEffect(() => {
     const onKeydown = (event: KeyboardEvent) => handleGlobalKeydown(event)
