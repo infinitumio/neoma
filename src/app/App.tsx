@@ -321,17 +321,51 @@ export default function App() {
     const vv = window.visualViewport
     if (!vv) return
     const root = document.documentElement
-    // Only shrink the shell's HEIGHT to the visible area. The shell stays
-    // pinned at top:0, so the editor's own (bounded) scroller reveals the caret
-    // and the document itself never needs to move — no up/down jitter.
-    const fit = () => {
+    // When the keyboard opens, iOS scrolls the *visual* viewport down, so a
+    // top:0 element ends up above the visible area (the "everything moves up").
+    // Track the visual viewport's top + height so the shell stays glued to the
+    // visible region. A rAF loop runs while an input is focused (the keyboard
+    // animates over ~300ms) so tracking is per-frame — no lag/bounce.
+    const update = () => {
       root.style.setProperty('--app-vh', `${vv.height}px`)
+      root.style.setProperty('--app-top', `${vv.offsetTop}px`)
     }
-    fit()
-    vv.addEventListener('resize', fit)
+    let raf = 0
+    let running = false
+    const tick = () => {
+      update()
+      raf = requestAnimationFrame(tick)
+    }
+    const start = () => {
+      if (running) return
+      running = true
+      tick()
+    }
+    const stop = () => {
+      running = false
+      cancelAnimationFrame(raf)
+      // Let the close animation settle, then snap back to the full viewport.
+      setTimeout(update, 300)
+    }
+    const isEditable = (t: EventTarget | null) =>
+      (t as HTMLElement)?.matches?.('input, textarea, [contenteditable="true"], .cm-content')
+    const onFocusIn = (e: FocusEvent) => {
+      if (isEditable(e.target)) start()
+    }
+    const onFocusOut = () => stop()
+    update()
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
     return () => {
-      vv.removeEventListener('resize', fit)
+      cancelAnimationFrame(raf)
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
       root.style.removeProperty('--app-vh')
+      root.style.removeProperty('--app-top')
     }
   }, [])
 

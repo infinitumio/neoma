@@ -2759,11 +2759,12 @@
   }
   .app-shell {
     position: fixed;
-    top: 0;
     left: 0;
     right: 0;
-    /* Pinned at the top; only the height shrinks to the visible area (set in
-       App.tsx from the visual viewport) so the keyboard never shifts the app. */
+    /* Glued to the visible region: --app-top/--app-vh track the visual viewport
+       (App.tsx), so when the keyboard scrolls the visual viewport the shell
+       follows it and nothing appears to move. */
+    top: var(--app-top, 0);
     height: var(--app-vh, 100%);
   }
   /* Scroll stays inside each region; no chaining/bounce to the page. */
