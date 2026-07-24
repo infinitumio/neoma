@@ -321,19 +321,21 @@ export default function App() {
     const vv = window.visualViewport
     if (!vv) return
     const root = document.documentElement
+    // Track the visual viewport (height + top offset) rather than fighting
+    // iOS's scroll — the app-shell follows it exactly, so it stays put with no
+    // up-then-back jitter when the keyboard opens.
     const fit = () => {
       root.style.setProperty('--app-vh', `${vv.height}px`)
-      if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0)
+      root.style.setProperty('--app-top', `${vv.offsetTop}px`)
     }
     fit()
     vv.addEventListener('resize', fit)
     vv.addEventListener('scroll', fit)
-    window.addEventListener('scroll', fit, { passive: true })
     return () => {
       vv.removeEventListener('resize', fit)
       vv.removeEventListener('scroll', fit)
-      window.removeEventListener('scroll', fit)
       root.style.removeProperty('--app-vh')
+      root.style.removeProperty('--app-top')
     }
   }, [])
 
