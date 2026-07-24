@@ -86,18 +86,47 @@ Notes:
 
 ## Signing
 
-Desktop installers and the iOS app are **unsigned by default**. See the honest
-note in [INSTALL.md](INSTALL.md). Signing variables are documented in
-[`.env.example`](.env.example) — copy it to a git-ignored `.env`, fill in your
-Apple Developer values, then `set -a; source .env; set +a` before a signed
-build. To sign:
+Desktop installers are **unsigned by default**, so macOS Gatekeeper shows
+_"Apple could not verify 'Neoma' is free of malware"_ and Windows shows a
+SmartScreen warning. To remove those warnings the macOS app must be **signed
+with a Developer ID and notarised**. The release workflow is already wired for
+it — it just needs the certificate + secrets below.
 
-- **macOS:** an Apple Developer ID certificate + notarisation
-  (`APPLE_CERTIFICATE`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` env vars in
-  CI, or Xcode locally).
-- **iOS:** required for any device install — your Apple Team ID as above.
-- **Windows:** an Authenticode certificate
-  (`tauri.conf.json → bundle.windows.certificateThumbprint`).
+### macOS — one-time setup
 
-Until a target is signed, the releases page states so plainly and explains the
-OS warning users will see.
+1. **Create a Developer ID Application certificate** (paid Apple Developer
+   Program required):
+   - Xcode → Settings → Accounts → your team → _Manage Certificates_ → **+** →
+     **Developer ID Application**. (Or create it at
+     <https://developer.apple.com/account/resources/certificates>.)
+   - Confirm it is installed: `security find-identity -v -p codesigning` should
+     list `Developer ID Application: <Name> (<TEAMID>)`.
+2. **App-specific password** for notarisation: appleid.apple.com → Sign-In &
+   Security → App-Specific Passwords.
+3. **Build locally (signed + notarised):** put these in `.env` (see
+   [`.env.example`](.env.example)) and run `set -a; source .env; set +a && npm run desktop:build`:
+   - `APPLE_SIGNING_IDENTITY="Developer ID Application: <Name> (<TEAMID>)"`
+   - `APPLE_ID`, `APPLE_PASSWORD` (app-specific), `APPLE_TEAM_ID`
+4. **Build in CI (the release workflow):** add these as **GitHub repo secrets**
+   (Settings → Secrets and variables → Actions). The workflow already reads them.
+   - `APPLE_CERTIFICATE` — base64 of your exported `.p12`:
+     `base64 -i DeveloperID.p12 | pbcopy` (export the cert+key from Keychain
+     Access → _Export_ → .p12, set a password)
+   - `APPLE_CERTIFICATE_PASSWORD` — that .p12 password
+   - `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID`
+
+   Then push a `desktop-v*` tag and the released `.dmg` will be signed +
+   notarised — no Gatekeeper warning.
+
+### Windows
+
+An Authenticode certificate (`tauri.conf.json → bundle.windows.certificateThumbprint`,
+or a signing secret in CI). Optional; SmartScreen otherwise warns on first run.
+
+### iOS
+
+Signing is mandatory for any device/simulator-device install — provide your
+Apple Team ID (`TAURI_APPLE_DEVELOPMENT_TEAM`) or pick the team in Xcode.
+
+Until a target is signed, [INSTALL.md](INSTALL.md) states so plainly and explains
+the OS warning users will see.
