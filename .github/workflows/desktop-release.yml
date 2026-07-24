@@ -53,11 +53,23 @@ jobs:
       - name: Install dependencies
         run: npm ci # @tauri-apps/cli and the icon set are committed to the repo
 
-      - name: Build desktop app
+      - name: Build desktop app and publish the release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          # All three matrix jobs publish to the same tagged release; the action
+          # creates it once and appends each platform's installers.
+          tagName: ${{ github.ref_name }}
+          releaseName: Neoma ${{ github.ref_name }}
+          releaseBody: |
+            Neoma desktop builds (macOS `.dmg`, Windows `.exe`, Linux `.AppImage`/`.deb`).
+
+            These installers are **unsigned** — your OS may show an "unidentified
+            developer" warning. Verify the SHA-256 checksums and see the install
+            guide before running: https://github.com/infinitumio/neoma/blob/main/INSTALL.md
+          releaseDraft: false
+          prerelease: true
           args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }}
 
       - name: Compute SHA-256 checksums
@@ -76,8 +88,14 @@ jobs:
             done
           cat SHA256SUMS-${{ matrix.target }}.txt
 
-      - name: Upload checksums
+      - name: Upload checksums (workflow artifact)
         uses: actions/upload-artifact@v4
         with:
           name: sha256-${{ matrix.target }}
           path: SHA256SUMS-${{ matrix.target }}.txt
+
+      - name: Attach checksums to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: SHA256SUMS-${{ matrix.target }}.txt
