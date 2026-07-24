@@ -487,6 +487,8 @@
         border-radius: var(--radius);
         padding: 26px 22px;
         text-align: center;
+        display: flex;
+        flex-direction: column;
       }
       .dl.featured {
         border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
@@ -516,7 +518,12 @@
         color: var(--text-faint);
         font-size: 0.82rem;
         margin: 0 0 18px;
-        min-height: 48px;
+        /* Grow to fill so the button always sits on the card's bottom edge,
+           lining up across cards regardless of description length. */
+        flex: 1 0 auto;
+      }
+      .dl .btn {
+        margin-top: auto;
       }
       .dl .btn {
         width: 100%;
