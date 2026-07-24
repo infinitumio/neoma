@@ -13,6 +13,7 @@ import {
   PanelLeftOpen,
   LayoutDashboard,
   MoreHorizontal,
+  Database,
   X,
 } from 'lucide-react'
 import { useUi } from '@/app/uiStore'
@@ -122,6 +123,16 @@ function MobileTabBar() {
               >
                 <Waypoints size={22} aria-hidden />
                 <span>Graph</span>
+              </button>
+              <button
+                className="more-item"
+                onClick={() => {
+                  ui.setVaultSwitcherOpen(true)
+                  setMoreOpen(false)
+                }}
+              >
+                <Database size={22} aria-hidden />
+                <span>Switch vault</span>
               </button>
               <button
                 className="more-item"

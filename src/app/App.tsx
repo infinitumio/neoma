@@ -127,6 +127,9 @@ function EmptyWorkspace() {
           <button className="btn" onClick={() => useUi.getState().openPalette('commands')}>
             Command palette
           </button>
+          <button className="btn" onClick={() => useUi.getState().setVaultSwitcherOpen(true)}>
+            Switch vault
+          </button>
         </div>
       </div>
     )

@@ -11,6 +11,7 @@ import { useStudy } from '@/study/studyStore'
 import { rateCard, getCardStates, isWeak, type Confidence } from '@/study/flashcards'
 import { useVault } from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 type Filter = 'all' | 'weak'
 
@@ -19,6 +20,7 @@ export function FlashcardReview() {
   const close = useStudy((s) => s.closeReview)
   const vaultId = useVault((s) => s.vault?.id)
 
+  const isMobile = useIsMobile()
   const [filter, setFilter] = useState<Filter>('all')
   const [shuffle, setShuffle] = useState(false)
   const [topic, setTopic] = useState<string>('')
@@ -127,7 +129,9 @@ export function FlashcardReview() {
           <FileText size={15} aria-hidden /> {review.title}
         </div>
         <div className="flashcard-controls">
-          {topics.length > 0 && (
+          {/* Phones keep only the essentials (restart + close); topic/hard/
+              shuffle filters would squash the header. */}
+          {!isMobile && topics.length > 0 && (
             <select
               className="flashcard-topic-select"
               aria-label="Filter by topic"
@@ -142,21 +146,25 @@ export function FlashcardReview() {
               ))}
             </select>
           )}
-          <button
-            className={`btn btn-small${filter === 'weak' ? ' btn-primary' : ''}`}
-            aria-pressed={filter === 'weak'}
-            onClick={() => setFilter((f) => (f === 'weak' ? 'all' : 'weak'))}
-          >
-            Hard only
-          </button>
-          <button
-            className={`icon-btn${shuffle ? ' active' : ''}`}
-            aria-label="Shuffle"
-            aria-pressed={shuffle}
-            onClick={() => setShuffle((s) => !s)}
-          >
-            <Shuffle size={16} aria-hidden />
-          </button>
+          {!isMobile && (
+            <button
+              className={`btn btn-small${filter === 'weak' ? ' btn-primary' : ''}`}
+              aria-pressed={filter === 'weak'}
+              onClick={() => setFilter((f) => (f === 'weak' ? 'all' : 'weak'))}
+            >
+              Hard only
+            </button>
+          )}
+          {!isMobile && (
+            <button
+              className={`icon-btn${shuffle ? ' active' : ''}`}
+              aria-label="Shuffle"
+              aria-pressed={shuffle}
+              onClick={() => setShuffle((s) => !s)}
+            >
+              <Shuffle size={16} aria-hidden />
+            </button>
+          )}
           <button className="icon-btn" aria-label="Restart" onClick={restart}>
             <RotateCcw size={16} aria-hidden />
           </button>

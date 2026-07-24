@@ -4109,23 +4109,45 @@
       0 0 0 0.5px rgba(0, 0, 0, 0.04);
   }
 
-  /* ---- Settings as grouped inset lists (iOS Settings.app) ---- */
+  /* ---- Settings: clean rows on the modal surface (no dark inset frame) ---- */
   .settings-content {
-    background: var(--color-bg);
-    padding: var(--space-3);
+    padding: var(--space-3) var(--space-4);
   }
   .setting-row {
-    background: var(--color-bg-raised);
-    padding: var(--space-3);
+    padding: var(--space-3) 0;
     gap: var(--space-3);
-    border-bottom: 0.5px solid var(--color-border);
   }
-  .setting-row:first-of-type {
-    border-radius: 12px 12px 0 0;
+  /* Don't reserve a wide control column on a phone — it squashes the label. */
+  .setting-control {
+    min-width: auto;
   }
-  .setting-row:last-of-type {
-    border-radius: 0 0 12px 12px;
-    border-bottom: none;
+
+  /* ---- Search: breathing room off the screen edge + a rounded iOS field ---- */
+  .search-panel {
+    padding: var(--space-3) var(--space-3) var(--bottom-bar-h);
+  }
+  .search-panel .input {
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+  }
+  .search-panel .search-result {
+    padding-right: var(--space-3);
+  }
+
+  /* ---- Flashcard header: title truncates, controls stay tight (no squish) ---- */
+  .flashcard-header {
+    padding: var(--space-3);
+    gap: var(--space-2);
+  }
+  .flashcard-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .flashcard-controls {
+    gap: var(--space-1);
+    flex-shrink: 0;
   }
 
   /* ---- Flashcards: clear the notch/status bar so the header isn't clipped ---- */

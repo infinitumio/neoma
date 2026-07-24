@@ -141,7 +141,7 @@ export function SearchPanel() {
       <div className="sidebar-header">
         <span className="sidebar-title">Search</span>
       </div>
-      <div className="sidebar-body">
+      <div className="sidebar-body search-panel">
         <input
           ref={inputRef}
           className="input"

@@ -13,6 +13,7 @@ import { createNoteFromTemplate } from './TemplatesPanel'
 import { getRecentPdfs } from '@/utils/recentPdfs'
 import { basename } from '@/utils/paths'
 import { isoDate } from '@/utils/dates'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 import type { NoteMeta } from '@/types'
 
 interface ExamRow {
@@ -40,6 +41,7 @@ export function StudyPanel() {
   const vaultId = useVault((s) => s.vault?.id)
   const openNote = useTabs((s) => s.openNote)
   const openPdf = useTabs((s) => s.openPdf)
+  const isMobile = useIsMobile()
   const [cardCount, setCardCount] = useState<number | null>(null)
 
   const exams = useMemo<ExamRow[]>(() => {
@@ -115,9 +117,13 @@ export function StudyPanel() {
             <Layers size={14} aria-hidden /> Review flashcards
             {cardCount != null && cardCount > 0 && <span className="study-badge">{cardCount}</span>}
           </button>
-          <button className="btn" onClick={() => useStudy.getState().toggleStudyMode()}>
-            <BookOpen size={14} aria-hidden /> Study mode
-          </button>
+          {/* Immersive "study mode" hides all chrome — pointless on a phone,
+              where the chrome is already minimal. */}
+          {!isMobile && (
+            <button className="btn" onClick={() => useStudy.getState().toggleStudyMode()}>
+              <BookOpen size={14} aria-hidden /> Study mode
+            </button>
+          )}
         </div>
 
         <div className="sidebar-section-label">
