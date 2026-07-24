@@ -129,7 +129,7 @@ export function WelcomeScreen() {
     <main className="welcome">
       <div className="welcome-card">
         <div className="welcome-logo">
-          <img src="/favicon.svg" alt="" aria-hidden />
+          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" aria-hidden />
           <div>
             <h1>{APP_NAME}</h1>
           </div>

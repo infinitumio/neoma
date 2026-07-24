@@ -194,7 +194,12 @@ export function ActivityRail() {
 
   return (
     <nav className="activity-rail" aria-label="Primary">
-      <img src="/favicon.svg" alt="" className="rail-logo" aria-hidden />
+      <img
+        src={`${import.meta.env.BASE_URL}favicon.svg`}
+        alt=""
+        className="rail-logo"
+        aria-hidden
+      />
       {(() => {
         const rendered: React.ReactNode[] = []
         const seenGroups = new Set<string>()

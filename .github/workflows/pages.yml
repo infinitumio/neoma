@@ -46,17 +46,12 @@ jobs:
           NEOMA_BASE: /neoma/app/
         run: npm run build
 
-      - name: Assemble the Pages bundle (site at root, app at /app)
-        run: |
-          rm -rf _site
-          mkdir -p _site
-          cp -r website/* _site/
-          mkdir -p _site/app
-          cp -r dist/* _site/app/
+      - name: Assemble the bundle (site at root, app at /app, policy pages)
+        run: node scripts/build-site.mjs
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist-site
       - id: deployment
         uses: actions/deploy-pages@v4
