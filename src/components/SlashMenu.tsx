@@ -25,6 +25,7 @@ import { CATEGORY_ORDER } from '@/editor/slash/types'
 import { slashIconSvg } from '@/editor/slashIcons'
 import { formatShortcut } from '@/utils/misc'
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useSheetDrag } from '@/hooks/useSheetDrag'
 
 interface Group {
   category: SlashCategory
@@ -93,6 +94,7 @@ export function SlashMenu() {
   const coords = useSlashMenu((s) => s.coords)
   const selectedIndex = useSlashMenu((s) => s.selectedIndex)
   const setIndex = useSlashMenu((s) => s.setIndex)
+  const close = useSlashMenu((s) => s.close)
   // Re-render when favourites/recents change.
   useSyncExternalStore(subscribeUsage, usageVersion)
 
@@ -102,6 +104,11 @@ export function SlashMenu() {
   // keyboard (tracked via visualViewport), not a cursor-anchored popup.
   const isMobile = useIsMobile()
   const [sheetBottom, setSheetBottom] = useState(0)
+  const drag = useSheetDrag<HTMLDivElement>({
+    onClose: close,
+    direction: 'down',
+    enabled: isMobile,
+  })
 
   const groups = useMemo(() => buildGroups(query, context), [query, context])
   // Flatten to map selectedIndex → command (matches rankSlashCommands order).
@@ -156,6 +163,7 @@ export function SlashMenu() {
 
   return createPortal(
     <div
+      ref={isMobile ? drag.ref : undefined}
       className={`slash-menu${isMobile ? ' slash-menu-sheet' : ''}`}
       style={isMobile ? { bottom: sheetBottom } : { left: pos!.left, top: pos!.top }}
       role="listbox"
@@ -163,6 +171,16 @@ export function SlashMenu() {
       // Never steal focus from the editor.
       onMouseDown={(e) => e.preventDefault()}
     >
+      {isMobile && (
+        <div
+          className="sheet-grabber"
+          onTouchStart={drag.onTouchStart}
+          onTouchMove={drag.onTouchMove}
+          onTouchEnd={drag.onTouchEnd}
+        >
+          <div className="more-sheet-handle" aria-hidden />
+        </div>
+      )}
       <div className="slash-list" ref={listRef}>
         {groups.length === 0 && <div className="slash-empty">No matching commands</div>}
         {groups.map((group) => (

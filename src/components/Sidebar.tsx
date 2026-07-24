@@ -3,6 +3,8 @@
 import { useUi } from '@/app/uiStore'
 import { getPanel } from '@/app/registries'
 import { registerBuiltinPanels } from '@/app/registerBuiltins'
+import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useSheetDrag } from '@/hooks/useSheetDrag'
 
 registerBuiltinPanels()
 
@@ -11,6 +13,12 @@ export function Sidebar() {
   const Panel = getPanel(sidePanel)?.component
   const open = useUi((s) => s.sidebarOpen)
   const setOpen = useUi((s) => s.setSidebarOpen)
+  const isMobile = useIsMobile()
+  const drag = useSheetDrag<HTMLElement>({
+    onClose: () => setOpen(false),
+    direction: 'left',
+    enabled: isMobile && open,
+  })
 
   return (
     <>
@@ -23,6 +31,10 @@ export function Sidebar() {
         />
       )}
       <aside
+        ref={drag.ref}
+        onTouchStart={drag.onTouchStart}
+        onTouchMove={drag.onTouchMove}
+        onTouchEnd={drag.onTouchEnd}
         className={`sidebar${open ? ' open' : ''}`}
         aria-label="Sidebar"
         style={open ? undefined : { display: 'none' }}

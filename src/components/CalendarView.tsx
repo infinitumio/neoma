@@ -32,6 +32,7 @@ import { dailyNotePath, dailyNoteExists } from '@/templates/dailyNotes'
 import { openDaily } from './panels/DailyPanel'
 import { addDays, formatDate, isoDate } from '@/utils/dates'
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useSheetDrag } from '@/hooks/useSheetDrag'
 import type { NoteMeta } from '@/types'
 
 type Mode = 'month' | 'agenda'
@@ -335,6 +336,11 @@ function DaySummary({
 }) {
   const metaVersion = useVault((s) => s.metaVersion)
   const openNote = useTabs((s) => s.openNote)
+  const drag = useSheetDrag<HTMLElement>({
+    onClose,
+    direction: 'down',
+    enabled: !!mobile,
+  })
   const day = new Date(date)
 
   const journalPath = dailyNotePath(day)
@@ -352,10 +358,20 @@ function DaySummary({
 
   return (
     <aside
+      ref={mobile ? drag.ref : undefined}
       className={`calendar-summary${mobile ? ' calendar-summary-sheet' : ''}`}
       aria-label={`Summary for ${date}`}
     >
-      {mobile && <div className="more-sheet-handle" aria-hidden />}
+      {mobile && (
+        <div
+          className="sheet-grabber"
+          onTouchStart={drag.onTouchStart}
+          onTouchMove={drag.onTouchMove}
+          onTouchEnd={drag.onTouchEnd}
+        >
+          <div className="more-sheet-handle" aria-hidden />
+        </div>
+      )}
       <div className="calendar-summary-head">
         <span>{formatDate(day, 'dddd, DD MMMM YYYY')}</span>
         <button className="icon-btn" aria-label="Close day summary" onClick={onClose}>

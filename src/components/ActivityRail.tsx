@@ -21,6 +21,7 @@ import { REPOSITORY_URL } from '@/app/about'
 import { listPanels } from '@/app/registries'
 import { registerBuiltinPanels } from '@/app/registerBuiltins'
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useSheetDrag } from '@/hooks/useSheetDrag'
 
 registerBuiltinPanels()
 
@@ -40,6 +41,11 @@ function MobileTabBar() {
   const [moreOpen, setMoreOpen] = useState(false)
   const panels = listPanels()
   const panel = (id: string) => panels.find((p) => p.id === id)
+  const drag = useSheetDrag<HTMLDivElement>({
+    onClose: () => setMoreOpen(false),
+    direction: 'down',
+    enabled: moreOpen,
+  })
 
   const openPanel = (id: string) => {
     ui.setSidePanel(id as Parameters<typeof ui.setSidePanel>[0])
@@ -88,8 +94,15 @@ function MobileTabBar() {
             aria-label="Close menu"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="more-sheet" role="dialog" aria-label="More">
-            <div className="more-sheet-handle" aria-hidden />
+          <div className="more-sheet" role="dialog" aria-label="More" ref={drag.ref}>
+            <div
+              className="more-sheet-grabber"
+              onTouchStart={drag.onTouchStart}
+              onTouchMove={drag.onTouchMove}
+              onTouchEnd={drag.onTouchEnd}
+            >
+              <div className="more-sheet-handle" aria-hidden />
+            </div>
             <div className="more-sheet-grid">
               {morePanels.map((p) => {
                 const Icon = p.icon

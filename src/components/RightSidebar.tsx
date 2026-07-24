@@ -11,6 +11,8 @@ import { stem } from '@/utils/paths'
 import { BacklinksContent, useActiveNotePath } from './panels/BacklinksPanel'
 import { scrollToHeading } from '@/app/navigation'
 import { friendlyDateTime } from '@/utils/dates'
+import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useSheetDrag } from '@/hooks/useSheetDrag'
 
 const TABS: Array<{ id: RightPanelId; label: string; icon: typeof List }> = [
   { id: 'outline', label: 'Outline', icon: List },
@@ -26,11 +28,24 @@ export function RightSidebar() {
   const path = useActiveNotePath()
   const meta = useVault((s) => (path ? s.metas.get(path) : undefined))
   useVault((s) => s.metaVersion)
+  const isMobile = useIsMobile()
+  const drag = useSheetDrag<HTMLElement>({
+    onClose: ui.toggleRightSidebar,
+    direction: 'right',
+    enabled: isMobile && open,
+  })
 
   if (!open) return null
 
   return (
-    <aside className={`right-sidebar${open ? ' open' : ''}`} aria-label="Note context">
+    <aside
+      ref={drag.ref}
+      onTouchStart={drag.onTouchStart}
+      onTouchMove={drag.onTouchMove}
+      onTouchEnd={drag.onTouchEnd}
+      className={`right-sidebar${open ? ' open' : ''}`}
+      aria-label="Note context"
+    >
       <div className="right-tabs" role="tablist" aria-label="Context panels">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button

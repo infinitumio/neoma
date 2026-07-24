@@ -8,6 +8,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react'
 import { parseOutline } from '@/utils/outline'
+import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useSheetDrag } from '@/hooks/useSheetDrag'
 
 interface OutlineProps {
   path: string
@@ -62,6 +64,13 @@ export function Outline({ path, content, open, onClose, closeOnJump }: OutlinePr
     return rows
   }, [items, parentLines, collapsed])
 
+  const isMobile = useIsMobile()
+  const drag = useSheetDrag<HTMLElement>({
+    onClose,
+    direction: 'right',
+    enabled: isMobile && open,
+  })
+
   const jump = (heading: string, slug: string, line: number) => {
     window.dispatchEvent(
       new CustomEvent('neoma:scroll-to-heading', { detail: { path, heading, slug, line } }),
@@ -73,6 +82,10 @@ export function Outline({ path, content, open, onClose, closeOnJump }: OutlinePr
     <>
       {open && <button className="outline-backdrop" aria-label="Close outline" onClick={onClose} />}
       <aside
+        ref={drag.ref}
+        onTouchStart={drag.onTouchStart}
+        onTouchMove={drag.onTouchMove}
+        onTouchEnd={drag.onTouchEnd}
         className={`outline-drawer${open ? ' open' : ''}`}
         aria-label="Outline"
         aria-hidden={!open}
