@@ -14,11 +14,12 @@ import {
   LayoutDashboard,
   MoreHorizontal,
   Database,
+  Globe,
   X,
 } from 'lucide-react'
 import { useUi } from '@/app/uiStore'
 import { useTabs } from '@/app/tabsStore'
-import { REPOSITORY_URL } from '@/app/about'
+import { REPOSITORY_URL, WEBSITE_URL } from '@/app/about'
 import { listPanels } from '@/app/registries'
 import { registerBuiltinPanels } from '@/app/registerBuiltins'
 import { useIsMobile } from '@/hooks/useMediaQuery'
@@ -266,6 +267,16 @@ export function ActivityRail() {
       >
         <Settings size={18} aria-hidden />
       </button>
+      <a
+        className="rail-btn"
+        href={WEBSITE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Neoma website (opens in new tab)"
+        title="Neoma website"
+      >
+        <Globe size={18} aria-hidden />
+      </a>
       <a
         className="rail-btn"
         href={REPOSITORY_URL}

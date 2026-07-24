@@ -22,6 +22,10 @@ import {
   APP_VERSION,
   CREATOR,
   REPOSITORY_URL,
+  WEBSITE_URL,
+  PRIVACY_URL,
+  TERMS_URL,
+  LICENSE_URL,
   PRIVACY_STATEMENT,
 } from '@/app/about'
 import { useInstallPrompt } from '@/app/usePwa'
@@ -546,6 +550,17 @@ export function SettingsModal() {
                 <li>All fonts, icons and scripts are bundled — nothing loads from CDNs</li>
                 <li>Offline use is a fully supported, normal state</li>
               </ul>
+              <p className="text-small" style={{ marginTop: 'var(--space-3)' }}>
+                Read the full{' '}
+                <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">
+                  Privacy Policy
+                </a>{' '}
+                and{' '}
+                <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">
+                  Terms of Use
+                </a>{' '}
+                on neomadev.app.
+              </p>
             </>
           )}
 
@@ -576,8 +591,19 @@ export function SettingsModal() {
                 <li>Vite &amp; vite-plugin-pwa (MIT)</li>
               </ul>
               <p style={{ marginTop: 'var(--space-2)' }}>
-                Full licence texts ship with the source distribution ("node_modules" of the
-                repository) and the repository's LICENSE file.
+                See the{' '}
+                <a href={LICENSE_URL} target="_blank" rel="noopener noreferrer">
+                  License summary
+                </a>{' '}
+                on neomadev.app, or the repository's full{' '}
+                <a
+                  href={`${REPOSITORY_URL}/blob/main/LICENSE`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  LICENSE
+                </a>{' '}
+                file. Full licence texts for bundled dependencies ship with the source.
               </p>
             </div>
           )}
@@ -592,9 +618,26 @@ export function SettingsModal() {
                 A lightweight, open-source research journal and linked-note application. Created by{' '}
                 {CREATOR} and community-driven.
               </p>
-              <p style={{ marginTop: 'var(--space-3)' }}>
-                <a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
-                  Source code and issue tracker
+              <p style={{ marginTop: 'var(--space-3)', display: 'flex', gap: 'var(--space-2)' }}>
+                <a className="btn" href={WEBSITE_URL} target="_blank" rel="noopener noreferrer">
+                  Visit neomadev.app
+                </a>
+                <a className="btn" href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
+                  Source code
+                </a>
+              </p>
+              <p
+                className="text-small"
+                style={{ marginTop: 'var(--space-3)', display: 'flex', gap: 'var(--space-3)' }}
+              >
+                <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">
+                  Privacy
+                </a>
+                <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">
+                  Terms
+                </a>
+                <a href={LICENSE_URL} target="_blank" rel="noopener noreferrer">
+                  License
                 </a>
               </p>
               {canInstall && (
