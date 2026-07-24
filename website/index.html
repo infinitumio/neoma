@@ -8,16 +8,62 @@
       name="description"
       content="Neoma is a local-first, offline research notebook. Your notes stay plain Markdown on your own device — no account, no telemetry, no cloud. Free on macOS, iOS, Windows, Linux and the web."
     />
+    <link rel="canonical" href="https://infinitumio.github.io/neoma/" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#101413" />
+    <meta name="author" content="Neoma contributors" />
+    <meta
+      name="keywords"
+      content="markdown notes, local-first, offline notebook, second brain, PKM, research notes, flashcards, note-taking app, open source, Obsidian alternative, study app"
+    />
+
+    <!-- Open Graph — Facebook, Discord, LinkedIn, WhatsApp, etc. -->
+    <meta property="og:site_name" content="Neoma" />
     <meta property="og:title" content="Neoma — your knowledge, rooted locally" />
     <meta
       property="og:description"
       content="A local-first, offline research notebook. Plain Markdown on your device — no account, no telemetry, no cloud."
     />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://infinitumio.github.io/neoma/" />
+    <meta property="og:image" content="https://infinitumio.github.io/neoma/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Neoma — your knowledge, rooted locally" />
+
+    <!-- Twitter / X large summary card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Neoma — your knowledge, rooted locally" />
+    <meta
+      name="twitter:description"
+      content="A local-first, offline research notebook. Plain Markdown on your device — no account, no telemetry, no cloud."
+    />
+    <meta name="twitter:image" content="https://infinitumio.github.io/neoma/og.png" />
+    <meta name="twitter:image:alt" content="Neoma — your knowledge, rooted locally" />
+
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%8C%B1%3C/text%3E%3C/svg%3E"
     />
+
+    <!-- Structured data for richer search results -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Neoma",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "macOS, iOS, Windows, Linux, Web",
+        "description": "A local-first, offline research notebook. Your notes stay plain Markdown on your own device — no account, no telemetry, no cloud.",
+        "url": "https://infinitumio.github.io/neoma/",
+        "downloadUrl": "https://github.com/infinitumio/neoma/releases/latest",
+        "softwareVersion": "0.3.0",
+        "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+        "author": { "@type": "Organization", "name": "Neoma contributors" },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
     <style>
       :root {
         --bg: #101413;
@@ -482,6 +528,7 @@
         gap: 18px;
       }
       .dl {
+        position: relative;
         background: var(--raised);
         border: 1px solid var(--border);
         border-radius: var(--radius);
@@ -489,6 +536,56 @@
         text-align: center;
         display: flex;
         flex-direction: column;
+      }
+      /* "Seems this is you" — the card matching the visitor's OS glows and
+         wears a badge (added by the small script at the end of the page). */
+      .dl.you {
+        border-color: var(--accent);
+        animation: youpulse 2.6s ease-in-out infinite;
+      }
+      .you-badge {
+        position: absolute;
+        top: -13px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        background: var(--accent);
+        color: #05130b;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        padding: 6px 13px;
+        border-radius: 999px;
+        box-shadow: 0 6px 18px rgba(74, 222, 128, 0.4);
+        animation: youpop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+      @keyframes youpulse {
+        0%,
+        100% {
+          box-shadow:
+            0 0 0 1px var(--accent) inset,
+            0 0 0 0 rgba(74, 222, 128, 0.32);
+        }
+        50% {
+          box-shadow:
+            0 0 0 1px var(--accent) inset,
+            0 0 30px 3px rgba(74, 222, 128, 0.26);
+        }
+      }
+      @keyframes youpop {
+        from {
+          transform: translateX(-50%) translateY(7px) scale(0.85);
+          opacity: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .dl.you {
+          animation: none;
+          box-shadow: 0 0 0 1px var(--accent) inset;
+        }
+        .you-badge {
+          animation: none;
+        }
       }
       .dl.featured {
         border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
@@ -1128,9 +1225,7 @@
               </p>
               <a
                 class="btn"
-                href="https://github.com/infinitumio/neoma/releases/latest"
-                target="_blank"
-                rel="noopener"
+                href="https://github.com/infinitumio/neoma/releases/download/desktop-v0.3.0/Neoma_0.3.0_universal.dmg"
                 >Download .dmg</a
               >
             </div>
@@ -1149,9 +1244,7 @@
               </p>
               <a
                 class="btn"
-                href="https://github.com/infinitumio/neoma/releases/latest"
-                target="_blank"
-                rel="noopener"
+                href="https://github.com/infinitumio/neoma/releases/download/desktop-v0.3.0/Neoma_0.3.0_x64-setup.exe"
                 >Download .exe</a
               >
             </div>
@@ -1178,9 +1271,7 @@
               <p class="sub">Debian &amp; Ubuntu package. iOS ships via Xcode / TestFlight.</p>
               <a
                 class="btn"
-                href="https://github.com/infinitumio/neoma/releases/latest"
-                target="_blank"
-                rel="noopener"
+                href="https://github.com/infinitumio/neoma/releases/download/desktop-v0.3.0/Neoma_0.3.0_amd64.deb"
                 >Download .deb</a
               >
             </div>
@@ -1315,5 +1406,40 @@
         <div>© 2026 Neoma contributors · Your knowledge, rooted locally.</div>
       </div>
     </footer>
+
+    <script>
+      // Highlight the download card that matches the visitor's platform with a
+      // gentle glow and a "looks like you're on …" badge. Purely cosmetic and
+      // fully degradable — with JS off, the Web app card stays featured.
+      ;(function () {
+        var ua = navigator.userAgent || ''
+        var touch = navigator.maxTouchPoints || 0
+        var os
+        if (/iPhone|iPad|iPod/.test(ua) || (/Mac/.test(ua) && touch > 1))
+          os = { file: 'no install', label: 'iOS', web: true }
+        else if (/Android/.test(ua)) os = { file: 'no install', label: 'Android', web: true }
+        else if (/Macintosh|Mac OS X/.test(ua)) os = { file: '.dmg', label: 'macOS' }
+        else if (/Windows/.test(ua)) os = { file: '.exe', label: 'Windows' }
+        else if (/Linux|X11|CrOS/.test(ua)) os = { file: '.deb', label: 'Linux' }
+        else os = { file: 'no install', label: 'the web', web: true }
+
+        var cards = Array.prototype.slice.call(document.querySelectorAll('.dl'))
+        var match = cards.filter(function (c) {
+          var f = (c.querySelector('.file') || {}).textContent || ''
+          return f.toLowerCase().indexOf(os.file) !== -1
+        })[0]
+        if (!match) return
+        cards.forEach(function (c) {
+          c.classList.remove('featured')
+        })
+        match.classList.add('you')
+        var badge = document.createElement('span')
+        badge.className = 'you-badge'
+        badge.textContent = os.web
+          ? '✨ Runs right here — no install'
+          : '👋 Looks like you’re on ' + os.label
+        match.prepend(badge)
+      })()
+    </script>
   </body>
 </html>
