@@ -73,7 +73,16 @@ export default defineConfig({
       },
     },
   },
+  // Tauri expects a fixed dev-server URL. On a physical iOS/Android device the
+  // server must bind to the LAN address (TAURI_DEV_HOST) so the phone can reach
+  // it; on desktop/simulator it stays on localhost. strictPort makes a port
+  // clash fail loudly instead of silently drifting off 5173.
   server: {
+    host: process.env.TAURI_DEV_HOST || false,
     port: 5173,
+    strictPort: true,
+    hmr: process.env.TAURI_DEV_HOST
+      ? { protocol: 'ws', host: process.env.TAURI_DEV_HOST, port: 5183 }
+      : undefined,
   },
 })

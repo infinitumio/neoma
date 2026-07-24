@@ -33,7 +33,7 @@
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
-    "ios:init": "tauri ios init && node scripts/sync-ios-icons.mjs && node scripts/patch-ios-webview.mjs",
+    "ios:init": "tauri ios init && node scripts/sync-ios-icons.mjs && node scripts/patch-ios-webview.mjs && node scripts/patch-ios-xcode-env.mjs",
     "ios:icons": "node scripts/sync-ios-icons.mjs",
     "ios:dev": "tauri ios dev",
     "ios:build": "tauri ios build"
