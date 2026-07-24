@@ -19,18 +19,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Each platform ships exactly ONE installer: Windows .exe (NSIS),
+        # macOS .dmg (universal), Linux .deb. --bundles pins that so no
+        # .msi/.AppImage/.rpm slips into the release.
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             rustTargets: x86_64-pc-windows-msvc
+            args: '--bundles nsis'
           - os: macos-latest
             # universal-apple-darwin is a Tauri meta-target (lipo of both
             # arches); rustup installs the two real targets below.
             target: universal-apple-darwin
             rustTargets: aarch64-apple-darwin,x86_64-apple-darwin
+            args: '--target universal-apple-darwin --bundles dmg'
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             rustTargets: x86_64-unknown-linux-gnu
+            args: '--bundles deb'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -77,14 +83,21 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: Neoma ${{ github.ref_name }}
           releaseBody: |
-            Neoma desktop builds (macOS `.dmg`, Windows `.exe`, Linux `.AppImage`/`.deb`).
+            **Neoma** — a local-first, offline research notebook. Your notes stay
+            plain Markdown on your device: no account, no telemetry, no cloud.
 
-            These installers are **unsigned** — your OS may show an "unidentified
-            developer" warning. Verify the SHA-256 checksums and see the install
-            guide before running: https://github.com/infinitumio/neoma/blob/main/INSTALL.md
+            ### Downloads
+            | Platform | File | Notes |
+            | --- | --- | --- |
+            | macOS (Apple Silicon + Intel) | `.dmg` | Signed with a Developer ID and notarised — opens without a Gatekeeper warning. |
+            | Windows 10/11 | `.exe` | Unsigned — SmartScreen may warn on first run (More info → Run anyway). |
+            | Linux (Debian/Ubuntu) | `.deb` | Unsigned. |
+
+            Verify your download against `SHA256SUMS-*.txt` before running. See the
+            [install guide](https://github.com/infinitumio/neoma/blob/main/INSTALL.md).
           releaseDraft: false
-          prerelease: true
-          args: ${{ matrix.os == 'macos-latest' && '--target universal-apple-darwin' || '' }}
+          prerelease: false
+          args: ${{ matrix.args }}
 
       # tauri-action notarizes the .app but not the .dmg, so a downloaded .dmg
       # still fails Gatekeeper. Notarize + staple the .dmg and replace the one
