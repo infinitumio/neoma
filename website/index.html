@@ -6,7 +6,7 @@
     <title>Neoma — your knowledge, rooted locally</title>
     <meta
       name="description"
-      content="Neoma is a local-first, offline research notebook. Your notes stay plain Markdown on your own device — no account, no telemetry, no cloud."
+      content="Neoma is a local-first, offline research notebook. Your notes stay plain Markdown on your own device — no account, no telemetry, no cloud. Free on macOS, iOS, Windows, Linux and the web."
     />
     <meta property="og:title" content="Neoma — your knowledge, rooted locally" />
     <meta
@@ -56,13 +56,16 @@
         color: inherit;
         text-decoration: none;
       }
+      img {
+        max-width: 100%;
+        display: block;
+      }
       .wrap {
         width: 100%;
         max-width: var(--maxw);
         margin: 0 auto;
         padding: 0 24px;
       }
-      /* Ambient glow behind the hero. */
       body::before {
         content: '';
         position: fixed;
@@ -161,7 +164,7 @@
         position: relative;
         z-index: 1;
         text-align: center;
-        padding: 96px 0 72px;
+        padding: 92px 0 56px;
       }
       .pill {
         display: inline-flex;
@@ -192,7 +195,7 @@
       .hero p.lead {
         font-size: clamp(1.05rem, 2.2vw, 1.3rem);
         color: var(--text-2);
-        max-width: 620px;
+        max-width: 640px;
         margin: 0 auto 36px;
       }
       .hero-cta {
@@ -207,19 +210,19 @@
         font-size: 0.9rem;
       }
 
-      /* ---- App mockup ---- */
-      .shot {
+      /* ---- Framed screenshot ---- */
+      .frame {
         position: relative;
         z-index: 1;
-        margin: 24px auto 0;
-        max-width: 940px;
+        margin: 40px auto 0;
+        max-width: 960px;
         border-radius: var(--radius);
         border: 1px solid var(--border);
-        background: var(--bg-sidebar);
-        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+        background: var(--bg-rail);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
         overflow: hidden;
       }
-      .shot-bar {
+      .frame-bar {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -233,84 +236,28 @@
         border-radius: 50%;
         background: #3a423f;
       }
-      .shot-body {
-        display: grid;
-        grid-template-columns: 200px 1fr;
-        min-height: 340px;
-      }
-      .shot-side {
-        background: var(--bg-sidebar);
-        border-right: 1px solid var(--border);
-        padding: 16px 12px;
-      }
-      .shot-side .s-item {
-        height: 12px;
-        border-radius: 6px;
-        background: var(--hover);
-        margin-bottom: 12px;
-      }
-      .shot-side .s-item.accent {
-        background: var(--accent-subtle);
-        width: 70%;
-      }
-      .shot-side .s-item.w1 {
-        width: 85%;
-      }
-      .shot-side .s-item.w2 {
-        width: 60%;
-      }
-      .shot-side .s-item.w3 {
-        width: 75%;
-      }
-      .shot-main {
-        padding: 28px 32px;
-        text-align: left;
-      }
-      .shot-main .m-h {
-        height: 22px;
-        width: 45%;
-        border-radius: 7px;
-        background: linear-gradient(90deg, var(--accent), transparent 80%);
-        margin-bottom: 22px;
-      }
-      .shot-main .m-l {
-        height: 11px;
-        border-radius: 6px;
-        background: var(--hover);
-        margin-bottom: 13px;
-      }
-      .shot-main .m-l.w1 {
-        width: 92%;
-      }
-      .shot-main .m-l.w2 {
-        width: 78%;
-      }
-      .shot-main .m-l.w3 {
-        width: 86%;
-      }
-      .shot-main .m-l.w4 {
-        width: 64%;
-      }
-      .shot-main .m-tag {
-        display: inline-block;
-        height: 20px;
-        width: 64px;
-        border-radius: 999px;
-        background: var(--accent-subtle);
-        margin-right: 8px;
-        margin-top: 8px;
+      .frame img {
+        width: 100%;
       }
 
       /* ---- Sections ---- */
       section {
         position: relative;
         z-index: 1;
-        padding: 80px 0;
+        padding: 78px 0;
       }
       .section-head {
         text-align: center;
-        max-width: 640px;
+        max-width: 660px;
         margin: 0 auto 52px;
+      }
+      .eyebrow {
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 0.82rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0 0 12px;
       }
       .section-head h2 {
         font-size: clamp(1.8rem, 4vw, 2.6rem);
@@ -357,6 +304,78 @@
         letter-spacing: -0.01em;
       }
       .card p {
+        margin: 0;
+        color: var(--text-2);
+        font-size: 0.97rem;
+      }
+      .card code,
+      .terminal .k,
+      .faq code {
+        font-family: var(--mono);
+        font-size: 0.85em;
+      }
+
+      /* ---- Alternating showcase ---- */
+      .showcase {
+        display: flex;
+        flex-direction: column;
+        gap: 72px;
+      }
+      .show-row {
+        display: grid;
+        grid-template-columns: 1fr 1.15fr;
+        gap: 48px;
+        align-items: center;
+      }
+      .show-row.rev .show-text {
+        order: 2;
+      }
+      .show-text h3 {
+        font-size: clamp(1.4rem, 3vw, 1.9rem);
+        letter-spacing: -0.02em;
+        margin: 10px 0 12px;
+      }
+      .show-text p {
+        color: var(--text-2);
+        font-size: 1.03rem;
+        margin: 0 0 10px;
+      }
+      .show-badge {
+        display: inline-block;
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .show-img {
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        background: var(--bg-rail);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+      }
+
+      /* ---- Use cases ---- */
+      .use-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .use {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+        background: linear-gradient(180deg, var(--bg-sidebar), var(--raised));
+      }
+      .use .emoji {
+        font-size: 1.7rem;
+      }
+      .use h3 {
+        margin: 12px 0 8px;
+        font-size: 1.2rem;
+      }
+      .use p {
         margin: 0;
         color: var(--text-2);
         font-size: 0.97rem;
@@ -419,23 +438,64 @@
         color: var(--text);
       }
 
+      /* ---- Steps ---- */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        counter-reset: step;
+      }
+      .step {
+        position: relative;
+        padding: 28px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--raised);
+      }
+      .step::before {
+        counter-increment: step;
+        content: counter(step);
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #05130b;
+        font-weight: 800;
+        margin-bottom: 16px;
+      }
+      .step h3 {
+        margin: 0 0 8px;
+        font-size: 1.15rem;
+      }
+      .step p {
+        margin: 0;
+        color: var(--text-2);
+        font-size: 0.97rem;
+      }
+
       /* ---- Download ---- */
       .dl-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
       }
       .dl {
         background: var(--raised);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: 28px;
+        padding: 26px 22px;
         text-align: center;
       }
+      .dl.featured {
+        border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+        box-shadow: 0 0 0 1px var(--accent-subtle) inset;
+      }
       .dl .plat {
-        width: 52px;
-        height: 52px;
-        margin: 0 auto 16px;
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 14px;
         display: grid;
         place-items: center;
         border-radius: 14px;
@@ -444,23 +504,88 @@
       }
       .dl h3 {
         margin: 0 0 4px;
-        font-size: 1.2rem;
+        font-size: 1.15rem;
       }
       .dl .file {
         font-family: var(--mono);
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: var(--accent);
         margin-bottom: 6px;
       }
       .dl .sub {
         color: var(--text-faint);
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         margin: 0 0 18px;
-        min-height: 34px;
+        min-height: 48px;
       }
       .dl .btn {
         width: 100%;
         justify-content: center;
+      }
+
+      /* ---- FAQ ---- */
+      .faq {
+        max-width: 780px;
+        margin: 0 auto;
+      }
+      .faq details {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--raised);
+        margin-bottom: 12px;
+        overflow: hidden;
+      }
+      .faq summary {
+        cursor: pointer;
+        padding: 18px 22px;
+        font-weight: 650;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .faq summary::-webkit-details-marker {
+        display: none;
+      }
+      .faq summary::after {
+        content: '+';
+        color: var(--accent);
+        font-size: 1.4rem;
+        line-height: 1;
+        transition: transform 0.2s;
+      }
+      .faq details[open] summary::after {
+        transform: rotate(45deg);
+      }
+      .faq .a {
+        padding: 0 22px 20px;
+        color: var(--text-2);
+        margin: 0;
+      }
+
+      /* ---- CTA band ---- */
+      .cta {
+        text-align: center;
+      }
+      .cta .box {
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 56px 32px;
+        background:
+          radial-gradient(closest-side at 50% 0, var(--accent-subtle), transparent 70%),
+          var(--bg-sidebar);
+      }
+      .cta h2 {
+        font-size: clamp(1.9rem, 4vw, 2.7rem);
+        letter-spacing: -0.03em;
+        margin: 0 0 14px;
+        font-weight: 800;
+      }
+      .cta p {
+        color: var(--text-2);
+        margin: 0 0 28px;
+        font-size: 1.08rem;
       }
 
       /* ---- Footer ---- */
@@ -482,6 +607,7 @@
       .foot-links {
         display: flex;
         gap: 20px;
+        flex-wrap: wrap;
       }
       .foot-links a:hover {
         color: var(--text);
@@ -489,20 +615,20 @@
 
       @media (max-width: 860px) {
         .grid,
-        .dl-grid {
+        .dl-grid,
+        .use-grid,
+        .steps {
           grid-template-columns: 1fr;
         }
-        .band .split {
+        .band .split,
+        .show-row {
           grid-template-columns: 1fr;
           gap: 28px;
         }
+        .show-row.rev .show-text {
+          order: 0;
+        }
         .nav-links a:not(.btn) {
-          display: none;
-        }
-        .shot-body {
-          grid-template-columns: 1fr;
-        }
-        .shot-side {
           display: none;
         }
       }
@@ -535,11 +661,10 @@
         </a>
         <nav class="nav-links">
           <a href="#features">Features</a>
+          <a href="#showcase">Screens</a>
           <a href="#privacy">Privacy</a>
           <a href="#download">Download</a>
-          <a class="btn" href="https://github.com/infinitumio/neoma" target="_blank" rel="noopener"
-            >GitHub</a
-          >
+          <a class="btn" href="app/">Open web app</a>
         </nav>
       </div>
     </header>
@@ -556,42 +681,22 @@
             belongs.
           </p>
           <div class="hero-cta">
-            <a class="btn btn-primary" href="#download">Download for free</a>
-            <a
-              class="btn"
-              href="https://github.com/infinitumio/neoma"
-              target="_blank"
-              rel="noopener"
-              >View source</a
-            >
+            <a class="btn btn-primary" href="app/">Try the web app — no install</a>
+            <a class="btn" href="#download">Download the app</a>
           </div>
-          <div class="hero-note">macOS · iOS · Windows · Linux — free and AGPL-licensed</div>
+          <div class="hero-note">Runs in your browser · macOS · iOS · Windows · Linux · AGPL</div>
         </div>
 
         <div class="wrap">
-          <div class="shot" role="img" aria-label="Neoma app interface preview">
-            <div class="shot-bar">
+          <div class="frame">
+            <div class="frame-bar">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
             </div>
-            <div class="shot-body">
-              <div class="shot-side">
-                <div class="s-item accent"></div>
-                <div class="s-item w1"></div>
-                <div class="s-item w2"></div>
-                <div class="s-item w3"></div>
-                <div class="s-item w1"></div>
-                <div class="s-item w2"></div>
-              </div>
-              <div class="shot-main">
-                <div class="m-h"></div>
-                <div class="m-l w1"></div>
-                <div class="m-l w2"></div>
-                <div class="m-l w3"></div>
-                <div class="m-l w1"></div>
-                <div class="m-l w4"></div>
-                <div><span class="m-tag"></span><span class="m-tag"></span></div>
-              </div>
-            </div>
+            <img
+              src="shots/reading-text.png"
+              alt="Neoma reading view with a formatted Markdown note"
+              loading="eager"
+            />
           </div>
         </div>
       </section>
@@ -599,6 +704,7 @@
       <section id="features">
         <div class="wrap">
           <div class="section-head">
+            <p class="eyebrow">Everything, offline</p>
             <h2>A notebook that respects your data</h2>
             <p>Everything you need to think, write and study — running entirely on your machine.</p>
           </div>
@@ -728,14 +834,122 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 >
-                  <rect x="5" y="2" width="14" height="20" rx="2" />
-                  <path d="M12 18h.01" />
+                  <path d="M4 17V9m4 8V5m4 12v-6m4 6V8m4 9v-4" />
                 </svg>
               </div>
-              <h3>Native apps</h3>
+              <h3>Math, PDFs &amp; tasks</h3>
               <p>
-                A real Mac and iOS app (plus Windows &amp; Linux) with a touch-native,
-                gesture-driven interface — not just a browser tab.
+                KaTeX math, an inline PDF reader, tags, task lists and a slash-command menu — the
+                whole toolkit, built in.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="showcase">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">See it in action</p>
+            <h2>Designed to get out of your way</h2>
+            <p>A calm, keyboard-driven editor with the power hiding one slash away.</p>
+          </div>
+          <div class="showcase">
+            <div class="show-row">
+              <div class="show-text">
+                <span class="show-badge">Write faster</span>
+                <h3>A slash away from anything</h3>
+                <p>
+                  Type <code>/</code> to insert headings, callouts, tables, math, flashcards and
+                  more — fuzzy-searched and grouped, with your favourites first. No menus to hunt
+                  through.
+                </p>
+              </div>
+              <div class="show-img">
+                <img
+                  src="shots/slash-menu.png"
+                  alt="Slash-command menu in the editor"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="show-row rev">
+              <div class="show-text">
+                <span class="show-badge">Connect ideas</span>
+                <h3>Watch your knowledge grow</h3>
+                <p>
+                  Every wiki-link becomes an edge in a live graph. Zoom out to see the shape of your
+                  thinking and rediscover notes you'd forgotten.
+                </p>
+              </div>
+              <div class="show-img">
+                <img src="shots/graph.png" alt="Graph view of linked notes" loading="lazy" />
+              </div>
+            </div>
+            <div class="show-row">
+              <div class="show-text">
+                <span class="show-badge">Study smarter</span>
+                <h3>From notes to flashcards</h3>
+                <p>
+                  Mark any Q&amp;A as a flashcard and review it with spaced repetition. Confidence
+                  is stored per card so the ones you find hard resurface — completely offline.
+                </p>
+              </div>
+              <div class="show-img">
+                <img
+                  src="shots/flashcard-review.png"
+                  alt="Flashcard review session"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="show-row rev">
+              <div class="show-text">
+                <span class="show-badge">Stay organised</span>
+                <h3>Plan the term, track the day</h3>
+                <p>
+                  A built-in calendar, daily notes and task lists tie your writing to real dates —
+                  import your class or work schedule from any <code>.ics</code> file.
+                </p>
+              </div>
+              <div class="show-img">
+                <img src="shots/calendar.png" alt="Calendar view with events" loading="lazy" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">Who it's for</p>
+            <h2>Built for deep work</h2>
+            <p>One tidy place for the people who live in their notes.</p>
+          </div>
+          <div class="use-grid">
+            <div class="use">
+              <div class="emoji">🎓</div>
+              <h3>Students</h3>
+              <p>
+                Lecture notes, PDF readings, exam countdowns and flashcards — one vault per course,
+                revised offline on the bus.
+              </p>
+            </div>
+            <div class="use">
+              <div class="emoji">🔬</div>
+              <h3>Researchers</h3>
+              <p>
+                Citations, linked literature notes, math and a graph of how every idea connects —
+                with your data staying yours.
+              </p>
+            </div>
+            <div class="use">
+              <div class="emoji">✍️</div>
+              <h3>Writers &amp; thinkers</h3>
+              <p>
+                A distraction-free Markdown editor, daily journaling and backlinks that quietly
+                build your second brain.
               </p>
             </div>
           </div>
@@ -745,6 +959,7 @@
       <section id="privacy" class="band">
         <div class="wrap split">
           <div>
+            <p class="eyebrow">Privacy by design</p>
             <h2>Your data never leaves your device</h2>
             <p>
               Most note apps sync your private thinking to someone else's servers. Neoma doesn't.
@@ -780,7 +995,7 @@
                 >
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
-                Zero telemetry or tracking
+                Zero telemetry or tracking — verified in CI
               </li>
               <li>
                 <svg
@@ -826,16 +1041,74 @@
         </div>
       </section>
 
+      <section>
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">Get going in seconds</p>
+            <h2>How it works</h2>
+            <p>No onboarding wizard, no cloud setup. Open it and write.</p>
+          </div>
+          <div class="steps">
+            <div class="step">
+              <h3>Pick a vault</h3>
+              <p>
+                Start in seconds in the browser, or point Neoma at a local folder to keep every note
+                as a real file on disk.
+              </p>
+            </div>
+            <div class="step">
+              <h3>Write in Markdown</h3>
+              <p>
+                Type <code>/</code> for anything — headings, math, tables, callouts, flashcards.
+                It's just Markdown underneath.
+              </p>
+            </div>
+            <div class="step">
+              <h3>Link &amp; study</h3>
+              <p>
+                Connect notes with <code>[[wiki-links]]</code>, explore the graph, and turn key
+                ideas into flashcards for revision.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="download">
         <div class="wrap">
           <div class="section-head">
-            <h2>Download Neoma</h2>
-            <p>Free on every platform. Grab the latest release from GitHub.</p>
+            <p class="eyebrow">Free forever</p>
+            <h2>Get Neoma</h2>
+            <p>Run it in your browser, or install the native app. Every option is free.</p>
           </div>
           <div class="dl-grid">
+            <div class="dl featured">
+              <div class="plat">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
+                </svg>
+              </div>
+              <h3>Web app</h3>
+              <div class="file">no install</div>
+              <p class="sub">
+                Runs entirely in your browser. Notes stay on your device via local storage or a
+                local folder.
+              </p>
+              <a class="btn btn-primary" href="app/">Open web app</a>
+            </div>
             <div class="dl">
               <div class="plat">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                   <path
                     d="M16.5 1.6c.1 1-.3 2-.9 2.8-.7.8-1.7 1.4-2.7 1.3-.1-1 .4-2 .9-2.7.7-.8 1.8-1.3 2.7-1.4ZM19 17c-.5 1.2-.8 1.7-1.5 2.7-1 1.5-2.4 3.3-4.1 3.3-1.5 0-1.9-1-4-1-2 0-2.5 1-4 1-1.7 0-3-1.7-4-3.1C-.4 15.6-.6 10.3 2 7.6c1-1 2.4-1.7 3.8-1.7 1.6 0 2.6 1 4 1 1.3 0 2-1 4-1 1.2 0 2.5.4 3.5 1.4-3 1.7-2.6 6.1 1.7 7.7Z"
                   />
@@ -844,11 +1117,10 @@
               <h3>macOS</h3>
               <div class="file">Neoma.dmg</div>
               <p class="sub">
-                Universal (Apple&nbsp;Silicon&nbsp;+&nbsp;Intel). Signed &amp; notarised — no
-                Gatekeeper warning.
+                Universal build. Signed &amp; notarised — opens without a Gatekeeper warning.
               </p>
               <a
-                class="btn btn-primary"
+                class="btn"
                 href="https://github.com/infinitumio/neoma/releases/latest"
                 target="_blank"
                 rel="noopener"
@@ -857,7 +1129,7 @@
             </div>
             <div class="dl">
               <div class="plat">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                   <path
                     d="M3 4.5 10.5 3.4v7.6H3V4.5ZM11.5 3.3 21 2v9h-9.5V3.3ZM3 12h7.5v7.6L3 18.5V12Zm8.5 0H21v9l-9.5-1.3V12Z"
                   />
@@ -866,7 +1138,7 @@
               <h3>Windows</h3>
               <div class="file">Neoma-setup.exe</div>
               <p class="sub">
-                Windows&nbsp;10 &amp; 11 installer. Unsigned — SmartScreen may warn on first run.
+                Windows 10 &amp; 11 installer. Unsigned — SmartScreen may warn on first run.
               </p>
               <a
                 class="btn"
@@ -879,8 +1151,8 @@
             <div class="dl">
               <div class="plat">
                 <svg
-                  width="26"
-                  height="26"
+                  width="24"
+                  height="24"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -896,7 +1168,7 @@
               </div>
               <h3>Linux</h3>
               <div class="file">neoma.deb</div>
-              <p class="sub">Debian &amp; Ubuntu package. Unsigned.</p>
+              <p class="sub">Debian &amp; Ubuntu package. iOS ships via Xcode / TestFlight.</p>
               <a
                 class="btn"
                 href="https://github.com/infinitumio/neoma/releases/latest"
@@ -919,6 +1191,73 @@
             downloads against the <code style="font-family: var(--mono)">SHA256SUMS</code> files on
             the release.
           </p>
+        </div>
+      </section>
+
+      <section id="faq">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">Good to know</p>
+            <h2>Frequently asked</h2>
+          </div>
+          <div class="faq">
+            <details open>
+              <summary>Is Neoma really free?</summary>
+              <p class="a">
+                Yes — every platform, no paid tier. Neoma is open source under the AGPL-3.0 licence,
+                so you can read, modify and self-host it.
+              </p>
+            </details>
+            <details>
+              <summary>Where are my notes stored?</summary>
+              <p class="a">
+                On your device. Point Neoma at a local folder and every page is a plain
+                <code>.md</code> file you can open in any editor. In the browser without a folder,
+                notes are kept in local storage on that machine. Nothing is uploaded anywhere.
+              </p>
+            </details>
+            <details>
+              <summary>Does it work offline?</summary>
+              <p class="a">
+                Completely. Neoma is a local-first app and an installable PWA — it launches and runs
+                with no network connection, and never phones home.
+              </p>
+            </details>
+            <details>
+              <summary>What's the difference between the web app and the desktop app?</summary>
+              <p class="a">
+                Same app, same features. The desktop build adds a native window, system tray,
+                launch-on-startup and native file dialogs. The web app needs no install and is the
+                fastest way to try Neoma.
+              </p>
+            </details>
+            <details>
+              <summary>Can I move my notes to another tool later?</summary>
+              <p class="a">
+                Always. They're standard Markdown files with no proprietary wrapper — there's
+                nothing to export, because they were never locked in to begin with.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta">
+        <div class="wrap">
+          <div class="box">
+            <h2>Start where your ideas already live</h2>
+            <p>Open Neoma in your browser — no account, no download, no catch.</p>
+            <div class="hero-cta">
+              <a class="btn btn-primary" href="app/">Launch the web app</a>
+              <a
+                class="btn"
+                href="https://github.com/infinitumio/neoma"
+                target="_blank"
+                rel="noopener"
+                >Star on GitHub</a
+              >
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -948,6 +1287,7 @@
           Neoma
         </div>
         <div class="foot-links">
+          <a href="app/">Web app</a>
           <a href="https://github.com/infinitumio/neoma" target="_blank" rel="noopener">GitHub</a>
           <a href="https://github.com/infinitumio/neoma/releases" target="_blank" rel="noopener"
             >Releases</a
