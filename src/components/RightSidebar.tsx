@@ -35,7 +35,9 @@ export function RightSidebar() {
     enabled: isMobile && open,
   })
 
-  if (!open) return null
+  // Desktop unmounts when closed; mobile keeps it mounted off-screen so the
+  // `.open` transform can slide it in instead of the panel just appearing.
+  if (!open && !isMobile) return null
 
   return (
     <aside

@@ -11,13 +11,21 @@
  * so it tracks the finger at 60fps. When idle we clear the inline transform so
  * the element's CSS `.open` transition owns the resting/slide-in state.
  */
-import { useRef, type TouchEvent } from 'react'
+import { useEffect, useRef, type TouchEvent } from 'react'
 
 type Direction = 'down' | 'left' | 'right'
 
 const SPRING = 'cubic-bezier(0.32, 0.72, 0, 1)' // iOS sheet curve
 const DISTANCE = 64 // px past which a release dismisses
 const VELOCITY = 0.5 // px/ms flick that dismisses regardless of distance
+
+// The fully-dismissed transform per direction — matches each panel's CSS closed
+// state so handing control back to CSS after dismissal doesn't visibly jump.
+const CLOSED: Record<Direction, string> = {
+  down: 'translateY(100%)',
+  left: 'translateX(-100%)',
+  right: 'translateX(100%)',
+}
 
 export function useSheetDrag<T extends HTMLElement>({
   onClose,
@@ -92,9 +100,11 @@ export function useSheetDrag<T extends HTMLElement>({
       return
     }
     if (dismiss) {
-      // Finish the throw off-screen, then unmount.
-      el.style.transition = `transform 220ms ${SPRING}`
-      el.style.transform = axis === 'y' ? 'translateY(110%)' : `translateX(${sign * 110}%)`
+      // Finish the throw to the closed position, then close. We deliberately
+      // leave the inline transform in place — it equals the CSS closed state,
+      // so there's no jump — and the effect below clears it on the next open.
+      el.style.transition = `transform 240ms ${SPRING}`
+      el.style.transform = CLOSED[direction]
       const done = () => {
         el.removeEventListener('transitionend', done)
         onClose()
@@ -111,6 +121,16 @@ export function useSheetDrag<T extends HTMLElement>({
       el.addEventListener('transitionend', clear)
     }
   }
+
+  // On (re)open, wipe any inline transform a previous dismissal left behind so
+  // the element isn't stuck off-screen and the CSS `.open` slide-in can run.
+  useEffect(() => {
+    const el = ref.current
+    if (enabled && el) {
+      el.style.transition = ''
+      el.style.transform = ''
+    }
+  }, [enabled])
 
   return { ref, onTouchStart, onTouchMove, onTouchEnd }
 }

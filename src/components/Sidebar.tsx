@@ -37,7 +37,10 @@ export function Sidebar() {
         onTouchEnd={drag.onTouchEnd}
         className={`sidebar${open ? ' open' : ''}`}
         aria-label="Sidebar"
-        style={open ? undefined : { display: 'none' }}
+        aria-hidden={!open}
+        // Desktop collapses by unmounting from layout (display:none). On mobile
+        // it stays mounted off-screen so the `.open` transform can slide it in.
+        style={!isMobile && !open ? { display: 'none' } : undefined}
       >
         {Panel && <Panel />}
       </aside>
