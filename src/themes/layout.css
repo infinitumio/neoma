@@ -333,106 +333,127 @@
   padding: var(--space-2);
   padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
 }
+/* One heading row: [caret] [label]. Indentation + vertical guide lines are
+   applied per level on the row itself so the tree reads as a hierarchy. */
 .outline-item {
-  --ol: color-mix(in srgb, var(--color-text) 16%, transparent);
+  --ol: color-mix(in srgb, var(--color-text) 15%, transparent);
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 1px;
   width: 100%;
-  text-align: left;
-  padding: 7px var(--space-2) 7px 0.75rem;
-  border: none;
-  background: none;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
   border-radius: var(--radius-sm);
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   /* Continuous vertical guide lines for each ancestor level. */
   background-repeat: no-repeat;
   background-size: 1px 100%;
 }
 .outline-item:hover {
   background-color: var(--color-bg-hover);
+}
+/* Caret toggle (parents) / spacer (leaves) — keeps labels aligned. */
+.outline-caret,
+.outline-caret-spacer {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.outline-caret {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.outline-caret:hover {
+  color: var(--color-text);
+  background: var(--color-bg-hover);
+}
+.outline-caret svg {
+  transition: transform var(--transition-fast);
+}
+.outline-caret.collapsed svg {
+  transform: rotate(-90deg);
+}
+.outline-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 7px var(--space-2) 7px 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.outline-item:hover .outline-label {
   color: var(--color-text);
 }
-.outline-l1 {
+.outline-l1 > .outline-label {
   font-weight: 650;
   color: var(--color-text);
 }
-/* Horizontal connector tick from the guide line to the text (levels 2+). */
-.outline-item::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 0.5rem;
-  height: 1px;
-  background: var(--ol);
-}
-.outline-l1::before {
-  display: none;
+/* Per-level indent (step 0.9rem) with a guide line under each ancestor. */
+.outline-l1 {
+  padding-left: 0.35rem;
 }
 .outline-l2 {
-  padding-left: 2rem;
+  padding-left: 1.25rem;
   background-image: linear-gradient(var(--ol), var(--ol));
-  background-position: 0.9rem 0;
-}
-.outline-l2::before {
-  left: 0.9rem;
+  background-position: 0.6rem 0;
 }
 .outline-l3 {
-  padding-left: 3rem;
+  padding-left: 2.15rem;
   background-image: linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol));
   background-position:
-    0.9rem 0,
-    1.9rem 0;
-}
-.outline-l3::before {
-  left: 1.9rem;
+    0.6rem 0,
+    1.5rem 0;
 }
 .outline-l4 {
-  padding-left: 4rem;
+  padding-left: 3.05rem;
   background-image:
     linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol)),
     linear-gradient(var(--ol), var(--ol));
   background-position:
-    0.9rem 0,
-    1.9rem 0,
-    2.9rem 0;
-}
-.outline-l4::before {
-  left: 2.9rem;
+    0.6rem 0,
+    1.5rem 0,
+    2.4rem 0;
 }
 .outline-l5 {
-  padding-left: 5rem;
+  padding-left: 3.95rem;
   background-image:
     linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol)),
     linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol));
   background-position:
-    0.9rem 0,
-    1.9rem 0,
-    2.9rem 0,
-    3.9rem 0;
-}
-.outline-l5::before {
-  left: 3.9rem;
+    0.6rem 0,
+    1.5rem 0,
+    2.4rem 0,
+    3.3rem 0;
 }
 .outline-l6 {
-  padding-left: 6rem;
+  padding-left: 4.85rem;
   background-image:
     linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol)),
     linear-gradient(var(--ol), var(--ol)), linear-gradient(var(--ol), var(--ol)),
     linear-gradient(var(--ol), var(--ol));
   background-position:
-    0.9rem 0,
-    1.9rem 0,
-    2.9rem 0,
-    3.9rem 0,
-    4.9rem 0;
+    0.6rem 0,
+    1.5rem 0,
+    2.4rem 0,
+    3.3rem 0,
+    4.2rem 0;
 }
-.outline-l6::before {
-  left: 4.9rem;
+/* Collapse-all / expand-all control in the drawer header. */
+.outline-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 @media (max-width: 900px) {
   .outline-drawer {
@@ -1687,24 +1708,6 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--space-3);
-}
-
-.outline-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 0.2rem var(--space-2);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.outline-item:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text);
 }
 
 .backlink-card {
