@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in neoma is broken or behaving unexpectedly
+title: '[Bug]: '
+labels: ['bug', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please never paste private notes —
+        a minimal reproduction (a few throwaway notes) is ideal.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: |
+        1. Create a note called …
+        2. Type …
+        3. Expected … but saw …
+    validations:
+      required: true
+  - type: dropdown
+    id: vault-type
+    attributes:
+      label: Vault type
+      options:
+        - Browser vault
+        - Local folder vault
+        - Demo vault
+        - Not vault-related
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: e.g. Chrome 138, Firefox 141, Safari 18
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. macOS 15, Windows 11, Ubuntu 24.04, Android 16
+    validations:
+      required: true
+  - type: dropdown
+    id: install-mode
+    attributes:
+      label: How are you running neoma?
+      options:
+        - Web (browser tab)
+        - Installed PWA
+        - npm run dev
+        - Docker / self-hosted
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: Open DevTools → Console and paste anything red (redact private paths).
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: My report contains no private note content
+          required: true

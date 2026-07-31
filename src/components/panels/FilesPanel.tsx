@@ -1,0 +1,189 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+/** File explorer panel: vault header, new note/folder, sort, import/export. */
+import { useRef, useState } from 'react'
+import {
+  FilePlus,
+  FolderPlus,
+  ArrowUpDown,
+  MoreHorizontal,
+  Download,
+  Upload,
+  Paperclip,
+  ChevronsUpDown,
+} from 'lucide-react'
+import { FileTree } from '../FileTree'
+import { ContextMenu } from '../ContextMenu'
+import { createNote, createFolder, refreshEntries, useVault, getAdapter } from '@/app/vaultStore'
+import { useTabs } from '@/app/tabsStore'
+import { useUi } from '@/app/uiStore'
+import { useSettings } from '@/settings/settingsStore'
+import type { SortOrder } from '@/types'
+import { exportVaultZip, importFiles, downloadBlob } from '@/storage/import-export'
+
+export function FilesPanel() {
+  const vault = useVault((s) => s.vault)
+  const ui = useUi()
+  const update = useSettings((s) => s.update)
+  const sortOrder = useSettings((s) => s.settings.fileSortOrder)
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
+  const attachInput = useRef<HTMLInputElement>(null)
+
+  const newNote = async () => {
+    const path = await createNote('', 'Untitled')
+    if (path) {
+      useTabs.getState().openNote(path)
+      useUi.getState().toast('Page created', 'success')
+    }
+  }
+
+  const newFolder = () => {
+    ui.askPrompt({
+      title: 'New folder',
+      label: 'Folder name',
+      placeholder: 'e.g. Projects',
+      onSubmit: async (value) => {
+        const name = value.trim()
+        if (!name) return
+        // "Calendar" is reserved for journals/events — steer users to it.
+        const reserved = useSettings.getState().settings.dailyNotesFolder
+        if (name.toLowerCase() === reserved.toLowerCase()) {
+          ui.toast(`“${reserved}” is managed by the Planner — add events there instead`, 'warning')
+          return
+        }
+        await createFolder('', name)
+      },
+    })
+  }
+
+  const cycleSort = () => {
+    const orders: SortOrder[] = ['name', 'created', 'modified']
+    const next = orders[(orders.indexOf(sortOrder) + 1) % orders.length]
+    update('fileSortOrder', next)
+    ui.toast(`Sorted by ${next === 'name' ? 'name' : next + ' date'}`)
+  }
+
+  const exportZip = async () => {
+    const adapter = getAdapter()
+    if (!adapter || !vault) return
+    ui.toast('Preparing vault export…')
+    try {
+      const blob = await exportVaultZip(adapter)
+      downloadBlob(blob, `${vault.name}.zip`)
+      ui.toast('Vault exported', 'success')
+    } catch {
+      ui.toast('Export failed', 'error')
+    }
+  }
+
+  const attachmentFolder = useSettings((s) => s.settings.attachmentFolder)
+
+  const onImportFiles = async (files: FileList | null, attachmentsOnly = false) => {
+    const adapter = getAdapter()
+    if (!adapter || !files?.length) return
+    const summary = await importFiles(adapter, [...files], {
+      attachmentsFolder: attachmentFolder,
+      attachmentsOnly,
+    })
+    await refreshEntries()
+    const parts: string[] = []
+    if (summary.notes) parts.push(`${summary.notes} page${summary.notes === 1 ? '' : 's'}`)
+    if (summary.attachments)
+      parts.push(`${summary.attachments} attachment${summary.attachments === 1 ? '' : 's'}`)
+    ui.toast(`Imported ${parts.join(' and ') || 'nothing'}`, 'success')
+  }
+
+  return (
+    <>
+      <div className="sidebar-header">
+        <button
+          className="sidebar-title vault-name-btn"
+          title="Switch vault"
+          onClick={() => ui.setVaultSwitcherOpen(true)}
+        >
+          {vault?.name ?? 'Vault'}
+          <ChevronsUpDown size={13} aria-hidden style={{ flexShrink: 0, opacity: 0.6 }} />
+        </button>
+        <button
+          className="icon-btn"
+          onClick={() => void newNote()}
+          aria-label="New page"
+          title="New page"
+        >
+          <FilePlus size={16} aria-hidden />
+        </button>
+        <button className="icon-btn" onClick={newFolder} aria-label="New folder" title="New folder">
+          <FolderPlus size={16} aria-hidden />
+        </button>
+        <button
+          className="icon-btn"
+          onClick={cycleSort}
+          aria-label={`Sort order: ${sortOrder}. Click to change`}
+          title={`Sort: ${sortOrder}`}
+        >
+          <ArrowUpDown size={16} aria-hidden />
+        </button>
+        <button
+          className="icon-btn"
+          onClick={(e) => setMenu({ x: e.clientX, y: e.clientY })}
+          aria-label="More vault actions"
+          aria-haspopup="menu"
+        >
+          <MoreHorizontal size={16} aria-hidden />
+        </button>
+      </div>
+      <div className="sidebar-body">
+        <FileTree />
+      </div>
+      <input
+        ref={fileInput}
+        type="file"
+        multiple
+        data-testid="import-input"
+        className="visually-hidden"
+        aria-hidden
+        tabIndex={-1}
+        onChange={(e) => {
+          void onImportFiles(e.target.files)
+          e.target.value = ''
+        }}
+      />
+      <input
+        ref={attachInput}
+        type="file"
+        multiple
+        className="visually-hidden"
+        aria-hidden
+        tabIndex={-1}
+        onChange={(e) => {
+          void onImportFiles(e.target.files, true)
+          e.target.value = ''
+        }}
+      />
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          onClose={() => setMenu(null)}
+          items={[
+            {
+              label: 'Import files or ZIP…',
+              icon: <Upload size={14} aria-hidden />,
+              onSelect: () => fileInput.current?.click(),
+            },
+            {
+              label: `Import files as attachments (${attachmentFolder}/)…`,
+              icon: <Paperclip size={14} aria-hidden />,
+              onSelect: () => attachInput.current?.click(),
+            },
+            {
+              label: 'Export vault as ZIP',
+              icon: <Download size={14} aria-hidden />,
+              onSelect: () => void exportZip(),
+            },
+          ]}
+        />
+      )}
+    </>
+  )
+}

@@ -1,0 +1,408 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+/** Application root: welcome flow or workspace, plus global chrome. */
+import { lazy, Suspense, useEffect } from 'react'
+import { Columns2, BookOpen } from 'lucide-react'
+import type { TabState } from '@/types'
+import { WelcomeScreen } from '@/components/WelcomeScreen'
+import { FlashcardReview } from '@/components/FlashcardReview'
+import { useStudy } from '@/study/studyStore'
+import { ActivityRail } from '@/components/ActivityRail'
+import { Sidebar } from '@/components/Sidebar'
+import { TabsBar } from '@/components/TabsBar'
+import { NotePane } from '@/components/NotePane'
+import { clearEditorStateCache } from '@/components/Editor'
+import { RightSidebar } from '@/components/RightSidebar'
+import { StatusBar } from '@/components/StatusBar'
+import { CommandPalette } from '@/components/CommandPalette'
+import { SettingsModal } from '@/components/SettingsModal'
+import { HelpModal } from '@/components/HelpModal'
+import { VaultSwitcher } from '@/components/VaultSwitcher'
+import { AttachmentPicker } from '@/components/AttachmentPicker'
+import { CalendarRefPicker } from '@/components/CalendarRefPicker'
+import { SlashMenu } from '@/components/SlashMenu'
+import { Tooltips } from '@/components/Tooltips'
+import { Dialogs } from '@/components/Dialogs'
+import { Toasts } from '@/components/Toasts'
+import { useVault, flushAllSaves, openVault, createNote, createFolder } from './vaultStore'
+import { basename, dirname, joinPath } from '@/utils/paths'
+import { listVaults } from '@/storage/VaultManager'
+import { useTabs } from './tabsStore'
+import { useUi } from './uiStore'
+import { useSettings, applyAppearance } from '@/settings/settingsStore'
+import { registerCommands, runCommand } from '@/commands/registry'
+import { buildDefaultCommands } from '@/commands/defaultCommands'
+import { handleGlobalKeydown } from '@/commands/shortcuts'
+import { formatShortcut } from '@/utils/misc'
+import { useIsMobile } from '@/hooks/useMediaQuery'
+import { initDesktopIntegration, syncCloseBehavior, isMobileApp } from '@/desktop/tauri'
+
+// The graph loads only when opened, keeping it out of the initial bundle.
+const GraphView = lazy(() => import('@/graph/GraphView'))
+const CalendarView = lazy(() => import('@/components/CalendarView'))
+const PdfViewer = lazy(() =>
+  import('@/components/PdfViewer').then((m) => ({ default: m.PdfViewer })),
+)
+
+/** A PDF tab, optionally split with a companion note for paraphrasing. */
+function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }) {
+  const setSplit = useTabs((s) => s.setPdfSplitNote)
+  const path = tab.path as string
+  // Side-by-side PDF + note doesn't fit a phone — show the PDF alone there.
+  const isMobile = useIsMobile()
+
+  const toggleSplit = async () => {
+    if (tab.pdfSplitNote) {
+      setSplit(tab.id, undefined)
+      return
+    }
+    // Put the companion note inside a folder named after the PDF, so the tree
+    // nests it under the PDF (see FileTree.buildTree) without moving the file.
+    const stem = basename(path).replace(/\.pdf$/i, '')
+    const folder = joinPath(dirname(path), stem)
+    await createFolder(dirname(path), stem).catch(() => {})
+    const desired = joinPath(folder, `${stem} — notes.md`)
+    const existing = useVault.getState().entries.has(desired)
+    const notePath = existing
+      ? desired
+      : await createNote(
+          folder,
+          `${stem} — notes`,
+          `# ${stem} — notes\n\nParaphrasing [[${basename(path)}]]\n\n`,
+        )
+    if (notePath) setSplit(tab.id, notePath)
+  }
+
+  const splitButton = (
+    <button
+      className={`icon-btn${tab.pdfSplitNote ? ' active' : ''}`}
+      aria-label={tab.pdfSplitNote ? 'Close split note' : 'Open note beside PDF'}
+      aria-pressed={!!tab.pdfSplitNote}
+      title={tab.pdfSplitNote ? 'Close split note' : 'Open note beside PDF'}
+      onClick={() => void toggleSplit()}
+    >
+      <Columns2 size={16} aria-hidden />
+    </button>
+  )
+
+  if (tab.pdfSplitNote && !isMobile) {
+    return (
+      <div className="pdf-split">
+        <div className="pdf-split-pane">
+          <PdfViewer path={path} initialPage={tab.pdfPage} toolbarExtra={splitButton} />
+        </div>
+        <div className="pdf-split-pane pdf-split-note">
+          <NotePane
+            key={`${vaultId}:${tab.pdfSplitNote}`}
+            path={tab.pdfSplitNote}
+            hideBreadcrumbs
+          />
+        </div>
+      </div>
+    )
+  }
+  return (
+    <PdfViewer
+      path={path}
+      initialPage={tab.pdfPage}
+      toolbarExtra={isMobile ? undefined : splitButton}
+    />
+  )
+}
+
+function EmptyWorkspace() {
+  const isMobile = useIsMobile()
+  // No hardware keyboard on phones, so offer tappable buttons instead of
+  // keyboard-shortcut hints.
+  if (isMobile) {
+    return (
+      <div className="empty-state">
+        <p>No note open</p>
+        <div className="empty-actions">
+          <button className="btn" onClick={() => useUi.getState().openPalette('notes')}>
+            Open a note
+          </button>
+          <button className="btn" onClick={() => void runCommand('note.new')}>
+            Create a note
+          </button>
+          <button className="btn" onClick={() => useUi.getState().openPalette('commands')}>
+            Command palette
+          </button>
+          <button className="btn" onClick={() => useUi.getState().setVaultSwitcherOpen(true)}>
+            Switch vault
+          </button>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="empty-state">
+      <p>No note open</p>
+      <div className="shortcut-hints">
+        <span className="kbd">{formatShortcut('Mod+O')}</span>
+        <span>Open a note</span>
+        <span className="kbd">{formatShortcut('Mod+Alt+N')}</span>
+        <span>Create a note</span>
+        <span className="kbd">{formatShortcut('Mod+K')}</span>
+        <span>Command palette</span>
+      </div>
+    </div>
+  )
+}
+
+function Workspace() {
+  const activeTab = useTabs((s) => s.tabs.find((t) => t.id === s.activeId))
+  const vaultId = useVault((s) => s.vault?.id)
+  const isMobile = useIsMobile()
+  const studyMode = useStudy((s) => s.studyMode)
+
+  // Study mode: exit on Escape.
+  useEffect(() => {
+    if (!studyMode) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') useStudy.getState().setStudyMode(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [studyMode])
+
+  // Editor state is cached by path; two vaults can share a path (e.g.
+  // Untitled.md), so clear the cache whenever the vault changes.
+  useEffect(() => {
+    clearEditorStateCache()
+  }, [vaultId])
+
+  // On small screens the sidebar is a drawer: start closed, and close it
+  // whenever a note is opened so the editor gets the full width.
+  useEffect(() => {
+    if (isMobile) useUi.getState().setSidebarOpen(false)
+  }, [isMobile])
+  useEffect(() => {
+    if (isMobile && activeTab) useUi.getState().setSidebarOpen(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab?.id, activeTab?.path])
+
+  return (
+    <div className={`app-shell${studyMode ? ' study-mode' : ''}`}>
+      {studyMode && (
+        <button
+          className="btn btn-small study-exit"
+          onClick={() => useStudy.getState().setStudyMode(false)}
+        >
+          <BookOpen size={14} aria-hidden /> Exit study mode <span className="kbd">Esc</span>
+        </button>
+      )}
+      <ActivityRail />
+      <Sidebar />
+      <div className="main-area">
+        <TabsBar />
+        {!activeTab && <EmptyWorkspace />}
+        {activeTab?.type === 'note' && activeTab.path && (
+          <NotePane key={`${vaultId}:${activeTab.path}`} path={activeTab.path} />
+        )}
+        {activeTab?.type === 'graph' && (
+          <Suspense
+            fallback={
+              <div className="empty-state" aria-busy="true">
+                <p>Loading graph…</p>
+              </div>
+            }
+          >
+            <GraphView />
+          </Suspense>
+        )}
+        {activeTab?.type === 'pdf' && activeTab.path && (
+          <Suspense
+            fallback={
+              <div className="empty-state" aria-busy="true">
+                <p>Loading PDF viewer…</p>
+              </div>
+            }
+          >
+            <PdfTab key={`${vaultId}:${activeTab.id}`} tab={activeTab} vaultId={vaultId} />
+          </Suspense>
+        )}
+        {activeTab?.type === 'calendar' && (
+          <Suspense
+            fallback={
+              <div className="empty-state" aria-busy="true">
+                <p>Loading calendar…</p>
+              </div>
+            }
+          >
+            <CalendarView />
+          </Suspense>
+        )}
+        <StatusBar />
+      </div>
+      <RightSidebar />
+    </div>
+  )
+}
+
+export default function App() {
+  const status = useVault((s) => s.status)
+  const settings = useSettings((s) => s.settings)
+
+  // Register first-party commands once.
+  useEffect(() => registerCommands(buildDefaultCommands()), [])
+
+  // Reopen the last vault on startup (restores the whole workspace).
+  useEffect(() => {
+    const lastVault = localStorage.getItem('neoma.lastVault')
+    if (!lastVault || useVault.getState().status !== 'closed') return
+    void listVaults().then((vaults) => {
+      const vault = vaults.find((v) => v.id === lastVault)
+      if (vault && useVault.getState().status === 'closed') void openVault(vault)
+    })
+  }, [])
+
+  // Appearance follows settings.
+  useEffect(() => applyAppearance(settings), [settings])
+
+  // Apply the configured default editor mode when the app starts.
+  useEffect(() => {
+    useUi.getState().setEditorMode(useSettings.getState().settings.defaultEditorMode)
+  }, [])
+
+  // Desktop (Tauri) native integration — a no-op in the browser build.
+  useEffect(() => {
+    let cleanup = () => {}
+    void initDesktopIntegration(() => useSettings.getState().settings.desktopCloseBehavior).then(
+      (fn) => {
+        cleanup = fn
+      },
+    )
+    return () => cleanup()
+  }, [])
+  // Keep the native close handler in sync with the setting.
+  useEffect(() => {
+    void syncCloseBehavior(settings.desktopCloseBehavior)
+  }, [settings.desktopCloseBehavior])
+
+  // iOS: the WKWebView scrolls/bounces the whole page. Lock it so drags only do
+  // something inside genuinely scrollable regions (or editable/selectable text)
+  // — the tab bar, note header and tab bar stay static.
+  useEffect(() => {
+    if (!isMobileApp()) return
+    const canScroll = (target: EventTarget | null): boolean => {
+      let el = target as HTMLElement | null
+      while (el && el !== document.body) {
+        if (
+          el.matches?.(
+            '.cm-content, .markdown-body, .preview-content, input, textarea, [contenteditable="true"]',
+          )
+        )
+          return true
+        const s = getComputedStyle(el)
+        if (/(auto|scroll)/.test(s.overflowY) && el.scrollHeight > el.clientHeight) return true
+        if (/(auto|scroll)/.test(s.overflowX) && el.scrollWidth > el.clientWidth) return true
+        el = el.parentElement
+      }
+      return false
+    }
+    let allow = false
+    const onStart = (e: TouchEvent) => {
+      allow = canScroll(e.target)
+    }
+    const onMove = (e: TouchEvent) => {
+      if (!allow) e.preventDefault()
+    }
+    document.addEventListener('touchstart', onStart, { passive: true })
+    document.addEventListener('touchmove', onMove, { passive: false })
+    return () => {
+      document.removeEventListener('touchstart', onStart)
+      document.removeEventListener('touchmove', onMove)
+    }
+  }, [])
+
+  // iOS: when the on-screen keyboard opens, WKWebView shifts the whole page up
+  // to reveal the caret. Size the app to the visible (visual viewport) height
+  // and cancel the document scroll, so the tab bar/header stay pinned and the
+  // editor's own scroller keeps the caret in view.
+  useEffect(() => {
+    if (!isMobileApp()) return
+    const vv = window.visualViewport
+    if (!vv) return
+    const root = document.documentElement
+    // When the keyboard opens, iOS scrolls the *visual* viewport down, so a
+    // top:0 element ends up above the visible area (the "everything moves up").
+    // Track the visual viewport's top + height so the shell stays glued to the
+    // visible region. A rAF loop runs while an input is focused (the keyboard
+    // animates over ~300ms) so tracking is per-frame — no lag/bounce.
+    const update = () => {
+      root.style.setProperty('--app-vh', `${vv.height}px`)
+      root.style.setProperty('--app-top', `${vv.offsetTop}px`)
+    }
+    let raf = 0
+    let running = false
+    const tick = () => {
+      update()
+      raf = requestAnimationFrame(tick)
+    }
+    const start = () => {
+      if (running) return
+      running = true
+      tick()
+    }
+    const stop = () => {
+      running = false
+      cancelAnimationFrame(raf)
+      // Let the close animation settle, then snap back to the full viewport.
+      setTimeout(update, 300)
+    }
+    const isEditable = (t: EventTarget | null) =>
+      (t as HTMLElement)?.matches?.('input, textarea, [contenteditable="true"], .cm-content')
+    const onFocusIn = (e: FocusEvent) => {
+      if (isEditable(e.target)) start()
+    }
+    const onFocusOut = () => stop()
+    update()
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      cancelAnimationFrame(raf)
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+      root.style.removeProperty('--app-vh')
+      root.style.removeProperty('--app-top')
+    }
+  }, [])
+
+  // Global shortcuts + never lose unsaved work on tab close.
+  useEffect(() => {
+    const onKeydown = (event: KeyboardEvent) => handleGlobalKeydown(event)
+    const onBeforeUnload = () => flushAllSaves()
+    window.addEventListener('keydown', onKeydown)
+    window.addEventListener('beforeunload', onBeforeUnload)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushAllSaves()
+    })
+    return () => {
+      window.removeEventListener('keydown', onKeydown)
+      window.removeEventListener('beforeunload', onBeforeUnload)
+    }
+  }, [])
+
+  const showWorkspace = status === 'ready' || status === 'permission' || status === 'opening'
+
+  return (
+    <>
+      {showWorkspace ? <Workspace /> : <WelcomeScreen />}
+      <CommandPalette />
+      <SettingsModal />
+      <HelpModal />
+      <VaultSwitcher />
+      <AttachmentPicker />
+      <CalendarRefPicker />
+      <SlashMenu />
+      <FlashcardReview />
+      <Tooltips />
+      <Dialogs />
+      <Toasts />
+    </>
+  )
+}

@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest an improvement or new capability
+title: '[Feature]: '
+labels: ['enhancement', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before proposing, skim the [roadmap](../../blob/main/ROADMAP.md) and the
+        non-goals (no telemetry, no mandatory cloud, no proprietary formats).
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow that is currently awkward or impossible.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like neoma to do? Sketches and examples welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Fit with neoma's principles
+      options:
+        - label: Works fully offline and requires no account or cloud service
+          required: true
+        - label: Keeps notes portable (no proprietary syntax in user files)
+          required: true

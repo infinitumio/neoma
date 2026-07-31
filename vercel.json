@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "NEOMA_BASE=/app/ npm run build && node scripts/build-site.mjs",
+  "outputDirectory": "dist-site",
+  "trailingSlash": false
+}

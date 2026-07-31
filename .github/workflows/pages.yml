@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Deploys the marketing site (website/) to the Pages root and a live build of
+# the web app to /app, so https://<user>.github.io/neoma/ is the site and
+# .../neoma/app/ runs the actual PWA. One-time setup: repo Settings → Pages →
+# Source: "GitHub Actions".
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - 'src/**'
+      - 'index.html'
+      - 'vite.config.ts'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two Pages deploys at once; let a newer one supersede.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the web app (served under /neoma/app/)
+        env:
+          NEOMA_BASE: /neoma/app/
+        run: npm run build
+
+      - name: Assemble the bundle (site at root, app at /app, policy pages)
+        run: node scripts/build-site.mjs
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-site
+      - id: deployment
+        uses: actions/deploy-pages@v4

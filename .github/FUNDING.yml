@@ -1,0 +1,7 @@
+# Shows a "Sponsor" button on the GitHub repo. Fill in each handle once you have
+# created the account, and remove the leading # to enable it.
+github: [infinitumio] # enable GitHub Sponsors for the infinitumio org first
+# ko_fi: neoma                 # create at https://ko-fi.com
+# open_collective: neoma       # create at https://opencollective.com (transparent, good for OSS)
+# patreon: neoma
+custom: ['https://neomadev.app/support.html']
