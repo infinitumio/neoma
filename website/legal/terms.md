@@ -1,17 +1,22 @@
 # Terms of Use
 
-_Last updated: 24 July 2026_
+_Last updated: 31 July 2026_
 
-Neoma is free, open-source software. By downloading or using it, you agree to
-these simple terms.
+By downloading or using Neoma, you agree to these simple terms.
+
+## Which edition you have
+
+Neoma comes in two editions. The **web app** is free and open-source under the
+AGPL-3.0-or-later. The **App Store, Mac App Store and desktop installer** builds are
+proprietary and governed by their End User License Agreement. The
+[License](license.html) page explains both, and why they differ.
 
 ## The software is provided "as is"
 
-Neoma is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
-To the fullest extent permitted by law, the software is provided **without
-warranty of any kind**, express or implied, including but not limited to the
-warranties of merchantability, fitness for a particular purpose and
-non-infringement. See the [License](license.html) for the authoritative terms.
+To the fullest extent permitted by law, Neoma is provided **without warranty of any
+kind**, express or implied, including but not limited to the warranties of
+merchantability, fitness for a particular purpose and non-infringement. See the
+[License](license.html) for the authoritative terms.
 
 ## Your responsibility for your data
 
@@ -32,14 +37,17 @@ To the maximum extent permitted by law, the authors and contributors of Neoma
 shall not be liable for any damages arising from the use of, or inability to
 use, the software.
 
+Nothing in these terms excludes or limits any guarantee, right or remedy that cannot
+lawfully be excluded, including under the Australian Consumer Law.
+
 ## Your rights under the license
 
-Nothing in these terms limits the rights granted to you by the AGPL-3.0 license,
-which lets you use, study, share and modify the software. Where these terms and
-the license conflict, the license governs.
+Nothing in these terms limits the rights granted to you by the license covering your
+edition. If you have the open-source edition, the AGPL-3.0 lets you use, study, share
+and modify the software. Where these terms and that license conflict, the license
+governs.
 
 ## Changes
 
 These terms may be updated; the "last updated" date above reflects the latest
-version, and the full history is public in the
-[repository](https://github.com/infinitumio/neoma).
+version.
