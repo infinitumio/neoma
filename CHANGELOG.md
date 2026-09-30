@@ -27,7 +27,7 @@ The version does not imply new native installers have been published.
 
 ### Verification
 
-- 229 unit tests and 34 browser end-to-end tests pass.
+- 232 unit tests and 34 browser end-to-end tests pass.
 - Typecheck, lint, formatting and production web build pass.
 - Native shell/store packaging remains maintained separately; this repository has no `src-tauri` build.
 

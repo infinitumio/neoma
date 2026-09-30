@@ -68,6 +68,6 @@ describe('desktop quit saves', () => {
   it('reads compiled native capabilities for store builds', async () => {
     mocks.invoke.mockResolvedValue(false)
     expect(await supportsDesktopUpdates()).toBe(false)
-    expect(mocks.invoke).toHaveBeenCalledWith('desktop_self_update_enabled')
+    expect(mocks.invoke).toHaveBeenCalledWith('desktop_updater_available')
   })
 })

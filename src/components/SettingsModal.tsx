@@ -1,4 +1,4 @@
-import { useDesktopUpdates } from '@/desktop/capabilities'
+import { useDesktopUpdates, useDesktopUpdaterAvailable } from '@/desktop/capabilities'
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
  * Settings dialog. Sections come from a small registry-style list so future
@@ -128,6 +128,7 @@ function Toggle({
  *  self-updates via the signed release feed, the web app reloads to the latest
  *  service worker, and iOS updates through the App Store. */
 function UpdatesRow() {
+  const updaterAvailable = useDesktopUpdaterAvailable()
   const desktopUpdates = useDesktopUpdates()
   const { updateAvailable, applyUpdate, checkForUpdate } = usePwa()
   const [checking, setChecking] = useState(false)
@@ -144,6 +145,20 @@ function UpdatesRow() {
   }
 
   if (isDesktopApp() && desktopUpdates === null) return null
+
+  if (isDesktopApp() && updaterAvailable === null) return null
+  if (isDesktopApp() && !updaterAvailable) {
+    return (
+      <Row
+        name="Updates"
+        desc="Install a newer package to update this installation. AppImage installations support in-app updates."
+      >
+        <a href="https://github.com/infinitumio/neoma/releases" target="_blank" rel="noreferrer">
+          Download updates
+        </a>
+      </Row>
+    )
+  }
 
   const desktop = isDesktopApp()
 
