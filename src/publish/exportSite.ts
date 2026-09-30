@@ -7,9 +7,9 @@
  * publishing feature; hosted publishing is a later, paid layer.
  */
 import { zip, strToU8 } from 'fflate'
-import { getAdapter, getLinkGraph } from '@/app/vaultStore'
+import { flushAllSaves, getAdapter, getLinkGraph } from '@/app/vaultStore'
 import { renderMarkdown } from '@/markdown/render'
-import { downloadBlob } from '@/storage/import-export'
+import { exportBlob } from '@/storage/import-export'
 import { stem } from '@/utils/paths'
 
 const isMarkdown = (path: string) => /\.md$/i.test(path)
@@ -89,6 +89,7 @@ let siteName = 'My notes'
 
 /** Build and download the vault as a static site ZIP. Returns note count. */
 export async function exportSiteZip(name = 'My notes'): Promise<number> {
+  await flushAllSaves()
   const adapter = getAdapter()
   if (!adapter) throw new Error('No vault is open')
   siteName = name
@@ -152,6 +153,6 @@ export async function exportSiteZip(name = 'My notes'): Promise<number> {
   const zipped = await new Promise<Uint8Array>((resolve, reject) =>
     zip(files, { level: 6 }, (err, data) => (err ? reject(err) : resolve(data))),
   )
-  downloadBlob(new Blob([zipped.slice().buffer], { type: 'application/zip' }), 'neoma-site.zip')
+  await exportBlob(new Blob([zipped.slice().buffer], { type: 'application/zip' }), 'neoma-site.zip')
   return notes.length
 }

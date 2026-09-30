@@ -117,7 +117,7 @@ export function StudyPanel() {
             <Layers size={14} aria-hidden /> Review flashcards
             {cardCount != null && cardCount > 0 && <span className="study-badge">{cardCount}</span>}
           </button>
-          {/* Immersive "study mode" hides all chrome — pointless on a phone,
+          {/* Immersive "study mode" hides all chrome, which is pointless on a phone
               where the chrome is already minimal. */}
           {!isMobile && (
             <button className="btn" onClick={() => useStudy.getState().toggleStudyMode()}>

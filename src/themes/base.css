@@ -204,6 +204,58 @@ a:hover {
   transition: border-color var(--transition-fast);
 }
 
+/* A native <select> draws its own dropdown chevron inside the padding box, so
+   the symmetric 0.65rem above leaves the longest option running underneath it —
+   "Whole vault" collided with the arrow in the graph toolbar. Reserve room on
+   the right for the control.
+
+   Note: WebKit ignores padding on a select with the native appearance, so this
+   is a no-op on iOS/Safari — harmless, because WebKit already reserves chevron
+   room in the control's intrinsic width. Do not rely on it for layout. */
+select.input {
+  padding-right: 1.9rem;
+}
+
+/* Sliders are left to the platform. These were previously given `.input`, which
+   wrapped a native control in a text-field box — border, background and padding
+   around WebKit's own slider. Dropping that lets iOS draw the real UISlider
+   (grey track, white knob with its shadow, tinted fill), and `accent-color`
+   tints it to the app's green. Do not add borders or padding here. */
+.slider {
+  appearance: auto;
+  accent-color: var(--color-accent-strong);
+  width: 100%;
+  max-width: 12rem;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* Native checkboxes and radios take the app's tint rather than the system blue,
+   while still being drawn by the platform. */
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--color-accent-strong);
+}
+
+/* iOS zooms the entire page in when a focused form control's text is smaller
+   than 16px, and never zooms back out — tapping the graph's "Find a note"
+   field left the whole app magnified with the toolbar cut off. The UI font is
+   14px, so every control tripped it. 16px on touch layouts is the only fix
+   that keeps pinch-zoom working; the alternative (maximum-scale=1 on the
+   viewport) disables zoom for everyone and is an accessibility failure.
+   Keyed on a coarse pointer rather than a width: the app ships to iPad too
+   (TARGETED_DEVICE_FAMILY "1,2"), where the viewport is wider than the phone
+   breakpoint but the zoom behaviour is identical. A width-bounded rule would
+   have left iPad broken. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 .input:focus-visible {
   border-color: var(--color-accent-muted);
   box-shadow: none;

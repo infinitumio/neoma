@@ -7,7 +7,7 @@
  * only adds native window/tray behaviour. See src-tauri/ and DESKTOP.md.
  */
 import { useUi } from '@/app/uiStore'
-import { flushAllSaves } from '@/app/vaultStore'
+import { flushAllSaves, reportSaveError } from '@/app/vaultStore'
 
 /** How closing the main window behaves in the desktop app. */
 export type CloseBehavior = 'quit' | 'tray' | 'ask'
@@ -20,13 +20,26 @@ export function isTauri(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 }
 
-/** True in the native mobile app (iOS/Android). */
+/**
+ * True in the native mobile app (iOS/iPadOS/Android).
+ *
+ * iPadOS 13+ reports a *desktop* user agent inside WKWebView — verified on an
+ * iPad Pro 11 simulator: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+ * AppleWebKit/605.1.15`, with no "iPad" anywhere. Matching the UA alone
+ * therefore missed every iPad, and because `isDesktopApp()` is defined as "Tauri
+ * and not mobile", an iPad claimed to *be* a desktop. That handed it the
+ * desktop-only folder picker (which returns FolderPickerNotImplemented on
+ * mobile), the `<a download>` export path (which wry cancels), and none of the
+ * touch scroll-lock or keyboard viewport handling.
+ *
+ * A Mac reports no touch points; iPadOS reports 5. Requiring an Apple desktop UA
+ * *and* touch keeps Windows/Linux touchscreen laptops on the desktop layout.
+ */
 export function isMobileApp(): boolean {
-  return (
-    isTauri() &&
-    typeof navigator !== 'undefined' &&
-    /iphone|ipad|ipod|android/i.test(navigator.userAgent)
-  )
+  if (!isTauri() || typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent
+  if (/iphone|ipad|ipod|android/i.test(ua)) return true
+  return /Macintosh|Mac OS X/.test(ua) && (navigator.maxTouchPoints ?? 0) > 1
 }
 
 /**
@@ -84,23 +97,39 @@ export async function initDesktopIntegration(
   await syncCloseBehavior(getBehavior())
   try {
     const { listen } = await import('@tauri-apps/api/event')
-    const unlisten = await listen('neoma://close-requested', () => {
-      useUi.getState().askConfirm({
-        title: 'Quit neoma?',
-        message: 'Quit completely, or keep neoma running in the tray?',
-        confirmLabel: 'Quit',
-        onConfirm: async () => {
-          flushAllSaves()
-          try {
-            const { invoke } = await import('@tauri-apps/api/core')
-            await invoke('quit_app')
-          } catch {
-            /* non-fatal */
-          }
-        },
+    let quitting = false
+    const saveAndQuit = async () => {
+      if (quitting) return
+      quitting = true
+      try {
+        await flushAllSaves()
+        const { invoke } = await import('@tauri-apps/api/core')
+        await invoke('quit_app')
+      } catch (error) {
+        reportSaveError(error)
+      } finally {
+        quitting = false
+      }
+    }
+    const unlistenSave = await listen('neoma://save-and-quit', () => void saveAndQuit())
+    let unlisten: () => void
+    try {
+      unlisten = await listen('neoma://close-requested', () => {
+        useUi.getState().askConfirm({
+          title: 'Quit neoma?',
+          message: 'Quit completely, or keep neoma running in the tray?',
+          confirmLabel: 'Quit',
+          onConfirm: saveAndQuit,
+        })
       })
-    })
-    return () => unlisten()
+    } catch (error) {
+      unlistenSave()
+      throw error
+    }
+    return () => {
+      unlisten()
+      unlistenSave()
+    }
   } catch {
     return () => {}
   }

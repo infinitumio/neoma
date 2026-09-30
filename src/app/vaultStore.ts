@@ -5,6 +5,7 @@
  * here; components never touch IndexedDB or file handles directly.
  */
 import { create } from 'zustand'
+import { useUi } from './uiStore'
 import type { FileEntry, NoteMeta, SaveState, StorageAdapter, TrashEntry, Vault } from '@/types'
 import { createAdapter, touchVault } from '@/storage/VaultManager'
 import { LocalFolderAdapter } from '@/storage/local-folder/LocalFolderAdapter'
@@ -77,6 +78,7 @@ let search: SearchClient | null = null
 const linkGraph = new LinkGraph()
 let openToken = 0
 const savers = new Map<string, ReturnType<typeof debounce<[string]>>>()
+const saving = new Map<string, Promise<void>>()
 
 export function getAdapter(): StorageAdapter | null {
   return adapter
@@ -207,6 +209,7 @@ function removeEntries(predicate: (path: string) => boolean): void {
 /* ------------------------------------------------------------------ */
 
 export async function openVault(vault: Vault): Promise<void> {
+  await flushAllSaves()
   const token = ++openToken
   closeVaultInternals()
   setState({
@@ -293,7 +296,7 @@ async function loadVaultContents(token: number): Promise<void> {
 }
 
 function closeVaultInternals(): void {
-  for (const saver of savers.values()) saver.flush()
+  for (const saver of savers.values()) saver.cancel()
   savers.clear()
   adapter?.close()
   adapter = null
@@ -302,7 +305,8 @@ function closeVaultInternals(): void {
   linkGraph.clear()
 }
 
-export function closeVault(): void {
+export async function closeVault(): Promise<void> {
+  await flushAllSaves()
   openToken++
   localStorage.removeItem('neoma.lastVault')
   closeVaultInternals()
@@ -383,7 +387,7 @@ export function updateNoteContent(path: string, content: string): void {
   let saver = savers.get(path)
   if (!saver) {
     saver = debounce(
-      (p: string) => void performSave(p),
+      (p: string) => void saveNoteNow(p).catch(reportSaveError),
       useSettings.getState().settings.autosaveDelayMs,
     )
     savers.set(path, saver)
@@ -391,13 +395,30 @@ export function updateNoteContent(path: string, content: string): void {
   saver(path)
 }
 
-export async function saveNoteNow(path: string): Promise<void> {
-  savers.get(path)?.cancel()
-  await performSave(path)
+export function reportSaveError(error: unknown): void {
+  useUi.getState().toast(error instanceof Error ? error.message : 'Could not save notes', 'error')
 }
 
-export function flushAllSaves(): void {
-  for (const saver of savers.values()) saver.flush()
+/** Serialize writes per note, including edits made while a write is in flight. */
+export function saveNoteNow(path: string): Promise<void> {
+  savers.get(path)?.cancel()
+  const pending = saving.get(path)
+  if (pending) return pending.then(() => saveNoteNow(path))
+  const task = (async () => {
+    do {
+      await performSave(path)
+    } while (useVault.getState().notes.get(path)?.saveState === 'unsaved')
+  })().finally(() => {
+    saving.delete(path)
+  })
+  saving.set(path, task)
+  return task
+}
+
+/** Await durable writes; callers must not export or switch vaults before this resolves. */
+export async function flushAllSaves(): Promise<void> {
+  const paths = new Set([...saving.keys(), ...useVault.getState().notes.keys()])
+  await Promise.all([...paths].map(saveNoteNow))
 }
 
 async function performSave(path: string): Promise<void> {
@@ -419,7 +440,11 @@ async function performSave(path: string): Promise<void> {
     }
     await adapter.writeText(path, note.content)
     const statEntry = await adapter.stat(path)
-    setNote(path, { saveState: 'saved', diskModifiedAt: statEntry?.modifiedAt ?? Date.now() })
+    setNote(path, {
+      saveState:
+        useVault.getState().notes.get(path)?.content === note.content ? 'saved' : 'unsaved',
+      diskModifiedAt: statEntry?.modifiedAt ?? Date.now(),
+    })
     updateEntry(
       statEntry ?? { path, kind: 'file', size: note.content.length, modifiedAt: Date.now() },
     )
@@ -437,7 +462,7 @@ async function performSave(path: string): Promise<void> {
     if (err instanceof ConflictError) {
       setNote(path, { saveState: 'unsaved' })
       setState({ conflict: { path, ourContent: note.content, diskContent: err.diskContent } })
-      return
+      throw err
     }
     setNote(path, { saveState: 'error' })
     if (err instanceof PermissionError) setState({ status: 'permission' })
@@ -460,7 +485,7 @@ export async function resolveConflict(choice: 'keep-mine' | 'use-disk'): Promise
       saveState: 'unsaved',
       diskModifiedAt: statEntry?.modifiedAt ?? Date.now(),
     })
-    await performSave(conflict.path)
+    await saveNoteNow(conflict.path)
   }
 }
 
@@ -639,6 +664,7 @@ export async function nestUnder(path: string, targetNote: string): Promise<void>
 
 export async function deleteNote(path: string): Promise<void> {
   if (!adapter || !search) return
+  await saveNoteNow(path)
   savers.get(path)?.cancel()
   savers.delete(path)
   await adapter.deleteFile(path)
@@ -654,6 +680,7 @@ export async function deleteNote(path: string): Promise<void> {
 
 export async function deleteFolder(path: string): Promise<void> {
   if (!adapter || !search) return
+  await flushAllSaves()
   const affected = [...useVault.getState().entries.keys()].filter(
     (p) => p !== path && isWithin(path, p),
   )
@@ -670,7 +697,7 @@ export async function deleteFolder(path: string): Promise<void> {
 
 async function moveFileInternal(oldPath: string, newPath: string): Promise<void> {
   if (!adapter || !search) return
-  await saveNoteNow(oldPath).catch(() => {})
+  await saveNoteNow(oldPath)
   await adapter.rename(oldPath, newPath)
   removeEntries((p) => p === oldPath)
   const statEntry = await adapter.stat(newPath)
@@ -779,6 +806,7 @@ export async function moveNote(path: string, targetFolder: string): Promise<void
 
 export async function duplicateNote(path: string): Promise<string | null> {
   if (!adapter) return null
+  await saveNoteNow(path)
   const content = await adapter.readText(path)
   return createNote(dirname(path), `${stem(path)} copy`, content)
 }
@@ -787,7 +815,7 @@ export async function renameFolder(oldPath: string, newName: string): Promise<vo
   if (!adapter || !search) return
   const newPath = joinPath(dirname(oldPath), sanitizeName(newName))
   if (newPath === oldPath) return
-  flushAllSaves()
+  await flushAllSaves()
   await adapter.renameFolder(oldPath, newPath)
   // Simplest correct behaviour: re-list and re-index affected notes.
   const affected = [...useVault.getState().entries.keys()].filter((p) => isWithin(oldPath, p))

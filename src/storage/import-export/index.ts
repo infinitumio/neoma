@@ -7,6 +7,8 @@
 import { zip, unzip, strToU8, strFromU8, type Zippable } from 'fflate'
 import type { StorageAdapter } from '@/types'
 import { isMarkdown, normalizePath, stem } from '@/utils/paths'
+import { requestFileShare } from '@/storage/preparedShare'
+import { isMobileApp, isDesktopApp } from '@/desktop/tauri'
 
 function zipAsync(data: Zippable): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
@@ -150,6 +152,72 @@ async function looksLikeZip(file: File): Promise<boolean> {
   return head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04
 }
 
+/**
+ * True where the app can actually hand a file to the user.
+ *
+ * `<a download>` is the only save mechanism the web app has, and inside a Tauri
+ * WKWebView it does nothing: wry's navigation delegate cancels any navigation
+ * with `shouldPerformDownload` unless the host registered a download handler,
+ * and Neoma registers none. So on the phone app every export silently no-opped
+ * — a visible control that does nothing, which is an App Store 2.1 rejection.
+ *
+ * The phone route is the native share sheet instead, which is also the correct
+ * iOS idiom for "send this file somewhere". Where even that is unavailable the
+ * caller must hide the control rather than offer a dead one.
+ */
+export function canExportFiles(): boolean {
+  if (!isMobileApp()) return true
+  return (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.canShare === 'function' &&
+    typeof navigator.share === 'function'
+  )
+}
+
+/** Raised when the user dismisses the share sheet. Callers stay silent on it. */
+export class ExportCancelled extends Error {
+  constructor() {
+    super('Export cancelled')
+    this.name = 'ExportCancelled'
+  }
+}
+
+/**
+ * Hand a file to the user by whichever route this platform supports.
+ *
+ * On iOS, present the prepared file first. The user's Share or save tap
+ * supplies fresh activation even after a slow ZIP build.
+ */
+export async function exportBlob(blob: Blob, filename: string): Promise<void> {
+  // The desktop app is a WKWebView/WebView2 too, so `<a download>` is cancelled
+  // there for the same reason as on the phone — exports were silently doing
+  // nothing on macOS as well. Use the native save panel and write the bytes
+  // ourselves. `dialog:default` already grants allow-save and the capability
+  // set allows fs writes under $HOME.
+  if (isDesktopApp()) {
+    const { save } = await import('@tauri-apps/plugin-dialog')
+    const path = await save({ defaultPath: filename })
+    if (!path) throw new ExportCancelled()
+    const { writeFile } = await import('@tauri-apps/plugin-fs')
+    await writeFile(path, new Uint8Array(await blob.arrayBuffer()))
+    return
+  }
+  if (!isMobileApp()) {
+    downloadBlob(blob, filename)
+    return
+  }
+  const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' })
+  if (!navigator.canShare?.({ files: [file] })) {
+    throw new Error('This device cannot share files')
+  }
+  try {
+    await requestFileShare(file)
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') throw new ExportCancelled()
+    throw err
+  }
+}
+
 /** Trigger a browser download for a Blob. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
@@ -162,12 +230,12 @@ export function downloadBlob(blob: Blob, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 10_000)
 }
 
-export function exportNoteMarkdown(path: string, content: string): void {
-  downloadBlob(new Blob([content], { type: 'text/markdown;charset=utf-8' }), `${stem(path)}.md`)
+export async function exportNoteMarkdown(path: string, content: string): Promise<void> {
+  await exportBlob(new Blob([content], { type: 'text/markdown;charset=utf-8' }), `${stem(path)}.md`)
 }
 
 /** Wrap rendered note HTML in a small, self-contained document. */
-export function exportNoteHtml(path: string, renderedHtml: string): void {
+export async function exportNoteHtml(path: string, renderedHtml: string): Promise<void> {
   const title = stem(path)
   const doc = `<!doctype html>
 <html lang="en">
@@ -194,5 +262,5 @@ ${renderedHtml}
 </body>
 </html>
 `
-  downloadBlob(new Blob([doc], { type: 'text/html;charset=utf-8' }), `${title}.html`)
+  await exportBlob(new Blob([doc], { type: 'text/html;charset=utf-8' }), `${title}.html`)
 }

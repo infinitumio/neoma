@@ -13,8 +13,33 @@ import {
   verifyHandlePermission,
 } from './local-folder/LocalFolderAdapter'
 import { TauriFsAdapter } from './tauri-fs/TauriFsAdapter'
-import { isTauri } from '@/desktop/tauri'
+import { isDesktopApp } from '@/desktop/tauri'
+import { createBookmark } from '@/desktop/bookmarks'
 import { generateId } from '@/utils/misc'
+
+/**
+ * True where a real folder on disk can back a vault. Two mechanisms qualify:
+ * Chromium browsers (File System Access API) and the desktop app (Tauri's
+ * native picker).
+ *
+ * The phone app has neither. WKWebView ships no File System Access API, and
+ * tauri-plugin-dialog's folder picker is compiled desktop-only — on mobile it
+ * returns `FolderPickerNotImplemented` rather than opening anything. Callers
+ * must gate the "open a folder" affordance on this, because an action that is
+ * offered and then fails is an App Store review rejection (Guideline 2.1).
+ */
+export function supportsFolderVaults(): boolean {
+  return supportsLocalFolders() || isDesktopApp()
+}
+
+/**
+ * Open a folder as a vault using whichever picker this platform has. Returns
+ * null if the user cancels. Throws if the platform has no picker at all —
+ * check `supportsFolderVaults()` before offering this.
+ */
+export async function openFolderVault(): Promise<Vault | null> {
+  return isDesktopApp() ? openTauriFolderVault() : openLocalFolderVault()
+}
 
 export async function listVaults(): Promise<Vault[]> {
   const vaults = await db.vaults.toArray()
@@ -83,7 +108,7 @@ export async function openLocalFolderVault(): Promise<Vault | null> {
  * Returns null if the user cancels. Desktop only.
  */
 export async function openTauriFolderVault(): Promise<Vault | null> {
-  if (!isTauri()) throw new Error('Native folders are only available in the desktop app')
+  if (!isDesktopApp()) throw new Error('Native folders are only available in the desktop app')
   const { open } = await import('@tauri-apps/plugin-dialog')
   const selected = await open({
     directory: true,
@@ -93,11 +118,23 @@ export async function openTauriFolderVault(): Promise<Vault | null> {
   if (!selected || typeof selected !== 'string') return null
   const rootPath = selected.replace(/\/+$/, '')
 
-  // Re-use the existing vault if this folder was opened before.
+  // Mint the bookmark now, while the picker's grant is still live — it cannot be
+  // created later from a bare path. Null off the Mac App Store build, which is
+  // fine: only the sandbox needs it. See src/desktop/bookmarks.ts.
+  const rootBookmark = (await createBookmark(rootPath)) ?? undefined
+
+  // Re-use the existing vault if this folder was opened before, refreshing its
+  // bookmark — a re-pick is the natural moment to replace a stale one.
   const existing = (await db.vaults.toArray()).find(
     (v) => v.kind === 'tauri-fs' && v.rootPath === rootPath,
   )
-  if (existing) return existing
+  if (existing) {
+    if (rootBookmark && rootBookmark !== existing.rootBookmark) {
+      await db.vaults.update(existing.id, { rootBookmark })
+      return { ...existing, rootBookmark }
+    }
+    return existing
+  }
 
   const vault: Vault = {
     id: generateId(),
@@ -106,6 +143,7 @@ export async function openTauriFolderVault(): Promise<Vault | null> {
     createdAt: Date.now(),
     lastOpenedAt: Date.now(),
     rootPath,
+    rootBookmark,
   }
   await db.vaults.add(vault)
   return vault

@@ -30,7 +30,7 @@ import {
   X,
 } from 'lucide-react'
 import { getAdapter } from '@/app/vaultStore'
-import { downloadBlob } from '@/storage/import-export'
+import { exportBlob, canExportFiles } from '@/storage/import-export'
 import { basename } from '@/utils/paths'
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
@@ -383,7 +383,8 @@ export function PdfViewer({ path, initialPage, toolbarExtra, inline }: PdfViewer
             <button
               className="icon-btn"
               aria-label="Download PDF"
-              onClick={() => blobRef.current && downloadBlob(blobRef.current, basename(path))}
+              hidden={!canExportFiles()}
+              onClick={() => blobRef.current && void exportBlob(blobRef.current, basename(path))}
             >
               <Download size={16} aria-hidden />
             </button>
@@ -474,12 +475,16 @@ export function PdfViewer({ path, initialPage, toolbarExtra, inline }: PdfViewer
           {error && (
             <div className="empty-state" role="alert">
               <p>{error}</p>
-              <button
-                className="btn"
-                onClick={() => blobRef.current && downloadBlob(blobRef.current, basename(path))}
-              >
-                Download instead
-              </button>
+              {canExportFiles() && (
+                <button
+                  className="btn"
+                  onClick={() =>
+                    blobRef.current && void exportBlob(blobRef.current, basename(path))
+                  }
+                >
+                  Download instead
+                </button>
+              )}
             </div>
           )}
           {!doc && !error && (

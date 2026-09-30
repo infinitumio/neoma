@@ -23,6 +23,7 @@ import { REPOSITORY_URL, WEBSITE_URL } from '@/app/about'
 import { listPanels } from '@/app/registries'
 import { registerBuiltinPanels } from '@/app/registerBuiltins'
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import { useDialogFocus } from '@/hooks/useDialogFocus'
 import { useSheetDrag } from '@/hooks/useSheetDrag'
 
 registerBuiltinPanels()
@@ -41,6 +42,7 @@ function MobileTabBar() {
   const ui = useUi()
   const openSpecial = useTabs((s) => s.openSpecial)
   const [moreOpen, setMoreOpen] = useState(false)
+  const activeTab = useTabs((state) => state.tabs.find((tab) => tab.id === state.activeId))
   const panels = listPanels()
   const panel = (id: string) => panels.find((p) => p.id === id)
   const drag = useSheetDrag<HTMLDivElement>({
@@ -48,6 +50,8 @@ function MobileTabBar() {
     direction: 'down',
     enabled: moreOpen,
   })
+
+  useDialogFocus(drag.ref, moreOpen, () => setMoreOpen(false))
 
   const openPanel = (id: string) => {
     ui.setSidePanel(id as Parameters<typeof ui.setSidePanel>[0])
@@ -64,7 +68,11 @@ function MobileTabBar() {
           const p = panel(id)
           if (!p) return null
           const Icon = p.icon
-          const active = ui.sidePanel === id && ui.sidebarOpen
+          const active =
+            !moreOpen &&
+            (ui.sidebarOpen
+              ? ui.sidePanel === id
+              : id === 'files' && (activeTab?.type === 'note' || activeTab?.type === 'pdf'))
           return (
             <button
               key={id}
@@ -72,9 +80,14 @@ function MobileTabBar() {
               aria-label={p.label}
               title={p.label}
               aria-pressed={active}
-              onClick={() => ui.setSidePanel(id)}
+              onClick={() => {
+                ui.setSidePanel(id)
+                ui.setSidebarOpen(true)
+                setMoreOpen(false)
+              }}
             >
               <Icon size={22} aria-hidden />
+              <span>{p.label}</span>
             </button>
           )
         })}
@@ -86,6 +99,7 @@ function MobileTabBar() {
           onClick={() => setMoreOpen((v) => !v)}
         >
           <MoreHorizontal size={22} aria-hidden />
+          <span>More</span>
         </button>
       </nav>
 
@@ -96,7 +110,13 @@ function MobileTabBar() {
             aria-label="Close menu"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="more-sheet" role="dialog" aria-label="More" ref={drag.ref}>
+          <div
+            className="more-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="More"
+            ref={drag.ref}
+          >
             <div
               className="more-sheet-grabber"
               onTouchStart={drag.onTouchStart}

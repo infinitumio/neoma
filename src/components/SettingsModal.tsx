@@ -1,9 +1,11 @@
+import { useDesktopUpdates } from '@/desktop/capabilities'
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
  * Settings dialog. Sections come from a small registry-style list so future
  * plugins can contribute panes. Everything is stored locally.
  */
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 import { Modal } from './Modal'
 import { useUi } from '@/app/uiStore'
 import { useVault } from '@/app/vaultStore'
@@ -15,13 +17,12 @@ import type { ApplicationSettings } from '@/types'
 import { BUILTIN_TEMPLATES } from '@/templates/builtins'
 import { listCommands, runCommand } from '@/commands/registry'
 import { effectiveBinding } from '@/commands/shortcuts'
-import { downloadBlob } from '@/storage/import-export'
+import { exportBlob, canExportFiles, ExportCancelled } from '@/storage/import-export'
 import {
   APP_NAME,
   APP_TAGLINE,
   APP_VERSION,
   CREATOR,
-  REPOSITORY_URL,
   WEBSITE_URL,
   PRIVACY_URL,
   TERMS_URL,
@@ -127,19 +128,22 @@ function Toggle({
  *  self-updates via the signed release feed, the web app reloads to the latest
  *  service worker, and iOS updates through the App Store. */
 function UpdatesRow() {
+  const desktopUpdates = useDesktopUpdates()
   const { updateAvailable, applyUpdate, checkForUpdate } = usePwa()
   const [checking, setChecking] = useState(false)
   const [checked, setChecked] = useState(false)
   const [pending, setPending] = useState<DesktopUpdate | null>(null)
   const [installing, setInstalling] = useState(false)
 
-  if (isMobileApp()) {
+  if (isMobileApp() || (isDesktopApp() && desktopUpdates === false)) {
     return (
-      <Row name="Updates" desc="On iOS, Neoma updates through the App Store.">
+      <Row name="Updates" desc="This edition updates through the App Store.">
         <span className="text-small text-faint">Managed by the App Store</span>
       </Row>
     )
   }
+
+  if (isDesktopApp() && desktopUpdates === null) return null
 
   const desktop = isDesktopApp()
 
@@ -319,7 +323,7 @@ const SECTIONS = [
   'Backups',
   'Keyboard shortcuts',
   'Privacy',
-  'Open-source licences',
+  'Acknowledgements',
   'About',
 ] as const
 
@@ -330,11 +334,17 @@ export function SettingsModal() {
   const setOpen = useUi((s) => s.setSettingsOpen)
   const toast = useUi((s) => s.toast)
   const settings = useSettings((s) => s.settings)
+  const desktopUpdates = useDesktopUpdates()
   const update = useSettings((s) => s.update)
   const [section, setSection] = useState<Section>('Appearance')
   const importInput = useRef<HTMLInputElement>(null)
   const { canInstall, promptInstall } = useInstallPrompt()
   const mobile = isMobileApp()
+  const compact = useIsMobile()
+  const [sectionOpen, setSectionOpen] = useState(false)
+  useEffect(() => {
+    if (!open) setSectionOpen(false)
+  }, [open])
   // Sections that don't apply to the phone app (no hardware keyboard, no
   // desktop window).
   const hidden = new Set<Section>()
@@ -348,15 +358,30 @@ export function SettingsModal() {
 
   return (
     <Modal title="Settings" onClose={() => setOpen(false)} wide initialFocus={false}>
-      <div className="settings-layout">
-        <nav className="settings-nav" aria-label="Settings sections">
-          {SECTIONS.filter((name) => !hidden.has(name)).map((name) => (
-            <button key={name} aria-current={section === name} onClick={() => setSection(name)}>
-              {name}
+      <div className={`settings-layout${compact ? ' settings-compact' : ''}`}>
+        {(!compact || !sectionOpen) && (
+          <nav className="settings-nav" aria-label="Settings sections">
+            {SECTIONS.filter((name) => !hidden.has(name)).map((name) => (
+              <button
+                key={name}
+                aria-current={section === name}
+                onClick={() => {
+                  setSection(name)
+                  setSectionOpen(true)
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </nav>
+        )}
+        <div className="settings-content" hidden={compact && !sectionOpen}>
+          {compact && (
+            <button className="btn settings-back" onClick={() => setSectionOpen(false)}>
+              ‹ Settings
             </button>
-          ))}
-        </nav>
-        <div className="settings-content">
+          )}
+          {compact && <h2 className="settings-section-title">{section}</h2>}
           {section === 'Appearance' && (
             <>
               <Row name="Theme" desc="Neoma Dark is the default; both use the same design tokens">
@@ -372,7 +397,7 @@ export function SettingsModal() {
               </Row>
               <Row name="Editor font size" desc={`${settings.editorFontSize}px`}>
                 <input
-                  className="input"
+                  className="slider"
                   type="range"
                   min={13}
                   max={22}
@@ -386,7 +411,7 @@ export function SettingsModal() {
                 desc={`Maximum editor line width: ${settings.editorLineWidth}rem`}
               >
                 <input
-                  className="input"
+                  className="slider"
                   type="range"
                   min={32}
                   max={64}
@@ -429,6 +454,16 @@ export function SettingsModal() {
                   checked={settings.showToastIcons}
                   onChange={(v) => set('showToastIcons', v)}
                   label="Notification close button"
+                />
+              </Row>
+              <Row
+                name="Load remote content"
+                desc="Off by default. A remote image or video embed tells whoever controls that address when you opened the note, and from where. The provider may receive your IP address and apply its own privacy policy."
+              >
+                <Toggle
+                  checked={settings.allowRemoteContent}
+                  onChange={(v) => set('allowRemoteContent', v)}
+                  label="Load remote content"
                 />
               </Row>
             </>
@@ -625,34 +660,41 @@ export function SettingsModal() {
                   <option value="ask">Ask me each time</option>
                 </select>
               </Row>
-              <Row name="Launch on startup" desc="Open Neoma automatically when you log in">
-                <Toggle
-                  checked={settings.launchOnStartup}
-                  onChange={(v) => {
-                    set('launchOnStartup', v)
-                    void setLaunchOnStartup(v)
-                  }}
-                  label="Launch on startup"
-                />
-              </Row>
+              {desktopUpdates && (
+                <Row name="Launch on startup" desc="Open Neoma automatically when you log in">
+                  <Toggle
+                    checked={settings.launchOnStartup}
+                    onChange={(v) => {
+                      set('launchOnStartup', v)
+                      void setLaunchOnStartup(v)
+                    }}
+                    label="Launch on startup"
+                  />
+                </Row>
+              )}
             </>
           )}
 
           {section === 'Backups' && (
             <>
-              <Row name="Export settings" desc="Download all settings as JSON">
-                <button
-                  className="btn"
-                  onClick={() => {
-                    downloadBlob(
-                      new Blob([exportSettingsJson()], { type: 'application/json' }),
-                      'neoma-settings.json',
-                    )
-                  }}
-                >
-                  Export settings
-                </button>
-              </Row>
+              {canExportFiles() && (
+                <Row name="Export settings" desc="Download all settings as JSON">
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      void exportBlob(
+                        new Blob([exportSettingsJson()], { type: 'application/json' }),
+                        'neoma-settings.json',
+                      ).catch((err) => {
+                        if (err instanceof ExportCancelled) return
+                        toast(err instanceof Error ? err.message : 'Export failed', 'error')
+                      })
+                    }}
+                  >
+                    Export settings
+                  </button>
+                </Row>
+              )}
               <Row name="Import settings" desc="Restore settings from a JSON export">
                 <button className="btn" onClick={() => importInput.current?.click()}>
                   Import settings
@@ -690,7 +732,7 @@ export function SettingsModal() {
               />
               <p className="text-small text-secondary" style={{ paddingTop: 'var(--space-3)' }}>
                 To back up your notes, use <strong>Export vault as ZIP</strong> from the file panel
-                menu. Browser vaults live in this browser's storage — export regularly, or use a
+                menu. Browser vaults live in this browser's storage, so export regularly, or use a
                 local-folder vault for file-level backups and Git.
               </p>
             </>
@@ -745,7 +787,7 @@ export function SettingsModal() {
               >
                 <li>No accounts, no cloud services, no remote databases</li>
                 <li>No telemetry, analytics, advertisements or tracking pixels</li>
-                <li>No external API calls and no hidden network requests</li>
+                <li>Remote images and videos are blocked unless you enable them</li>
                 <li>All fonts, icons and scripts are bundled — nothing loads from CDNs</li>
                 <li>Offline use is a fully supported, normal state</li>
               </ul>
@@ -763,12 +805,13 @@ export function SettingsModal() {
             </>
           )}
 
-          {section === 'Open-source licences' && (
+          {section === 'Acknowledgements' && (
             <div className="text-small text-secondary">
-              <p>
-                {APP_NAME} is free software, licensed under <strong>AGPL-3.0-or-later</strong>. It
-                is built on these open-source projects:
-              </p>
+              {/* Attribution, not positioning. The MIT/ISC/Apache-2.0 licences
+                  below require their notices to travel with a distributed
+                  build, so this list must stay even though the App Store build
+                  is shared by both editions; this repository is AGPL-3.0-or-later. */}
+              <p>{APP_NAME} is built on these projects, with thanks to their authors:</p>
               <ul
                 style={{
                   paddingLeft: '1.2rem',
@@ -782,6 +825,7 @@ export function SettingsModal() {
                 <li>unified / remark / rehype (MIT)</li>
                 <li>KaTeX (MIT)</li>
                 <li>Dexie.js (Apache-2.0)</li>
+                <li>pdf.js (Apache-2.0)</li>
                 <li>MiniSearch (MIT)</li>
                 <li>fflate (MIT)</li>
                 <li>Lucide icons (ISC)</li>
@@ -792,17 +836,9 @@ export function SettingsModal() {
               <p style={{ marginTop: 'var(--space-2)' }}>
                 See the{' '}
                 <a href={LICENSE_URL} target="_blank" rel="noopener noreferrer">
-                  License summary
+                  License page
                 </a>{' '}
-                on neomadev.app, or the repository's full{' '}
-                <a
-                  href={`${REPOSITORY_URL}/blob/main/LICENSE`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  LICENSE
-                </a>{' '}
-                file. Full licence texts for bundled dependencies ship with the source.
+                on neomadev.app for the full licence texts and complete third-party attributions.
               </p>
             </div>
           )}
@@ -814,15 +850,11 @@ export function SettingsModal() {
               </h3>
               <p className="text-secondary">{APP_TAGLINE}</p>
               <p className="text-small text-secondary" style={{ marginTop: 'var(--space-3)' }}>
-                A lightweight, open-source research journal and linked-note application. Created by{' '}
-                {CREATOR} and community-driven.
+                A lightweight research journal and linked-note application. Created by {CREATOR}.
               </p>
               <p style={{ marginTop: 'var(--space-3)', display: 'flex', gap: 'var(--space-2)' }}>
                 <a className="btn" href={WEBSITE_URL} target="_blank" rel="noopener noreferrer">
                   Visit neomadev.app
-                </a>
-                <a className="btn" href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer">
-                  Source code
                 </a>
               </p>
               <p

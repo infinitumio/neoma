@@ -38,6 +38,7 @@ export function Sidebar() {
         className={`sidebar${open ? ' open' : ''}`}
         aria-label="Sidebar"
         aria-hidden={!open}
+        hidden={!open}
         // Desktop collapses by unmounting from layout (display:none). On mobile
         // it stays mounted off-screen so the `.open` transform can slide it in.
         style={!isMobile && !open ? { display: 'none' } : undefined}

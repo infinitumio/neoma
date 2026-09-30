@@ -4,6 +4,7 @@
  * and the (optional) install prompt. Uses vite-plugin-pwa's virtual module.
  */
 import { useEffect, useState } from 'react'
+import { isTauri } from '@/desktop/tauri'
 import { registerSW } from 'virtual:pwa-register'
 
 let updateSWCallback: ((reload?: boolean) => Promise<void>) | null = null
@@ -12,7 +13,7 @@ let updateAvailableFlag = false
 let registered = false
 
 function ensureRegistered(): void {
-  if (registered || typeof window === 'undefined') return
+  if (registered || typeof window === 'undefined' || isTauri()) return
   registered = true
   try {
     updateSWCallback = registerSW({

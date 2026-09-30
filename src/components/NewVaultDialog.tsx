@@ -75,13 +75,12 @@ export function NewVaultDialog({ onClose }: NewVaultDialogProps) {
         </>
       }
     >
-      {!mobile && (
+      {
         <p className="text-secondary" style={{ marginBottom: 'var(--space-4)' }}>
-          A <strong>vault</strong> is the folder where Neoma keeps a collection of related pages,
-          attachments and settings. You might keep separate vaults for your degree, work, research,
-          or personal notes. Everything stays on this device.
+          A <strong>vault</strong> is a collection of notes and attachments stored on this device.
+          Export a backup to keep a copy outside Neoma.
         </p>
-      )}
+      }
 
       <div className="form-row">
         <label htmlFor="vault-name">Vault name</label>

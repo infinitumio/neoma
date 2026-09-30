@@ -6,6 +6,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import {
+  MoreHorizontal,
   ChevronRight,
   FileText,
   Paperclip,
@@ -23,6 +24,7 @@ import {
   Home,
 } from 'lucide-react'
 import type { FileEntry } from '@/types'
+import { exportNoteMarkdown, canExportFiles, ExportCancelled } from '@/storage/import-export'
 import { ContextMenu, type MenuItem } from './ContextMenu'
 import { ColorPicker } from './ColorPicker'
 import type { PageColor } from '@/utils/colors'
@@ -61,7 +63,7 @@ import {
 import { isReservedCalendarFolder } from '@/templates/dailyNotes'
 import { loadOrder, saveFolderOrder } from '@/app/fileOrder'
 import { Modal } from './Modal'
-import { downloadBlob, importFiles } from '@/storage/import-export'
+import { exportBlob, importFiles } from '@/storage/import-export'
 
 export interface TreeNode {
   entry: FileEntry
@@ -403,6 +405,26 @@ export function FileTree() {
       separatorAfter: true,
       onSelect: () => void duplicateNote(path),
     },
+    ...(canExportFiles()
+      ? [
+          {
+            label: 'Export Markdown',
+            onSelect: () => {
+              const content = useVault.getState().notes.get(path)?.content
+              const adapter = getAdapter()
+              if (!adapter) return
+              void (async () => {
+                try {
+                  await exportNoteMarkdown(path, content ?? (await adapter.readText(path)))
+                } catch (err) {
+                  if (!(err instanceof ExportCancelled))
+                    ui.toast(err instanceof Error ? err.message : 'Export failed', 'error')
+                }
+              })()
+            },
+          },
+        ]
+      : []),
     {
       label: 'Delete',
       icon: <Trash2 size={14} aria-hidden />,
@@ -587,77 +609,64 @@ export function FileTree() {
     const reserved = isFolder && isReservedCalendarFolder(entry.path)
     return (
       <li key={entry.path} role="treeitem" aria-expanded={expandable ? isOpen : undefined}>
-        <button
-          className={`tree-item${isActive ? ' active' : ''}${dropTarget === entry.path ? ' drop-target' : ''}${selected.has(entry.path) ? ' multi-selected' : ''}${
-            dropLine?.path === entry.path ? (dropLine.before ? ' drop-before' : ' drop-after') : ''
-          }`}
-          onClick={(e) => openEntry(entry, e)}
-          onContextMenu={(e) => {
-            e.preventDefault()
-            if (menuItems(entry).length) setMenu({ x: e.clientX, y: e.clientY, entry })
-          }}
-          draggable={(!isFolder || isPageFolder) && !reserved}
-          onDragStart={(e) => {
-            e.dataTransfer.setData(
-              'application/x-neoma-path',
-              isPageFolder ? indexNote! : entry.path,
-            )
-            e.dataTransfer.effectAllowed = 'move'
-          }}
-          onDragOver={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            // Top/bottom edge → reorder (show a line); middle of a folder/page
-            // → nest into it. Reserved date folders can still be nested into.
-            const r = e.currentTarget.getBoundingClientRect()
-            const rel = (e.clientY - r.top) / r.height
-            if (droppable && rel > 0.28 && rel < 0.72) {
-              setDropTarget(entry.path)
-              setDropLine(null)
-            } else {
-              setDropLine({ path: entry.path, before: rel <= 0.5 })
-              setDropTarget(null)
-            }
-          }}
-          onDragLeave={() => {
-            setDropTarget(null)
-            setDropLine(null)
-          }}
-          onDrop={(e) => {
-            const line = dropLine
-            setDropLine(null)
-            setDropTarget(null)
-            const source = e.dataTransfer.getData('application/x-neoma-path')
-            if (line?.path === entry.path && source && e.dataTransfer.files.length === 0) {
+        <div className="tree-row">
+          <button
+            className={`tree-item${isActive ? ' active' : ''}${dropTarget === entry.path ? ' drop-target' : ''}${selected.has(entry.path) ? ' multi-selected' : ''}${
+              dropLine?.path === entry.path
+                ? dropLine.before
+                  ? ' drop-before'
+                  : ' drop-after'
+                : ''
+            }`}
+            onClick={(e) => openEntry(entry, e)}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              if (menuItems(entry).length) setMenu({ x: e.clientX, y: e.clientY, entry })
+            }}
+            draggable={(!isFolder || isPageFolder) && !reserved}
+            onDragStart={(e) => {
+              e.dataTransfer.setData(
+                'application/x-neoma-path',
+                isPageFolder ? indexNote! : entry.path,
+              )
+              e.dataTransfer.effectAllowed = 'move'
+            }}
+            onDragOver={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              void reorder(source, entry.path, line.before)
-            } else {
-              void onDropOnEntry(entry, e)
-            }
-          }}
-          title={entry.path}
-        >
-          {isFolder ? (
-            <>
-              <ChevronRight
-                size={14}
-                className={`tree-chevron${isOpen ? ' open' : ''}`}
-                aria-hidden
-                onClick={(e) => {
-                  e.stopPropagation()
-                  toggleFolder(entry.path)
-                }}
-              />
-              {isPageFolder ? (
-                <FileText size={14} aria-hidden />
-              ) : (
-                <FolderIcon size={14} aria-hidden />
-              )}
-            </>
-          ) : (
-            <>
-              {expandable ? (
+              // Top/bottom edge → reorder (show a line); middle of a folder/page
+              // → nest into it. Reserved date folders can still be nested into.
+              const r = e.currentTarget.getBoundingClientRect()
+              const rel = (e.clientY - r.top) / r.height
+              if (droppable && rel > 0.28 && rel < 0.72) {
+                setDropTarget(entry.path)
+                setDropLine(null)
+              } else {
+                setDropLine({ path: entry.path, before: rel <= 0.5 })
+                setDropTarget(null)
+              }
+            }}
+            onDragLeave={() => {
+              setDropTarget(null)
+              setDropLine(null)
+            }}
+            onDrop={(e) => {
+              const line = dropLine
+              setDropLine(null)
+              setDropTarget(null)
+              const source = e.dataTransfer.getData('application/x-neoma-path')
+              if (line?.path === entry.path && source && e.dataTransfer.files.length === 0) {
+                e.preventDefault()
+                e.stopPropagation()
+                void reorder(source, entry.path, line.before)
+              } else {
+                void onDropOnEntry(entry, e)
+              }
+            }}
+            title={entry.path}
+          >
+            {isFolder ? (
+              <>
                 <ChevronRight
                   size={14}
                   className={`tree-chevron${isOpen ? ' open' : ''}`}
@@ -667,40 +676,72 @@ export function FileTree() {
                     toggleFolder(entry.path)
                   }}
                 />
-              ) : null}
-              {isMarkdown(entry.path) ? (
-                <FileText
-                  size={14}
-                  aria-hidden
-                  style={{ marginLeft: expandable ? 0 : 14, flexShrink: 0 }}
+                {isPageFolder ? (
+                  <FileText size={14} aria-hidden />
+                ) : (
+                  <FolderIcon size={14} aria-hidden />
+                )}
+              </>
+            ) : (
+              <>
+                {expandable ? (
+                  <ChevronRight
+                    size={14}
+                    className={`tree-chevron${isOpen ? ' open' : ''}`}
+                    aria-hidden
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleFolder(entry.path)
+                    }}
+                  />
+                ) : null}
+                {isMarkdown(entry.path) ? (
+                  <FileText
+                    size={14}
+                    aria-hidden
+                    style={{ marginLeft: expandable ? 0 : 14, flexShrink: 0 }}
+                  />
+                ) : (
+                  <Paperclip
+                    size={14}
+                    aria-hidden
+                    style={{ marginLeft: expandable ? 0 : 14, flexShrink: 0 }}
+                  />
+                )}
+              </>
+            )}
+            <span className="tree-label">{isFolder ? basename(entry.path) : stem(entry.path)}</span>
+            {(() => {
+              const color = getEntryColor(isPageFolder ? indexNote! : entry.path)
+              return color ? (
+                <span
+                  className="tree-color-dot"
+                  style={{ background: `var(--pc-${color})` }}
+                  aria-label={`Colour: ${color}`}
                 />
-              ) : (
-                <Paperclip
-                  size={14}
-                  aria-hidden
-                  style={{ marginLeft: expandable ? 0 : 14, flexShrink: 0 }}
-                />
-              )}
-            </>
+              ) : null
+            })()}
+            {pinned.includes(isPageFolder ? indexNote! : entry.path) && (
+              <Pin size={12} className="pin-indicator" aria-label="Pinned" />
+            )}
+            {reserved && (
+              <Lock size={11} className="tree-lock" aria-label="Managed by the calendar" />
+            )}
+          </button>
+          {menuItems(entry).length > 0 && (
+            <button
+              className="icon-btn tree-actions"
+              aria-label={`Actions for ${isFolder ? basename(entry.path) : stem(entry.path)}`}
+              aria-haspopup="menu"
+              onClick={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect()
+                setMenu({ x: rect.right, y: rect.bottom, entry })
+              }}
+            >
+              <MoreHorizontal size={18} aria-hidden />
+            </button>
           )}
-          <span className="tree-label">{isFolder ? basename(entry.path) : stem(entry.path)}</span>
-          {(() => {
-            const color = getEntryColor(isPageFolder ? indexNote! : entry.path)
-            return color ? (
-              <span
-                className="tree-color-dot"
-                style={{ background: `var(--pc-${color})` }}
-                aria-label={`Colour: ${color}`}
-              />
-            ) : null
-          })()}
-          {pinned.includes(isPageFolder ? indexNote! : entry.path) && (
-            <Pin size={12} className="pin-indicator" aria-label="Pinned" />
-          )}
-          {reserved && (
-            <Lock size={11} className="tree-lock" aria-label="Managed by the calendar" />
-          )}
-        </button>
+        </div>
         {expandable && isOpen && children.length > 0 && (
           <ul role="group">{children.map((child) => renderNode(child))}</ul>
         )}
@@ -872,8 +913,10 @@ async function openAttachment(path: string): Promise<void> {
   try {
     const blob = await adapter.readBinary(path)
     const url = URL.createObjectURL(blob)
+    // WKWebView blocks window.open, so the phone app always takes the second
+    // branch — which must be the share sheet, not a no-op <a download>.
     const opened = window.open(url, '_blank', 'noopener')
-    if (!opened) downloadBlob(blob, basename(path))
+    if (!opened) await exportBlob(blob, basename(path))
     setTimeout(() => URL.revokeObjectURL(url), 60_000)
   } catch {
     useUi.getState().toast('Could not open attachment', 'error')

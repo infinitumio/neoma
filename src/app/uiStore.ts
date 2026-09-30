@@ -24,6 +24,14 @@ export interface Toast {
   message: string
   /** optional action button, e.g. Undo */
   action?: { label: string; run: () => void | Promise<void> }
+  /**
+   * The toast is the ONLY evidence of the outcome — nothing in the UI changes
+   * to show it. The phone app hides routine confirmations, so without this such
+   * a toast leaves the action looking dead. Reserve it for outcomes the
+   * interface genuinely cannot show: clipboard writes, "nothing found" results,
+   * and work that lands in a note you are not looking at.
+   */
+  essential?: boolean
 }
 
 export interface ConfirmRequest {
@@ -83,7 +91,12 @@ interface UiState {
   askConfirm: (request: ConfirmRequest) => void
   askPrompt: (request: PromptRequest) => void
   clearDialogs: () => void
-  toast: (message: string, kind?: Toast['kind'], action?: Toast['action']) => void
+  toast: (
+    message: string,
+    kind?: Toast['kind'],
+    action?: Toast['action'],
+    essential?: boolean,
+  ) => void
   dismissToast: (id: string) => void
 }
 
@@ -131,9 +144,9 @@ export const useUi = create<UiState>((set) => ({
   askConfirm: (request) => set({ confirm: request }),
   askPrompt: (request) => set({ prompt: request }),
   clearDialogs: () => set({ confirm: null, prompt: null }),
-  toast: (message, kind = 'info', action) =>
+  toast: (message, kind = 'info', action, essential = false) =>
     set((s) => {
-      const toast: Toast = { id: generateId(), kind, message, action }
+      const toast: Toast = { id: generateId(), kind, message, action, essential }
       setTimeout(() => useUi.getState().dismissToast(toast.id), action ? 8000 : 5000)
       return { toasts: [...s.toasts.slice(-3), toast] }
     }),

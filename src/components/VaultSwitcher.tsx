@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react'
 import { Database, FolderOpen, Check, Plus, Home } from 'lucide-react'
 import type { Vault } from '@/types'
 import { Modal } from './Modal'
-import { listVaults, openLocalFolderVault } from '@/storage/VaultManager'
-import { openVault, closeVault, useVault, flushAllSaves } from '@/app/vaultStore'
+import { listVaults, openFolderVault, supportsFolderVaults } from '@/storage/VaultManager'
+import { openVault, closeVault, useVault, reportSaveError } from '@/app/vaultStore'
 import { useUi } from '@/app/uiStore'
 import { friendlyDateTime } from '@/utils/dates'
 
@@ -31,14 +31,17 @@ export function VaultSwitcher() {
       setOpen(false)
       return
     }
-    flushAllSaves()
-    setOpen(false)
-    await openVault(vault)
+    try {
+      await openVault(vault)
+      setOpen(false)
+    } catch (error) {
+      reportSaveError(error)
+    }
   }
 
   const openFolder = async () => {
     try {
-      const vault = await openLocalFolderVault()
+      const vault = await openFolderVault()
       if (vault) {
         setOpen(false)
         await openVault(vault)
@@ -89,19 +92,25 @@ export function VaultSwitcher() {
           className="btn"
           onClick={() => {
             setOpen(false)
-            closeVault()
+            void closeVault().catch(reportSaveError)
           }}
         >
           <Home size={14} aria-hidden /> Back to welcome
         </button>
-        <button className="btn" onClick={() => void openFolder()}>
-          <FolderOpen size={14} aria-hidden /> Open a folder
-        </button>
+        {/* Only where a folder picker actually exists. The phone app has none
+            (see supportsFolderVaults), and neither does the desktop webview
+            without Tauri's native dialog, and offering it there dead-ends in an
+            error toast. */}
+        {supportsFolderVaults() && (
+          <button className="btn" onClick={() => void openFolder()}>
+            <FolderOpen size={14} aria-hidden /> Open a folder
+          </button>
+        )}
         <button
           className="btn btn-primary"
           onClick={() => {
             setOpen(false)
-            closeVault()
+            void closeVault().catch(reportSaveError)
           }}
           title="Create a new vault from the welcome screen"
         >

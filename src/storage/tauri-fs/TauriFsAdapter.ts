@@ -22,7 +22,8 @@ import {
   stat,
   exists as fsExists,
 } from '@tauri-apps/plugin-fs'
-import type { FileEntry, StorageAdapter, TrashEntry, VaultKind } from '@/types'
+import type { FileEntry, StorageAdapter, TrashEntry, Vault, VaultKind } from '@/types'
+import { createBookmark, resolveBookmark } from '@/desktop/bookmarks'
 import { db } from '../db'
 import { AlreadyExistsError, NotFoundError } from '../errors'
 import { normalizePath, dirname, isWithin } from '@/utils/paths'
@@ -38,6 +39,28 @@ export class TauriFsAdapter implements StorageAdapter {
     const vault = await db.vaults.get(this.vaultId)
     if (!vault?.rootPath) throw new NotFoundError(`No folder path for vault ${this.vaultId}`)
     this.root = vault.rootPath.replace(/\/+$/, '')
+
+    // Redeem the security-scoped bookmark BEFORE the first read. Under the Mac
+    // App Store sandbox the stored path alone grants nothing, so every call
+    // below would fail; everywhere else this is a no-op and the path is enough.
+    if (vault.rootBookmark) {
+      const resolved = await resolveBookmark(vault.rootBookmark)
+      if (resolved) {
+        // A bookmark tracks the folder, not the string, so this is authoritative
+        // if the user moved or renamed it since last launch.
+        this.root = resolved.path.replace(/\/+$/, '')
+        const patch: Partial<Vault> = {}
+        if (this.root !== vault.rootPath) patch.rootPath = this.root
+        // Apple marks a bookmark stale when it still resolves but is due to be
+        // re-minted; ignoring that eventually breaks access silently.
+        if (resolved.stale) {
+          const fresh = await createBookmark(this.root)
+          if (fresh) patch.rootBookmark = fresh
+        }
+        if (Object.keys(patch).length) await db.vaults.update(this.vaultId, patch)
+      }
+    }
+
     if (!(await fsExists(this.root))) {
       throw new NotFoundError(this.root)
     }

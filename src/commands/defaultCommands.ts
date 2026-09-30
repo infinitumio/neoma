@@ -11,10 +11,17 @@ import {
   renamePage,
   closeVault,
   getAdapter,
+  flushAllSaves,
 } from '@/app/vaultStore'
 import { useSettings } from '@/settings/settingsStore'
+import { isMobileApp } from '@/desktop/tauri'
 import { openDaily } from '@/components/panels/DailyPanel'
-import { exportVaultZip, exportNoteMarkdown, downloadBlob } from '@/storage/import-export'
+import {
+  exportVaultZip,
+  exportNoteMarkdown,
+  exportBlob,
+  canExportFiles,
+} from '@/storage/import-export'
 import { stem, dirname } from '@/utils/paths'
 
 const activeNotePath = (): string | null => {
@@ -231,18 +238,18 @@ export function buildDefaultCommands(): Command[] {
       id: 'note.export-markdown',
       title: 'Export note as Markdown',
       category: 'Export',
-      isAvailable: hasActiveNote,
-      run: () => {
+      isAvailable: () => hasActiveNote() && canExportFiles(),
+      run: async () => {
         const path = activeNotePath()
         const note = path ? useVault.getState().notes.get(path) : null
-        if (path && note) exportNoteMarkdown(path, note.content)
+        if (path && note) await exportNoteMarkdown(path, note.content)
       },
     },
     {
       id: 'note.export-html',
       title: 'Export note as HTML',
       category: 'Export',
-      isAvailable: hasActiveNote,
+      isAvailable: () => hasActiveNote() && canExportFiles(),
       run: async () => {
         const path = activeNotePath()
         const note = path ? useVault.getState().notes.get(path) : null
@@ -255,14 +262,18 @@ export function buildDefaultCommands(): Command[] {
         const html = await renderMarkdown(note.content, {
           resolveLink: (t) => getLinkGraph().resolve(t, path),
         })
-        exportNoteHtml(path, html)
+        await exportNoteHtml(path, html)
       },
     },
     {
       id: 'note.export-pdf',
       title: 'Export note as PDF (print)',
       category: 'Export',
-      isAvailable: hasActiveNote,
+      // WKWebView does not implement window.print(): probed on an iPhone 17 Pro
+      // simulator it returns in ~1ms and presents nothing, so this offered a
+      // control that could never do anything. wry only implements printing for
+      // macOS (#[cfg(target_os = "macos")]), so there is no native route either.
+      isAvailable: () => hasActiveNote() && !isMobileApp(),
       run: () => {
         // Switch to reading view (the print stylesheet targets it), then print.
         useUi.getState().setEditorMode('reading')
@@ -273,20 +284,23 @@ export function buildDefaultCommands(): Command[] {
       id: 'vault.export-zip',
       title: 'Export vault as ZIP',
       category: 'Export',
-      isAvailable: hasVault,
+      isAvailable: () => hasVault() && canExportFiles(),
       run: async () => {
         const adapter = getAdapter()
         const vault = useVault.getState().vault
         if (!adapter || !vault) return
+        await flushAllSaves()
+        if (getAdapter() !== adapter)
+          throw new Error('Vault changed during export. Please try again.')
         const blob = await exportVaultZip(adapter)
-        downloadBlob(blob, `${vault.name}.zip`)
+        await exportBlob(blob, `${vault.name}.zip`)
       },
     },
     {
       id: 'vault.publish-site',
       title: 'Publish vault as a website (ZIP)',
       category: 'Export',
-      isAvailable: hasVault,
+      isAvailable: () => hasVault() && canExportFiles(),
       run: async () => {
         const vault = useVault.getState().vault
         if (!vault) return

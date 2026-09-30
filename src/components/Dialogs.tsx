@@ -8,6 +8,7 @@ import { Modal } from './Modal'
 import { useUi } from '@/app/uiStore'
 import {
   useVault,
+  reportSaveError,
   resolveConflict,
   applyLinkUpdates,
   dismissLinkUpdatePlan,
@@ -34,7 +35,7 @@ function ConfirmDialog() {
             className={`btn ${confirm.danger ? 'btn-danger' : 'btn-primary'}`}
             onClick={() => {
               clear()
-              void confirm.onConfirm()
+              void Promise.resolve().then(confirm.onConfirm).catch(reportSaveError)
             }}
           >
             {confirm.confirmLabel ?? 'Confirm'}
@@ -63,7 +64,9 @@ function PromptDialog() {
   }
   const submit = () => {
     clear()
-    void prompt.onSubmit(value)
+    void Promise.resolve()
+      .then(() => prompt.onSubmit(value))
+      .catch(reportSaveError)
   }
   return (
     <Modal
@@ -176,7 +179,7 @@ function LinkUpdateDialog() {
           <li key={entry.path} className="text-small">
             <strong>{entry.title}</strong>{' '}
             <span className="text-secondary">
-              ({entry.count} link{entry.count === 1 ? '' : 's'}) — {entry.path}
+              ({entry.count} link{entry.count === 1 ? '' : 's'}) · {entry.path}
             </span>
           </li>
         ))}
