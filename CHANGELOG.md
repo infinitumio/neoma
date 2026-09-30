@@ -4,6 +4,38 @@ All notable changes to neoma are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.4] — 2026-10-01 shared-source update
+
+This aligns the open-source web edition with the current shared application code.
+The version does not imply new native installers have been published.
+
+### Changed
+
+- Make phone navigation explicit with labelled destinations, visible page actions,
+  larger controls and a vertical Settings index.
+- Improve editor dividers, keyboard-aware formatting, save indicators and toast visibility.
+- Refresh onboarding and starter-vault instructions for local storage and backups.
+- Keep the public edition under AGPL-3.0-or-later with its existing web/self-hosting setup.
+
+### Fixed
+
+- Wait for pending saves before ZIP export, vault switching and desktop quit requests.
+- Preserve edits made while another save is in flight and surface write failures.
+- Prepare mobile file sharing before asking for a fresh user gesture, allowing cancellation and retry.
+- Correct native iPad detection, folder restoration and hidden-panel focus behavior.
+- Respect compiled desktop capabilities when showing updater/startup controls.
+
+### Verification
+
+- 229 unit tests and 34 browser end-to-end tests pass.
+- Typecheck, lint, formatting and production web build pass.
+- Native shell/store packaging remains maintained separately; this repository has no `src-tauri` build.
+
+## Earlier development notes
+
+The entries below predate the repository split; native packaging references describe
+historical work, not files included in this web-only checkout.
+
 ## [Unreleased]
 
 ### Added (calendar, tasks & desktop round)

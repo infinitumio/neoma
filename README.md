@@ -290,3 +290,10 @@ developers and anyone who wants complete ownership of their notes.
 
 _Neoma is an independent, community-driven project. It is not affiliated with Obsidian,
 Notion, or any other organisation._
+
+## Shared source updates
+
+The web edition is aligned to shared application version **1.0.4**. See
+[CHANGELOG.md](CHANGELOG.md) for the navigation, editor and save/export fixes.
+Native installer releases have their own publication cycle; updating this source
+does not replace the binaries on the Releases page.
