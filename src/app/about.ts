@@ -2,7 +2,7 @@
 /** Project identity constants (placeholders documented in the README). */
 export const APP_NAME = 'Neoma'
 export const APP_TAGLINE = 'Your knowledge, rooted locally.'
-export const APP_VERSION = '0.1.0'
+export const APP_VERSION = '1.0.4'
 export const CREATOR = 'Iwan'
 export const REPOSITORY_URL = 'https://github.com/infinitumio/neoma'
 export const WEBSITE_URL = 'https://neomadev.app'

@@ -11,8 +11,8 @@
  * in issues #17 and #29.
  */
 import { zip, unzip, strToU8, strFromU8 } from 'fflate'
-import { getAdapter, useVault, refreshEntries } from '@/app/vaultStore'
-import { downloadBlob } from '@/storage/import-export'
+import { flushAllSaves, getAdapter, useVault, refreshEntries } from '@/app/vaultStore'
+import { exportBlob } from '@/storage/import-export'
 import { stem } from '@/utils/paths'
 import type { StorageAdapter } from '@/types'
 
@@ -63,6 +63,7 @@ async function buildManifest(
 
 /** Save the current vault as a portable `.neomavault` bundle. */
 export async function exportVaultBundle(): Promise<number> {
+  await flushAllSaves()
   const adapter = getAdapter()
   const vault = useVault.getState().vault
   if (!adapter || !vault) throw new Error('No vault is open')
@@ -89,7 +90,7 @@ export async function exportVaultBundle(): Promise<number> {
     zip(files, { level: 6 }, (err, data) => (err ? reject(err) : resolve(data))),
   )
   const safeName = vault.name.replace(/[^a-z0-9-]+/gi, '-').replace(/^-+|-+$/g, '') || 'vault'
-  downloadBlob(
+  await exportBlob(
     new Blob([zipped.slice().buffer], { type: 'application/octet-stream' }),
     `${safeName}.neomavault`,
   )

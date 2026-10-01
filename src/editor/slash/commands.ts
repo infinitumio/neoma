@@ -41,7 +41,9 @@ async function reviewCurrentNote(): Promise<void> {
   if (active?.type !== 'note' || !active.path) return
   const cards = await cardsForNote(active.path)
   if (!cards.length) {
-    useUi.getState().toast('No flashcards on this page yet', 'info')
+    // The only response to invoking this command; without it the command
+    // looks broken on a phone, where routine toasts are hidden.
+    useUi.getState().toast('No flashcards on this page yet', 'info', undefined, true)
     return
   }
   useStudy.getState().openReview(basename(active.path).replace(/\.md$/i, ''), cards)
@@ -51,7 +53,7 @@ async function reviewCurrentNote(): Promise<void> {
 async function reviewWholeVault(): Promise<void> {
   const cards = await cardsForVault()
   if (!cards.length) {
-    useUi.getState().toast('No flashcards found in this vault', 'info')
+    useUi.getState().toast('No flashcards found in this vault', 'info', undefined, true)
     return
   }
   useStudy.getState().openReview('All flashcards', cards)
@@ -811,7 +813,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     description: 'Revision checklist',
     keywords: ['exam', 'study'],
     run: snippet(
-      '## ${Topic} — revision\n\n- [ ] Re-read notes\n- [ ] Summarise in my own words\n- [ ] Practice questions\n- [ ] Review weak points',
+      '## ${Topic} revision\n\n- [ ] Re-read notes\n- [ ] Summarise in my own words\n- [ ] Practice questions\n- [ ] Review weak points',
     ),
   },
   {

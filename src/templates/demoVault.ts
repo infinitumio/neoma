@@ -24,7 +24,7 @@ tags:
 
 **Your knowledge, rooted locally.**
 
-neoma is a lightweight research journal and linked-note app. Everything you write stays on this device as plain Markdown.
+Neoma is a lightweight research journal and linked-note app. Everything you write stays on this device as plain Markdown.
 
 ## Start here
 
@@ -357,7 +357,7 @@ tags:
   - meta
 ---
 
-neoma notes are ordinary Markdown files, portable to any other editor.
+Neoma notes are ordinary Markdown files, portable to any other editor.
 
 ## Basics
 

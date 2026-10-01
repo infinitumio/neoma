@@ -22,8 +22,16 @@ import { CalendarRefPicker } from '@/components/CalendarRefPicker'
 import { SlashMenu } from '@/components/SlashMenu'
 import { Tooltips } from '@/components/Tooltips'
 import { Dialogs } from '@/components/Dialogs'
+import { PreparedShareDialog } from '@/components/PreparedShareDialog'
 import { Toasts } from '@/components/Toasts'
-import { useVault, flushAllSaves, openVault, createNote, createFolder } from './vaultStore'
+import {
+  useVault,
+  flushAllSaves,
+  reportSaveError,
+  openVault,
+  createNote,
+  createFolder,
+} from './vaultStore'
 import { basename, dirname, joinPath } from '@/utils/paths'
 import { listVaults } from '@/storage/VaultManager'
 import { useTabs } from './tabsStore'
@@ -60,15 +68,21 @@ function PdfTab({ tab, vaultId }: { tab: TabState; vaultId: string | undefined }
     const stem = basename(path).replace(/\.pdf$/i, '')
     const folder = joinPath(dirname(path), stem)
     await createFolder(dirname(path), stem).catch(() => {})
-    const desired = joinPath(folder, `${stem} — notes.md`)
-    const existing = useVault.getState().entries.has(desired)
-    const notePath = existing
-      ? desired
-      : await createNote(
-          folder,
-          `${stem} — notes`,
-          `# ${stem} — notes\n\nParaphrasing [[${basename(path)}]]\n\n`,
-        )
+    const desired = joinPath(folder, `${stem} - notes.md`)
+    // Companion notes were generated with an em dash until the house style
+    // dropped them. This path is a lookup key, not just a label: renaming it
+    // without checking the old form would find nothing and quietly create a
+    // second note beside every one that already exists.
+    const legacy = joinPath(folder, `${stem} — notes.md`)
+    const entries = useVault.getState().entries
+    const found = entries.has(desired) ? desired : entries.has(legacy) ? legacy : null
+    const notePath =
+      found ??
+      (await createNote(
+        folder,
+        `${stem} - notes`,
+        `# ${stem} - notes\n\nParaphrasing [[${basename(path)}]]\n\n`,
+      ))
     if (notePath) setSplit(tab.id, notePath)
   }
 
@@ -252,7 +266,8 @@ export default function App() {
     if (!lastVault || useVault.getState().status !== 'closed') return
     void listVaults().then((vaults) => {
       const vault = vaults.find((v) => v.id === lastVault)
-      if (vault && useVault.getState().status === 'closed') void openVault(vault)
+      if (vault && useVault.getState().status === 'closed')
+        void openVault(vault).catch(reportSaveError)
     })
   }, [])
 
@@ -375,15 +390,21 @@ export default function App() {
   // Global shortcuts + never lose unsaved work on tab close.
   useEffect(() => {
     const onKeydown = (event: KeyboardEvent) => handleGlobalKeydown(event)
-    const onBeforeUnload = () => flushAllSaves()
+    const onBeforeUnload = () => {
+      void flushAllSaves().catch(reportSaveError)
+    }
     window.addEventListener('keydown', onKeydown)
     window.addEventListener('beforeunload', onBeforeUnload)
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') flushAllSaves()
-    })
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') void flushAllSaves().catch(reportSaveError)
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('pagehide', onBeforeUnload)
     return () => {
       window.removeEventListener('keydown', onKeydown)
       window.removeEventListener('beforeunload', onBeforeUnload)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('pagehide', onBeforeUnload)
     }
   }, [])
 
@@ -403,6 +424,7 @@ export default function App() {
       <Tooltips />
       <Dialogs />
       <Toasts />
+      <PreparedShareDialog />
     </>
   )
 }

@@ -9,6 +9,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { renderMarkdown } from '@/markdown/render'
 import { getAdapter, getLinkGraph, updateNoteContent, useVault } from '@/app/vaultStore'
 import { useUi } from '@/app/uiStore'
+import { useSettings } from '@/settings/settingsStore'
 import { useTabs } from '@/app/tabsStore'
 import { openNoteByTarget } from '@/app/navigation'
 import { pdfThumbnail } from './pdfThumbnail'
@@ -22,6 +23,61 @@ const PdfViewer = lazy(() => import('./PdfViewer').then((m) => ({ default: m.Pdf
 interface PreviewProps {
   path: string
   content: string
+}
+
+/**
+ * Replace a remote resource with a visible, inert placeholder.
+ *
+ * Silently dropping the content would be worse than loading it: the reader
+ * would not know something was there. This says what was blocked and why, and
+ * offers the URL as text so it can be inspected without being fetched.
+ */
+function blockedPlaceholder(kind: 'image' | 'video', url: string): HTMLElement {
+  const el = document.createElement('div')
+  el.className = 'remote-blocked'
+  el.dataset.testid = 'remote-blocked'
+  el.setAttribute('role', 'note')
+
+  const label = document.createElement('span')
+  label.className = 'remote-blocked-label'
+  label.textContent = `Remote ${kind} blocked`
+  el.appendChild(label)
+
+  const detail = document.createElement('span')
+  detail.className = 'remote-blocked-detail'
+  // Rendered as text, never as a link — a link is one mis-click from the
+  // request this exists to prevent.
+  detail.textContent = url
+  el.appendChild(detail)
+
+  const hint = document.createElement('span')
+  hint.className = 'remote-blocked-hint'
+  hint.textContent = 'Enable remote content in Settings to load it.'
+  el.appendChild(hint)
+
+  return el
+}
+
+/**
+ * Strip remote image sources out of rendered HTML before it reaches the DOM.
+ *
+ * Doing this after insertion is too late: the browser begins fetching an <img>
+ * the moment it is parsed, so removing the element afterwards still leaks the
+ * request. A DOMParser document is inert — nothing loads — so the rewrite
+ * happens safely there and the live DOM never sees a fetchable URL.
+ */
+function neutraliseRemoteHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  let changed = false
+  for (const img of doc.querySelectorAll('img')) {
+    const src = img.getAttribute('src') ?? ''
+    if (!/^https?:/i.test(src)) continue
+    img.removeAttribute('src')
+    img.removeAttribute('srcset')
+    img.setAttribute('data-remote-src', src)
+    changed = true
+  }
+  return changed ? doc.body.innerHTML : html
 }
 
 /** Matches a GFM task-list marker at the start of a list item. */
@@ -91,18 +147,22 @@ export function Preview({ path, content }: PreviewProps) {
   const [html, setHtml] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
   const metaVersion = useVault((s) => s.metaVersion)
+  // Subscribed rather than read once: toggling the setting must re-render the
+  // note, otherwise the change appears not to work until you reopen the file.
+  const allowRemoteContent = useSettings((st) => st.settings.allowRemoteContent)
 
   useEffect(() => {
     let cancelled = false
     void renderMarkdown(content, {
       resolveLink: (target) => getLinkGraph().resolve(target, path),
     }).then((rendered) => {
-      if (!cancelled) setHtml(rendered)
+      if (cancelled) return
+      setHtml(allowRemoteContent ? rendered : neutraliseRemoteHtml(rendered))
     })
     return () => {
       cancelled = true
     }
-  }, [content, path, metaVersion])
+  }, [content, path, metaVersion, allowRemoteContent])
 
   // Resolve local images to blob URLs after each render.
   useEffect(() => {
@@ -111,6 +171,14 @@ export function Preview({ path, content }: PreviewProps) {
     const urls: string[] = []
     const roots: Root[] = []
     const adapter = getAdapter()
+
+    // Images whose source was stripped before insertion. The URL is shown as
+    // text so it can be read without being requested. Runs before the adapter
+    // check: a vault with no adapter should still not silently swallow these.
+    for (const img of container.querySelectorAll<HTMLImageElement>('img[data-remote-src]')) {
+      img.replaceWith(blockedPlaceholder('image', img.dataset.remoteSrc ?? ''))
+    }
+
     if (!adapter) return
 
     const resolveTo = async (raw: string): Promise<string | null> => {
@@ -127,6 +195,8 @@ export function Preview({ path, content }: PreviewProps) {
       }
       return null
     }
+
+    const allowRemote = useSettings.getState().settings.allowRemoteContent
 
     for (const img of container.querySelectorAll<HTMLImageElement>('img')) {
       const src = img.getAttribute('src') ?? ''
@@ -183,8 +253,14 @@ export function Preview({ path, content }: PreviewProps) {
     }
     // YouTube links become a responsive inline player (loads only when online).
     for (const link of container.querySelectorAll<HTMLAnchorElement>('a[href]')) {
-      const id = youtubeId(link.getAttribute('href') ?? '')
+      const href = link.getAttribute('href') ?? ''
+      const id = youtubeId(href)
       if (!id) continue
+      if (!allowRemote) {
+        // An embed contacts several Google hosts before a frame of video plays.
+        link.replaceWith(blockedPlaceholder('video', href))
+        continue
+      }
       const figure = document.createElement('figure')
       figure.className = 'youtube-embed'
       const frame = document.createElement('iframe')
@@ -235,7 +311,8 @@ export function Preview({ path, content }: PreviewProps) {
     if (tex) {
       void navigator.clipboard
         .writeText(tex)
-        .then(() => useUi.getState().toast('Equation LaTeX copied', 'success'))
+        // A clipboard write changes nothing on screen.
+        .then(() => useUi.getState().toast('Equation LaTeX copied', 'success', undefined, true))
         .catch(() => useUi.getState().toast('Could not copy equation', 'error'))
     }
   }

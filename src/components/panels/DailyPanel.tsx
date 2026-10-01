@@ -75,7 +75,9 @@ function QuickNotes() {
       : ((await createDailyNote(date)) ?? dailyNotePath(date))
     await appendUnderHeading(path, 'Quick notes', `- ${text}`)
     remove(id)
-    useUi.getState().toast('Added under “Quick notes” in today’s journal', 'success')
+    useUi
+      .getState()
+      .toast('Added under “Quick notes” in today’s journal', 'success', undefined, true)
   }
   void version
 

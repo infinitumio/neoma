@@ -16,6 +16,13 @@ export interface Vault {
   lastOpenedAt: number
   /** Absolute folder path on disk — only for `tauri-fs` vaults (desktop app). */
   rootPath?: string
+  /**
+   * macOS security-scoped bookmark (base64) for `rootPath`. Required by the Mac
+   * App Store build, where the sandbox refuses a bare path on a later launch.
+   * Absent on Windows, Linux and the unsandboxed desktop build, which don't
+   * need one. See src/desktop/bookmarks.ts.
+   */
+  rootBookmark?: string
 }
 
 export interface FileEntry {
@@ -233,6 +240,19 @@ export interface ApplicationSettings {
   showBreadcrumbs: boolean
   /** Show the dismiss (×) button on toasts. Off by default — toasts auto-hide. */
   showToastIcons: boolean
+  /**
+   * Load images, video embeds and other remote content referenced by a note.
+   *
+   * Off by default, and deliberately so. A note is not necessarily written by
+   * the person reading it, and a remote image is a beacon: whoever controls the
+   * URL learns when the note was opened and from which address. For anyone
+   * holding privileged, confidential or ethics-approved material that is a
+   * disclosure, not a convenience.
+   *
+   * This never affects the notes themselves — only whether the renderer
+   * fetches what they point at.
+   */
+  allowRemoteContent: boolean
   /** Desktop app only: what closing the main window does. */
   desktopCloseBehavior: 'quit' | 'tray' | 'ask'
   /** Desktop app only: launch neoma on system login. */

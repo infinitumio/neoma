@@ -5,7 +5,8 @@
  * it. The plugin modules are imported lazily so nothing loads on the web or on
  * iOS (where updates come through the App Store).
  */
-import { isDesktopApp } from './tauri'
+import { supportsDesktopUpdates } from './capabilities'
+import { flushAllSaves } from '@/app/vaultStore'
 
 export interface DesktopUpdate {
   version: string
@@ -17,7 +18,7 @@ export interface DesktopUpdate {
 
 /** Returns update info if a newer signed build is available, else null. */
 export async function checkForDesktopUpdate(): Promise<DesktopUpdate | null> {
-  if (!isDesktopApp()) return null
+  if (!(await supportsDesktopUpdates())) return null
   const { check } = await import('@tauri-apps/plugin-updater')
   const update = await check()
   if (!update) return null
@@ -27,6 +28,7 @@ export async function checkForDesktopUpdate(): Promise<DesktopUpdate | null> {
     currentVersion: update.currentVersion,
     notes: update.body,
     install: async (onProgress) => {
+      await flushAllSaves()
       let total = 0
       let received = 0
       await update.downloadAndInstall((event) => {
@@ -41,6 +43,7 @@ export async function checkForDesktopUpdate(): Promise<DesktopUpdate | null> {
           onProgress(1)
         }
       })
+      await flushAllSaves()
       const { relaunch } = await import('@tauri-apps/plugin-process')
       await relaunch()
     },

@@ -10,12 +10,11 @@ import type { Vault } from '@/types'
 import {
   listVaults,
   createBrowserVault,
-  openLocalFolderVault,
-  openTauriFolderVault,
+  openFolderVault,
+  supportsFolderVaults,
   removeVault,
 } from '@/storage/VaultManager'
-import { supportsLocalFolders } from '@/storage/local-folder/LocalFolderAdapter'
-import { isTauri, isMobileApp } from '@/desktop/tauri'
+import { isMobileApp } from '@/desktop/tauri'
 import { openVault, getAdapter, refreshEntries } from '@/app/vaultStore'
 import { importFiles } from '@/storage/import-export'
 import { demoNotes } from '@/templates/demoVault'
@@ -26,19 +25,41 @@ import { NewVaultDialog } from './NewVaultDialog'
 import { APP_NAME, APP_TAGLINE } from '@/app/about'
 import { friendlyDateTime } from '@/utils/dates'
 
+/**
+ * True on a phone-sized viewport. Tracks the same 900px breakpoint the layout
+ * CSS uses, and re-renders on rotation — an iPad crosses it when turned.
+ */
+function useCompactViewport(): boolean {
+  const query = '(max-width: 900px)'
+  const [compact, setCompact] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches,
+  )
+  useEffect(() => {
+    const mql = window.matchMedia(query)
+    const update = () => setCompact(mql.matches)
+    mql.addEventListener('change', update)
+    return () => mql.removeEventListener('change', update)
+  }, [])
+  return compact
+}
+
 export function WelcomeScreen() {
   const [vaults, setVaults] = useState<Vault[]>([])
   const [showStorageHelp, setShowStorageHelp] = useState(false)
   const [busy, setBusy] = useState(false)
   const importInput = useRef<HTMLInputElement>(null)
   const ui = useUi()
-  const desktop = isTauri()
-  // On the phone app, keep the welcome actions terse (short titles, no long
-  // descriptions) so everything fits comfortably on a small screen.
-  const mobile = isMobileApp()
-  // Chromium browsers use the File System Access API; the desktop app uses
-  // Tauri's native filesystem, so folder vaults work there too.
-  const localFoldersSupported = supportsLocalFolders() || desktop
+  // Two different questions, previously conflated on one flag.
+  //
+  // `compact` is about screen size: keep the actions terse (short titles, no
+  // long descriptions) so they fit a phone. An iPad is a mobile OS with a large
+  // screen — it has room for the full copy, and keying this on the platform
+  // left it looking sparse and unexplained.
+  //
+  // `mobileOs` is about capability: iOS/iPadOS have no folder picker at all.
+  const compact = useCompactViewport()
+  const mobileOs = isMobileApp()
+  const localFoldersSupported = supportsFolderVaults()
 
   useEffect(() => {
     void listVaults().then(setVaults)
@@ -49,7 +70,7 @@ export function WelcomeScreen() {
   const openFolder = async () => {
     try {
       setBusy(true)
-      const vault = desktop ? await openTauriFolderVault() : await openLocalFolderVault()
+      const vault = await openFolderVault()
       if (vault) await openVault(vault)
     } catch (err) {
       ui.toast(err instanceof Error ? err.message : 'Could not open folder', 'error')
@@ -137,14 +158,19 @@ export function WelcomeScreen() {
         <p className="welcome-tagline">{APP_TAGLINE}</p>
 
         <div className="welcome-actions">
-          <button className="welcome-action" onClick={() => setShowNewVault(true)} disabled={busy}>
+          <button
+            className="welcome-action welcome-action-primary"
+            onClick={() => setShowNewVault(true)}
+            disabled={busy}
+          >
             <Database className="action-icon" size={20} aria-hidden />
             <span className="action-text">
-              <span className="action-title">{mobile ? 'New vault' : 'Create my first vault'}</span>
-              {!mobile && (
+              <span className="action-title">
+                {compact ? 'New vault' : 'Create my first vault'}
+              </span>
+              {!compact && (
                 <span className="action-desc">
-                  A private home for your pages, stored on this device. Pick a starter for study,
-                  research or personal notes.
+                  A private home for your pages, stored on this device.
                 </span>
               )}
             </span>
@@ -152,8 +178,8 @@ export function WelcomeScreen() {
           </button>
 
           {/* Native folder vaults need the sandboxed document picker on iOS,
-              which isn't wired up yet — offer Import there instead. */}
-          {!mobile && (
+              which isn't wired up yet, so Import is offered there instead. */}
+          {!mobileOs && (
             <button
               className="welcome-action"
               onClick={() => void openFolder()}
@@ -161,7 +187,7 @@ export function WelcomeScreen() {
               title={
                 localFoldersSupported
                   ? undefined
-                  : 'Not supported by this browser — use a Chromium-based browser, or the desktop app'
+                  : 'Not supported by this browser. Use a Chromium-based browser, or the desktop app.'
               }
             >
               <FolderOpen className="action-icon" size={20} aria-hidden />
@@ -169,7 +195,7 @@ export function WelcomeScreen() {
                 <span className="action-title">Open local folder</span>
                 <span className="action-desc">
                   {localFoldersSupported
-                    ? 'Plain .md files in a folder you choose — great with Git.'
+                    ? 'Plain .md files in a folder you choose. Works with Git.'
                     : 'Unavailable in this browser (needs the File System Access API, or use the desktop app).'}
                 </span>
               </span>
@@ -180,8 +206,8 @@ export function WelcomeScreen() {
           <button className="welcome-action" onClick={importVault} disabled={busy}>
             <Upload className="action-icon" size={20} aria-hidden />
             <span className="action-text">
-              <span className="action-title">{mobile ? 'Import' : 'Import vault'}</span>
-              {!mobile && (
+              <span className="action-title">{compact ? 'Import' : 'Import vault'}</span>
+              {!compact && (
                 <span className="action-desc">From a ZIP export or individual Markdown files.</span>
               )}
             </span>
@@ -191,11 +217,9 @@ export function WelcomeScreen() {
           <button className="welcome-action" onClick={() => void exploreDemo()} disabled={busy}>
             <Compass className="action-icon" size={20} aria-hidden />
             <span className="action-text">
-              <span className="action-title">{mobile ? 'Demo vault' : 'Explore demo vault'}</span>
-              {!mobile && (
-                <span className="action-desc">
-                  A small research vault showing links, templates and search.
-                </span>
+              <span className="action-title">{compact ? 'Demo vault' : 'Explore demo vault'}</span>
+              {!compact && (
+                <span className="action-desc">Links, templates and search, already filled in.</span>
               )}
             </span>
             <ChevronRight size={16} aria-hidden />
@@ -203,14 +227,14 @@ export function WelcomeScreen() {
         </div>
 
         <p className="welcome-privacy">
-          {!mobile && 'No account is required. Your notes remain on this device. '}
+          {!compact && 'No account is required. Your notes remain on this device. '}
           <button
             className="text-secondary"
             style={{ textDecoration: 'underline' }}
             onClick={() => setShowStorageHelp(true)}
           >
             <HelpCircle size={12} aria-hidden style={{ verticalAlign: '-2px' }} />{' '}
-            {mobile ? 'How storage works' : 'Learn how storage works'}
+            {compact ? 'How storage works' : 'Learn how storage works'}
           </button>
         </p>
 

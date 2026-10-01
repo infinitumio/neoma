@@ -28,11 +28,12 @@ export function TabsBar() {
   return (
     <div className="tabs-bar" role="tablist" aria-label="Open notes">
       {tabs.map((tab) => {
-        const isDirty =
-          tab.type === 'note' && tab.path
-            ? notes.get(tab.path)?.saveState === 'unsaved' ||
-              notes.get(tab.path)?.saveState === 'saving'
-            : false
+        const saveState =
+          tab.type === 'note' && tab.path ? notes.get(tab.path)?.saveState : undefined
+        const isDirty = saveState === 'unsaved' || saveState === 'saving'
+        // A failed save is neither 'unsaved' nor 'saving', so the dot used to
+        // vanish on failure — the tab looked saved precisely when it was not.
+        const saveFailed = saveState === 'error'
         return (
           <div
             key={tab.id}
@@ -66,6 +67,7 @@ export function TabsBar() {
             )}
             <span className="tab-label">{label(tab)}</span>
             {tab.pinned && <Pin size={11} className="pin-indicator" aria-label="Pinned tab" />}
+            {saveFailed && <span className="dirty-dot failed" aria-label="Save failed" />}
             {isDirty && <span className="dirty-dot" aria-label="Unsaved changes" />}
             <button
               className="icon-btn tab-close"

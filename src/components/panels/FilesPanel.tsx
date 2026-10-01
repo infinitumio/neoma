@@ -13,12 +13,25 @@ import {
 } from 'lucide-react'
 import { FileTree } from '../FileTree'
 import { ContextMenu } from '../ContextMenu'
-import { createNote, createFolder, refreshEntries, useVault, getAdapter } from '@/app/vaultStore'
+import {
+  createNote,
+  createFolder,
+  refreshEntries,
+  useVault,
+  getAdapter,
+  flushAllSaves,
+} from '@/app/vaultStore'
 import { useTabs } from '@/app/tabsStore'
 import { useUi } from '@/app/uiStore'
 import { useSettings } from '@/settings/settingsStore'
 import type { SortOrder } from '@/types'
-import { exportVaultZip, importFiles, downloadBlob } from '@/storage/import-export'
+import {
+  exportVaultZip,
+  importFiles,
+  exportBlob,
+  canExportFiles,
+  ExportCancelled,
+} from '@/storage/import-export'
 
 export function FilesPanel() {
   const vault = useVault((s) => s.vault)
@@ -48,7 +61,7 @@ export function FilesPanel() {
         // "Calendar" is reserved for journals/events — steer users to it.
         const reserved = useSettings.getState().settings.dailyNotesFolder
         if (name.toLowerCase() === reserved.toLowerCase()) {
-          ui.toast(`“${reserved}” is managed by the Planner — add events there instead`, 'warning')
+          ui.toast(`“${reserved}” is managed by the Planner. Add events there instead.`, 'warning')
           return
         }
         await createFolder('', name)
@@ -68,11 +81,15 @@ export function FilesPanel() {
     if (!adapter || !vault) return
     ui.toast('Preparing vault export…')
     try {
+      await flushAllSaves()
+      if (getAdapter() !== adapter)
+        throw new Error('Vault changed during export. Please try again.')
       const blob = await exportVaultZip(adapter)
-      downloadBlob(blob, `${vault.name}.zip`)
+      await exportBlob(blob, `${vault.name}.zip`)
       ui.toast('Vault exported', 'success')
-    } catch {
-      ui.toast('Export failed', 'error')
+    } catch (err) {
+      if (err instanceof ExportCancelled) return
+      ui.toast(err instanceof Error ? err.message : 'Export failed', 'error')
     }
   }
 
@@ -176,11 +193,16 @@ export function FilesPanel() {
               icon: <Paperclip size={14} aria-hidden />,
               onSelect: () => attachInput.current?.click(),
             },
-            {
-              label: 'Export vault as ZIP',
-              icon: <Download size={14} aria-hidden />,
-              onSelect: () => void exportZip(),
-            },
+            // Offered only where the platform can actually deliver a file.
+            ...(canExportFiles()
+              ? [
+                  {
+                    label: 'Export vault as ZIP',
+                    icon: <Download size={14} aria-hidden />,
+                    onSelect: () => void exportZip(),
+                  },
+                ]
+              : []),
           ]}
         />
       )}

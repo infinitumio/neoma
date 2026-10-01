@@ -253,6 +253,11 @@
   flex-shrink: 0;
 }
 
+/* A save that failed is not the same as one still in flight. */
+.tab .dirty-dot.failed {
+  background: var(--color-error);
+}
+
 /* Note view (header + editor area) */
 .note-view {
   flex: 1;
@@ -531,7 +536,7 @@
 
 .mode-chip {
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
@@ -548,13 +553,21 @@
   color: var(--color-accent);
 }
 
+/* Deliberately NOT a flex container. As flex, every text node and the <strong>
+   became separate flex items, so a narrow panel wrapped the sentence into
+   misaligned fragments — "5" and "matches" landing on different lines with the
+   gap between them. Block layout lets it flow and wrap as ordinary prose. */
 .search-status {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  display: block;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   padding: var(--space-2) 0;
+  line-height: 1.5;
+}
+
+.search-status svg {
+  vertical-align: -2px;
+  margin-right: 0.35rem;
 }
 
 /* ---- Slash command menu ---- */
@@ -825,6 +838,17 @@
   .slash-menu {
     width: 320px;
   }
+  /* Phone drawers run the full width.
+     Above 560px the 16.5rem drawer is right — on a tablet it sits beside the
+     note. On a 428px phone it left a ~160px strip of the editor showing down
+     the side: too narrow to read, but wide enough to look like a half-finished
+     transition. The drawers still stop above the floating tab bar, so there is
+     always a way out without a tap-outside target. */
+  .sidebar,
+  .right-sidebar {
+    width: 100%;
+    max-width: none;
+  }
 }
 
 /* Math symbol menu */
@@ -1014,13 +1038,23 @@
   min-width: 0;
 }
 
-.vault-row-name {
+/* Both lines truncate rather than wrap. The meta line is the long one —
+   "Browser vault · opened 08 Aug 2026 at 09:09" — and with plain block layout
+   it wrapped onto a second line on a phone, pushing the row taller and running
+   under the "Current" badge. A vault name long enough to wrap did the same. */
+.vault-row-name,
+.vault-row-meta {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-row-name {
   font-weight: 600;
 }
 
 .vault-row-meta {
-  display: block;
   font-size: var(--font-size-xs);
   color: var(--color-text-faint);
 }
@@ -1031,6 +1065,10 @@
   gap: 0.25rem;
   font-size: var(--font-size-xs);
   color: var(--color-accent);
+  /* Never let the badge be squeezed or broken across lines by a long name —
+     the flexible text column beside it is the one that should give. */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .vault-switcher-actions {
@@ -1039,6 +1077,29 @@
   flex-wrap: wrap;
   border-top: 1px solid var(--color-border);
   padding-top: var(--space-3);
+}
+
+/* Push the primary action away from the two secondary ones so the destructive-
+   ish "Back to welcome" isn't sitting flush against "New vault". */
+.vault-switcher-actions .btn-primary {
+  margin-left: auto;
+}
+
+@media (max-width: 560px) {
+  /* Three buttons never fit one row on a phone. With flex-wrap they broke as
+     two-then-one, leaving the primary action orphaned in the bottom-left with a
+     gap beside it — it read as a layout bug rather than a deliberate grouping.
+     Stack them full-width instead: unambiguous order, and each one is a full
+     touch target rather than a ~140px pill. */
+  .vault-switcher-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .vault-switcher-actions .btn {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
 }
 
 /* Colour picker + swatches + tree dots */
@@ -2295,6 +2356,46 @@
   background: var(--color-bg-hover);
 }
 
+/* The first action is the one a new visitor wants; the other three are for
+   people who already have notes somewhere. Four identically weighted cards
+   said they all mattered the same, which is never true.
+
+   It lifts by lighting a hairline along its top edge rather than moving,
+   the same treatment the marketing site uses, so nothing shifts under the
+   pointer. */
+.welcome-action-primary {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-4);
+  border-color: color-mix(in srgb, var(--color-accent) 32%, var(--color-border));
+  background: linear-gradient(180deg, var(--color-bg-hover), var(--color-bg-raised));
+}
+
+.welcome-action-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-accent), transparent);
+  opacity: 0.55;
+  transition: opacity var(--transition-fast);
+}
+
+.welcome-action-primary:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.welcome-action-primary .action-title {
+  font-size: var(--font-size-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-action,
+  .welcome-action-primary::before {
+    transition: none;
+  }
+}
+
 .welcome-action .action-icon {
   color: var(--color-accent);
   flex-shrink: 0;
@@ -2401,6 +2502,8 @@
   justify-content: flex-end;
 }
 
+/* Desktop toggle. The touch build overrides this with Apple's UISwitch
+   geometry — see the "iOS feel" block near the end of this file. */
 .switch {
   position: relative;
   width: 2.4rem;
@@ -2463,6 +2566,22 @@
   max-width: calc(100% - 2 * var(--space-3));
 }
 
+/* The scope select and Options button must not be squeezed. As ordinary flex
+   children they had flex-shrink: 1, so a narrow toolbar shaved them below their
+   content width and the longest option silently rendered as "Whole va" — a
+   native <select> truncates rather than overflowing, so it does not show up as
+   scrollWidth > clientWidth. Measured at 393px: wanted 145px, given 118px.
+   The search field is the one that should absorb the difference. */
+.graph-toolbar select.input,
+.graph-toolbar .btn {
+  flex-shrink: 0;
+}
+
+.graph-toolbar input.input {
+  flex: 1 1 6rem;
+  min-width: 0;
+}
+
 .graph-toolbar .input {
   width: 10rem;
 }
@@ -2495,13 +2614,19 @@
 /* Advanced graph controls, revealed by the Options toggle. */
 .graph-options {
   position: absolute;
+  /* `top` is set inline from the measured toolbar height — the toolbar wraps to
+     two or three rows on a phone, and this used to be a fixed 3.5rem guess that
+     put the panel behind it. This value is only a fallback before the first
+     measurement lands. */
   top: calc(var(--space-3) + 3.5rem);
   left: var(--space-3);
   z-index: 6;
   width: 16.5rem;
   max-width: calc(100% - 2 * var(--space-3));
-  /* Never let a long panel be clipped by the graph's overflow:hidden. */
-  max-height: calc(100% - var(--space-3) - 4rem);
+  /* Never let a long panel be clipped by the graph's overflow:hidden. Bounded
+     by the viewport rather than by the same toolbar-height guess, so a wrapped
+     toolbar can't push the panel's bottom off-screen. */
+  max-height: min(60vh, calc(100% - var(--space-3) - 4rem));
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -2575,6 +2700,13 @@
     width: auto;
     top: calc(var(--space-2) + 3rem);
   }
+  /* The colour legend and hover label are anchored to the bottom of the graph,
+     which runs under the floating tab bar — the bar was covering the last
+     swatches and the "set a page's colour" hint. Lift both clear of it. */
+  .graph-legend,
+  .graph-hover-name {
+    bottom: calc(var(--bottom-bar-h) + var(--space-2));
+  }
 }
 
 /* ---- Responsive ---- */
@@ -2586,6 +2718,11 @@
   /* Space reserved for the floating bottom tab bar (bar + margin + inset). */
   :root {
     --bottom-bar-h: calc(4.25rem + env(safe-area-inset-bottom));
+    /* What a scroll region reserves at its end so the last line sits clear of
+       the floating bar rather than flush against it. One value, used by every
+       scrolling region — duplicating the expression per region is how the
+       reading pane came to disagree with the rest. */
+    --scroll-end-gap: calc(var(--bottom-bar-h) + var(--space-2));
   }
   /* The left rail is gone on phones; panels open as drawers that stop above
      the bottom tab bar so it stays tappable. */
@@ -2637,7 +2774,84 @@
   .preview-pane,
   .source-view,
   .cm-scroller {
-    padding-bottom: var(--bottom-bar-h);
+    padding-bottom: var(--scroll-end-gap);
+  }
+
+  /* ---- Format bar: docked to the top of the keyboard while editing ----
+     App.tsx tracks the visual viewport into --app-top/--app-vh, and the visual
+     viewport's bottom edge IS the top of the keyboard, so anchoring there needs
+     no keyboard-height guesswork. The floating tab bar is fixed to the *layout*
+     viewport and therefore already sits behind the keyboard — the two never
+     meet. */
+  /* Rests on the keyboard. The offset comes from the component, which reads the
+     visual viewport directly (useKeyboardOpen) rather than --app-vh — that
+     property only exists inside the native shell, so depending on it would put
+     the bar under the keyboard in the web app. */
+  .format-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 96;
+    display: flex;
+    flex-direction: column;
+    background: color-mix(in srgb, var(--color-bg-raised) 92%, transparent);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--color-border);
+  }
+  /* Scrolls sideways rather than shrinking: a 44pt target matters more than
+     fitting every action on screen at once. */
+  .format-bar-row {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    padding: var(--space-1) var(--space-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .format-bar-row::-webkit-scrollbar {
+    display: none;
+  }
+  .format-bar-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3rem;
+    min-height: 2.75rem;
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .format-bar-btn:active,
+  .format-bar-btn.active {
+    background: var(--color-bg-active);
+  }
+  .format-bar-colors {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-2) 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .format-bar-colors::-webkit-scrollbar {
+    display: none;
+  }
+  .format-bar-swatch {
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-border-strong);
+  }
+  .format-bar-swatch-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-raised);
+    color: var(--color-text-secondary);
   }
 
   /* ---- Bottom tab bar: a floating "Liquid Glass" pill (iOS 26 style) ---- */
@@ -2786,6 +3000,14 @@
   .icon-btn {
     min-width: 2.5rem;
   }
+  /* A 14px cross centred in that 40px box leaves ~13px of dead space on each
+     side, so the close control read as marooned: 22px after the title and 27px
+     before the tab's edge. Pull the box in with negative margins — the 40x44
+     hit area is untouched, only the space around the glyph closes up. */
+  .tab .tab-close {
+    margin-left: calc(-1 * var(--space-2));
+    margin-right: calc(-1 * var(--space-3));
+  }
   /* Popovers anchored to left-side toolbar buttons open rightward, not off the
      left edge (colour picker handled separately). */
   .math-menu {
@@ -2807,8 +3029,12 @@
     flex-shrink: 0;
     scroll-snap-align: start;
   }
+  /* Tighter side padding on a phone, but keep the allowance that lets the last
+     line scroll clear of the floating tab bar. Writing this as the `padding`
+     shorthand silently reset the padding-bottom set earlier in this same block,
+     leaving the end of a note covered by ~48px. */
   .preview-pane {
-    padding: var(--space-4);
+    padding: var(--space-4) var(--space-4) var(--scroll-end-gap);
   }
   .settings-layout {
     flex-direction: column;
@@ -4059,10 +4285,14 @@
 
 /* ============================================================
    iOS feel: native controls, drawer physics, and tap feedback.
-   Scoped to touch/phone widths so the desktop stays deliberately
-   static. --ease-ios is Apple's sheet/drawer curve.
+   --ease-ios is Apple's sheet/drawer curve.
+
+   Matches a coarse pointer as well as phone widths. Keyed on width alone this
+   stopped at 900px, so an iPad in landscape (1194pt) fell back to desktop
+   controls — a web toggle and flat taps inside a native iOS app. The desktop
+   stays deliberately static because a mouse is a fine pointer.
    ============================================================ */
-@media (max-width: 900px) {
+@media (max-width: 900px), (pointer: coarse) {
   :root {
     --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
   }
@@ -4150,10 +4380,16 @@
     background-color: var(--color-bg-active);
   }
 
-  /* ---- Native iOS toggle switch: larger, spring knob with a shadow ---- */
+  /* ---- Native iOS toggle switch: spring knob with a shadow ----
+     Apple's UISwitch is 51×31pt with a 27pt knob inset 2pt, travelling 20pt.
+     These were rem-based, so they resolved to 49.6×29.6 with a 24.8pt knob —
+     close enough to look right in isolation, visibly off beside a real system
+     switch. Points map 1:1 to CSS px, so state them in px and they stay exact
+     regardless of the root font size. */
   .switch {
-    width: 3.1rem;
-    height: 1.85rem;
+    width: 51px;
+    height: 31px;
+    flex: none;
     border: none;
     background: color-mix(in srgb, var(--color-text) 20%, transparent);
     transition: background 280ms var(--ease-ios);
@@ -4164,8 +4400,8 @@
   .switch .knob {
     top: 2px;
     left: 2px;
-    width: 1.55rem;
-    height: 1.55rem;
+    width: 27px;
+    height: 27px;
     background: #fff;
     box-shadow:
       0 2px 5px rgba(0, 0, 0, 0.28),
@@ -4173,7 +4409,7 @@
     transition: transform 280ms var(--ease-ios);
   }
   .switch[aria-checked='true'] .knob {
-    transform: translateX(1.25rem);
+    transform: translateX(20px);
     background: #fff;
   }
 
@@ -4243,4 +4479,144 @@
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+/* Remote content blocked by default.
+   Visible and inert on purpose: silently dropping the resource would leave the
+   reader unaware something was there, which is worse than saying so. The URL is
+   shown as text rather than a link — a link is one mis-click away from the
+   request this exists to prevent. */
+.remote-blocked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border: 1px dashed var(--border, #3a423f);
+  border-radius: 6px;
+  background: var(--surface-2, rgba(127, 127, 127, 0.06));
+  font-size: 0.875rem;
+}
+.remote-blocked-label {
+  font-weight: 600;
+}
+.remote-blocked-detail {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125em;
+  word-break: break-all;
+  opacity: 0.75;
+}
+.remote-blocked-hint {
+  font-size: 0.8125em;
+  opacity: 0.6;
+}
+
+/* Release accessibility pass: visible actions and touch-sized controls. */
+.tree-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.tree-row .tree-item {
+  flex: 1;
+  min-width: 0;
+}
+.tree-actions {
+  flex: 0 0 auto;
+}
+.context-menu {
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+.settings-content[hidden] {
+  display: none;
+}
+@media (max-width: 900px) {
+  .activity-rail-bottom {
+    height: 64px;
+    background: var(--color-bg-rail);
+  }
+  .tab-btn {
+    width: 60px;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+  }
+  .tab-btn span {
+    position: relative;
+  }
+  .tab-btn::before {
+    width: 48px;
+    height: 52px;
+    border-radius: 16px;
+  }
+  :root {
+    --bottom-bar-h: calc(80px + env(safe-area-inset-bottom));
+  }
+  .icon-btn,
+  .right-tab,
+  .view-switcher-btn,
+  .context-menu button,
+  .settings-nav button,
+  .btn,
+  .outline-label {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .view-switcher-btn {
+    padding-inline: 10px;
+  }
+  .settings-compact {
+    display: block;
+  }
+  .settings-compact .settings-nav {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    border: 0;
+  }
+  .settings-compact .settings-nav button {
+    text-align: left;
+    width: 100%;
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .settings-compact .settings-content {
+    padding: 0;
+  }
+  .settings-back {
+    margin-bottom: 12px;
+  }
+  .settings-section-title {
+    font-size: 1.15rem;
+    margin: 0 0 16px;
+  }
+  .tree-actions {
+    min-width: 44px;
+  }
+}
+@media (max-width: 360px) {
+  .tab-btn {
+    width: 54px;
+  }
+  .note-header-actions {
+    gap: 0;
+  }
+  .view-switcher-btn {
+    padding-inline: 6px;
+  }
+}
+@media (pointer: coarse) {
+  .tree-actions,
+  .context-menu button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Keep drawer state while excluding closed controls from focus and accessibility. */
+.sidebar[hidden],
+.right-sidebar[hidden] {
+  display: none;
 }

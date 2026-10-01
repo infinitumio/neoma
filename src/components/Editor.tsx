@@ -13,7 +13,9 @@ import { setActiveView } from '@/editor/activeView'
 import { updateNoteContent, saveNoteNow, saveAttachment } from '@/app/vaultStore'
 import { useSettings } from '@/settings/settingsStore'
 import { useUi } from '@/app/uiStore'
+import { EditorFormatBar } from './EditorFormatBar'
 import { SelectionToolbar, type ToolbarPosition } from './SelectionToolbar'
+import { useKeyboardOpen } from '@/hooks/useKeyboardOpen'
 import { useIsMobile } from '@/hooks/useMediaQuery'
 
 /** Position the toolbar above the current selection, capturing its range. */
@@ -56,6 +58,13 @@ export function Editor({ path, content }: EditorProps) {
   // the custom floating format toolbar is disabled to avoid overlapping it.
   const isMobile = useIsMobile()
   const [toolbar, setToolbar] = useState<ToolbarPosition | null>(null)
+  // Drives the phone's format bar: it rides above the keyboard, so it should
+  // exist exactly while the editor holds focus.
+  const [editing, setEditing] = useState(false)
+  // Focus alone is not enough: the editor is focused on mount, and iOS will not
+  // raise the keyboard without a gesture, so the bar would sit at the bottom of
+  // the screen over the tab bar with nothing to dock to.
+  const keyboard = useKeyboardOpen()
 
   useEffect(() => {
     if (!container.current) return
@@ -114,6 +123,13 @@ export function Editor({ path, content }: EditorProps) {
 
     dom.addEventListener('paste', onPaste)
     dom.addEventListener('drop', onDrop)
+    const onFocusIn = () => setEditing(true)
+    const onFocusOut = () => setEditing(false)
+    view.contentDOM.addEventListener('focus', onFocusIn)
+    view.contentDOM.addEventListener('blur', onFocusOut)
+    // The view is focused above, before these listeners exist, so seed from the
+    // live state rather than waiting for an event that has already fired.
+    setEditing(document.activeElement === view.contentDOM)
     // Keep the floating toolbar glued to the selection while scrolling.
     const onScroll = () => refreshToolbar()
     view.scrollDOM.addEventListener('scroll', onScroll, { passive: true })
@@ -140,6 +156,9 @@ export function Editor({ path, content }: EditorProps) {
     return () => {
       dom.removeEventListener('paste', onPaste)
       dom.removeEventListener('drop', onDrop)
+      view.contentDOM.removeEventListener('focus', onFocusIn)
+      view.contentDOM.removeEventListener('blur', onFocusOut)
+      setEditing(false)
       view.scrollDOM.removeEventListener('scroll', onScroll)
       window.removeEventListener('neoma:insert-text', onInsert)
       window.removeEventListener('neoma:scroll-to-heading', onGotoHeading)
@@ -166,6 +185,9 @@ export function Editor({ path, content }: EditorProps) {
   return (
     <>
       <div ref={container} className="editor-pane" data-testid="editor" />
+      {editing && keyboard.open && isMobile && viewRef.current && (
+        <EditorFormatBar view={viewRef.current} bottom={keyboard.inset} />
+      )}
       {toolbar && !isMobile && viewRef.current && (
         <SelectionToolbar
           view={viewRef.current}

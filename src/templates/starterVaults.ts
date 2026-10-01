@@ -23,7 +23,7 @@ export const STARTERS: Starter[] = [
   {
     id: 'demo',
     name: 'Feature tour',
-    description: 'A guided vault that shows off every feature — dates are set around today.',
+    description: 'A guided vault that shows off every feature, with dates set around today.',
     files: () => [
       {
         path: 'Start here.md',
@@ -37,13 +37,13 @@ tags:
 
 # 👋 Welcome to the neoma feature tour
 
-This vault is filled with live examples. Everything is a plain Markdown file on
-your device — nothing is uploaded. Work through the pages below, then delete
+This vault is filled with live examples. Your notes are stored locally as Markdown on
+your device and can be exported as files — nothing is uploaded. Work through the pages below, then delete
 what you don't need.
 
 > [!tip] Two things to try first
 > 1. Type \`/\` on a blank line for the **slash menu** (headings, math, callouts, columns…).
-> 2. Press \`Ctrl/Cmd+K\` for the **command palette**.
+> 2. Open **Files** to find your notes. Use **…** beside a page to rename, move or export it.
 
 ## The tour
 
@@ -169,7 +169,7 @@ tags:
 
 # Tasks with due dates
 
-Checkboxes under a **"Tasks"** (or **"To-do"**) heading become tracked tasks —
+Checkboxes under a **"Tasks"** (or **"To-do"**) heading become tracked tasks:
 no special syntax needed. Giving any checkbox a 📅 due date, priority, course
 or recurrence also makes it a task. Plain checklists elsewhere stay checklists.
 Tasks show up in the **Tasks** panel (Today / Upcoming) and on the **Calendar**.
@@ -216,18 +216,18 @@ tags:
 
 # Biology 101
 
-- Lecture: [[Courses/Biology 101/Lecture 1 — Cells|Lecture 1 — Cells]]
+- Lecture: [[Courses/Biology 101/Lecture 1 - Cells|Lecture 1 - Cells]]
 - Exam: [[Courses/Biology 101/Final exam|Final exam]]
 
 Below is a live embed of the lecture:
 
-![[Courses/Biology 101/Lecture 1 — Cells]]
+![[Courses/Biology 101/Lecture 1 - Cells]]
 `,
       },
       {
-        path: 'Courses/Biology 101/Lecture 1 — Cells.md',
+        path: 'Courses/Biology 101/Lecture 1 - Cells.md',
         content: `---
-title: Lecture 1 — Cells
+title: Lecture 1 - Cells
 type: lecture
 course: Biology
 date: ${d(-3)}
@@ -235,7 +235,7 @@ tags:
   - biology
 ---
 
-# Lecture 1 — Cells
+# Lecture 1 - Cells
 
 ## Key idea
 
@@ -295,7 +295,7 @@ tags:
 
 # Study group
 
-Meet to review [[Courses/Biology 101/Lecture 1 — Cells|Lecture 1]]. Referenced on
+Meet to review [[Courses/Biology 101/Lecture 1 - Cells|Lecture 1]]. Referenced on
 [[${d(2)}]] so it shows a link marker on the calendar.
 `,
       },
@@ -326,7 +326,7 @@ tags:
   {
     id: 'university',
     name: 'University study',
-    description: 'Courses, lecture notes, exam prep — set up for a semester of study.',
+    description: 'Courses, lecture notes and exam prep, set up for a semester of study.',
     files: () => [
       {
         path: 'Start here.md',
@@ -344,7 +344,7 @@ This vault is set up for university. A **page** is a note; a page can contain
 ## Try this
 
 1. Open [[Courses/Courses]] to see your course pages
-2. Press \`Ctrl/Cmd+K\` for the command palette
+2. Open **Files**, then **…** beside a page to see its actions
 3. Type \`/\` on a blank line for the slash-command menu (headings, equations, callouts…)
 4. Open the **Exam preparation** page and add a real exam
 

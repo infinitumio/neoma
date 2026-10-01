@@ -85,7 +85,7 @@ export function StatusBar() {
           title={
             online
               ? 'neoma runs locally. Being online is never required.'
-              : 'Offline — everything keeps working. Notes are stored on this device.'
+              : 'Offline. Everything keeps working, notes are stored on this device.'
           }
         >
           <span className="dot" aria-hidden />

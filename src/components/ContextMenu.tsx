@@ -22,6 +22,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null
     const menu = ref.current
     if (!menu) return
     // Keep the menu on screen.
@@ -33,10 +34,11 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
     const onPointerDown = (event: MouseEvent) => {
       if (!menu.contains(event.target as Node)) onClose()
     }
-    window.addEventListener('mousedown', onPointerDown)
+    window.addEventListener('pointerdown', onPointerDown)
     window.addEventListener('blur', onClose)
     return () => {
-      window.removeEventListener('mousedown', onPointerDown)
+      window.removeEventListener('pointerdown', onPointerDown)
+      if (previous?.isConnected) previous.focus()
       window.removeEventListener('blur', onClose)
     }
   }, [x, y, onClose])
@@ -44,8 +46,11 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   const onKeyDown = (event: React.KeyboardEvent) => {
     const buttons = [...(ref.current?.querySelectorAll<HTMLElement>('button') ?? [])]
     const index = buttons.indexOf(document.activeElement as HTMLElement)
-    if (event.key === 'Escape') onClose()
-    else if (event.key === 'ArrowDown') {
+    if (event.key === 'Escape' || event.key === 'Tab') {
+      event.preventDefault()
+      event.stopPropagation()
+      onClose()
+    } else if (event.key === 'ArrowDown') {
       event.preventDefault()
       buttons[(index + 1) % buttons.length]?.focus()
     } else if (event.key === 'ArrowUp') {

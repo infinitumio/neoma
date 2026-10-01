@@ -49,6 +49,8 @@ export function RightSidebar() {
       onTouchEnd={drag.onTouchEnd}
       className={`right-sidebar${open ? ' open' : ''}`}
       aria-label="Note context"
+      aria-hidden={!open}
+      hidden={!open}
     >
       <div className="right-tabs" role="tablist" aria-label="Context panels">
         {TABS.map(({ id, label, icon: Icon }) => (
@@ -147,7 +149,7 @@ export function RightSidebar() {
                   </tr>
                   <tr>
                     <th scope="row">Tags</th>
-                    <td>{meta.tags.map((t) => `#${t}`).join(' ') || '—'}</td>
+                    <td>{meta.tags.map((t) => `#${t}`).join(' ') || 'None'}</td>
                   </tr>
                   {meta.citations.length > 0 && (
                     <tr>

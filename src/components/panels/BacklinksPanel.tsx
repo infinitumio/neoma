@@ -124,7 +124,7 @@ export function BacklinksContent({ path }: { path: string }) {
 
       {broken.length > 0 && (
         <p className="text-small text-faint" style={{ padding: 'var(--space-2)' }}>
-          {broken.length} broken link{broken.length > 1 ? 's' : ''} — click to create the missing
+          {broken.length} broken link{broken.length > 1 ? 's' : ''}. Click to create the missing
           note.
         </p>
       )}
