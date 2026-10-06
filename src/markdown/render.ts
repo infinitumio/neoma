@@ -101,8 +101,13 @@ function rehypeStaticTargets(opts: { resolveEmbed?: (target: string) => string |
         node.properties = { src: url, alt: stem(target), loading: 'lazy', className }
         node.children = []
       } else {
+        // A note (or other file): link to it, at the embedded heading if any.
+        const heading = node.properties['data-heading']
         node.tagName = 'a'
-        node.properties = { href: url, className }
+        node.properties = {
+          href: url + (typeof heading === 'string' ? `#${slugify(heading)}` : ''),
+          className,
+        }
       }
     })
   }

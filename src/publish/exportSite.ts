@@ -121,7 +121,10 @@ export async function exportSiteZip(name = 'My notes'): Promise<number> {
     }
     const resolveEmbed = (target: string) => {
       const found = attachments.get(target.toLowerCase())
-      return found ? relPath(note.path, found) : null
+      if (found) return relPath(note.path, found)
+      // `![[Another note]]` links to that note's page in the static site.
+      const embedded = graph.resolve(target, note.path)
+      return embedded && isMarkdown(embedded) ? relHtml(note.path, embedded) : null
     }
     const body = await renderMarkdown(text, { resolveLink, resolveEmbed, staticLinks: true })
     const article = `<h1>${esc(titleOf(note.path))}</h1>\n${body}`

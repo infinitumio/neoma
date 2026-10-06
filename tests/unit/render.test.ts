@@ -101,4 +101,20 @@ describe('renderMarkdown', () => {
     const prose = await renderMarkdown('`Q::` and `A::` work as shorthand.')
     expect(prose).not.toContain('flashcard-embed')
   })
+
+  it('keeps the heading of a ![[Note#Heading]] embed', async () => {
+    const html = await renderMarkdown('![[Waves#Interference]]')
+    expect(html).toContain('data-embed="Waves"')
+    expect(html).toContain('data-heading="Interference"')
+  })
+
+  it('links a note embed to its page and heading in a static export', async () => {
+    const html = await renderMarkdown('![[Waves#Interference]]', {
+      resolveEmbed: (t) => (t === 'Waves' ? 'Waves.html' : null),
+      staticLinks: true,
+    })
+    expect(html).toContain(
+      '<a href="Waves.html#interference" class="embed">Waves › Interference</a>',
+    )
+  })
 })
