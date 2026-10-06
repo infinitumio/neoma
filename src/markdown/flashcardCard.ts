@@ -60,6 +60,10 @@ export function remarkFlashcards() {
   return (tree: Root) => {
     visit(tree, 'paragraph', (node, index, parent) => {
       if (!parent || index === undefined) return
+      // Like the review deck (src/study/flashcards.ts), a card starts with a
+      // literal Question::/Q:: — not one quoted in `code` mid-sentence.
+      const first = node.children[0]
+      if (first?.type !== 'text' || !/^\s*(?:question|q)::/i.test(first.value)) return
       let text = paragraphText(node)
 
       // Pull an optional Topic::/Category:: label off the end.

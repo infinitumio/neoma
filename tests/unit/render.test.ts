@@ -74,4 +74,31 @@ describe('renderMarkdown', () => {
     expect(html).toContain('rel="noopener noreferrer"')
     expect(html).toContain('data-internal="Other.md"')
   })
+
+  it('gives wiki links and embeds real targets in a static export', async () => {
+    const html = await renderMarkdown('[[Known#Part Two]] [[Unknown]] ![[pic.png]] ![[doc.pdf]]', {
+      resolveLink: (t) => (t === 'Known' ? 'sub/Known.html' : null),
+      resolveEmbed: (t) => `files/${t}`,
+      staticLinks: true,
+    })
+    expect(html).toContain('href="sub/Known.html#part-two"')
+    expect(html).toMatch(
+      /<span class="wiki-link wiki-link-broken" data-target="Unknown">Unknown<\/span>/,
+    )
+    expect(html).toContain('<img src="files/pic.png" alt="pic"')
+    expect(html).toContain('<a href="files/doc.pdf" class="embed">')
+  })
+
+  it('leaves wiki links for the app to wire up outside a static export', async () => {
+    const html = await renderMarkdown('[[Known]]', { resolveLink: () => 'Known.md' })
+    expect(html).toContain('href="#"')
+  })
+
+  it('renders Question::/Answer:: paragraphs as flashcards, but not quoted syntax', async () => {
+    const card = await renderMarkdown('Question:: What is 2+2?\nAnswer:: `4`')
+    expect(card).toContain('class="flashcard-embed"')
+    expect(card).toContain('data-back="4"')
+    const prose = await renderMarkdown('`Q::` and `A::` work as shorthand.')
+    expect(prose).not.toContain('flashcard-embed')
+  })
 })

@@ -22,6 +22,8 @@ import { remarkFlashcards } from './flashcardCard'
 import { getMarkdownExtensions } from './registry'
 import { parseFrontmatter } from './frontmatter'
 import { maskNonProse } from './extractMeta'
+import { slugify } from '@/utils/misc'
+import { stem } from '@/utils/paths'
 
 const WIKI_SPAN_RE = /(!?)\[\[([^\][\n]+?)\]\]/g
 
@@ -56,6 +58,54 @@ export interface RenderOptions {
    * of turning them into in-app navigation anchors.
    */
   staticLinks?: boolean
+  /**
+   * Static-site export: URL for an `![[embed]]` target, or null if it isn't
+   * in the bundle. Images become `<img>`, anything else a plain link.
+   */
+  resolveEmbed?: (target: string) => string | null
+}
+
+const IMAGE_RE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
+
+const classesOf = (node: Element): string[] =>
+  Array.isArray(node.properties?.className) ? (node.properties.className as string[]) : []
+
+/**
+ * Static-site export has no Preview component to wire links up, so resolved
+ * wiki links get a real href (the resolver returns a page URL in this mode)
+ * and embeds become images or links.
+ */
+function rehypeStaticTargets(opts: { resolveEmbed?: (target: string) => string | null }) {
+  return (tree: HastRoot) => {
+    visit(tree, 'element', (node: Element) => {
+      const className = classesOf(node)
+      if (node.tagName === 'a' && className.includes('wiki-link')) {
+        const resolved = node.properties['data-resolved']
+        if (typeof resolved !== 'string') {
+          // Nothing to link to in the bundle: plain text, not a dead `#` link.
+          node.tagName = 'span'
+          delete node.properties.href
+          return
+        }
+        const heading = node.properties['data-heading']
+        node.properties.href =
+          resolved + (typeof heading === 'string' ? `#${slugify(heading)}` : '')
+        return
+      }
+      if (node.tagName !== 'span' || !className.includes('embed')) return
+      const target = String(node.properties['data-embed'] ?? '')
+      const url = opts.resolveEmbed?.(target)
+      if (!url) return
+      if (IMAGE_RE.test(target)) {
+        node.tagName = 'img'
+        node.properties = { src: url, alt: stem(target), loading: 'lazy', className }
+        node.children = []
+      } else {
+        node.tagName = 'a'
+        node.properties = { href: url, className }
+      }
+    })
+  }
 }
 
 /** Annotate anchors: external links open safely, local links stay internal. */
@@ -65,9 +115,7 @@ function rehypeLinkBehaviour(opts: { staticLinks?: boolean } = {}) {
       if (node.tagName !== 'a') return
       const href = node.properties?.href
       if (typeof href !== 'string') return
-      const className = Array.isArray(node.properties.className)
-        ? (node.properties.className as string[])
-        : []
+      const className = classesOf(node)
       if (className.includes('wiki-link') || className.includes('tag')) return
       if (/^[a-z][a-z0-9+.-]*:/i.test(href)) {
         node.properties.target = '_blank'
@@ -102,6 +150,8 @@ function buildProcessor(
   processor.use(rehypeSlug)
   processor.use(rehypeKatex, { errorColor: 'var(--color-error)', throwOnError: false })
   processor.use(rehypeLinkBehaviour, { staticLinks: options.staticLinks })
+  if (options.staticLinks)
+    processor.use(rehypeStaticTargets, { resolveEmbed: options.resolveEmbed })
   for (const ext of getMarkdownExtensions('rehype')) {
     processor.use(ext.plugin, ext.options as any)
   }
