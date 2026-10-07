@@ -1108,9 +1108,10 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     title: 'Reminder',
     category: 'Organisation',
     icon: 'reminder',
-    description: 'A reminder with a date',
+    description: 'A dated reminder (shows in Tasks & Calendar)',
     keywords: ['remind', 'alert'],
-    run: snippet('- [ ] ⏰ ${reminder} (due ${' + isoDate() + '})'),
+    // 📅 is the due-date marker the task parser reads (src/tasks/tasks.ts).
+    run: snippet('- [ ] ⏰ ${reminder} 📅 ${' + isoDate() + '}'),
   },
   {
     id: 'org.task',

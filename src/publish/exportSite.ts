@@ -21,16 +21,18 @@ const esc = (s: string) =>
 /** `../` prefix needed to reach the site root from a note's own folder. */
 const toRoot = (path: string) => '../'.repeat(path.split('/').length - 1)
 
-/** Relative, URL-encoded `.html` link from one vault path to another. */
-function relHtml(from: string, to: string): string {
+/** Relative, URL-encoded link from one vault path to another file. */
+function relPath(from: string, to: string): string {
   const fromDir = from.split('/').slice(0, -1)
-  const toParts = to.replace(/\.md$/i, '').split('/')
+  const toParts = to.split('/')
   let i = 0
   while (i < fromDir.length && i < toParts.length - 1 && fromDir[i] === toParts[i]) i++
   const up = fromDir.length - i
-  const rel = [...Array(up).fill('..'), ...toParts.slice(i)].join('/')
-  return encodeURI(rel) + '.html'
+  return encodeURI([...Array(up).fill('..'), ...toParts.slice(i)].join('/'))
 }
+
+/** Relative, URL-encoded `.html` link from one vault path to another note. */
+const relHtml = (from: string, to: string) => relPath(from, htmlPath(to))
 
 const LEAF = `<svg viewBox="0 0 64 64" width="24" height="24" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#141817"/><path d="M47 12 C47 33 35 46.5 18.5 49.5 C15.5 33 27 17.5 47 12 Z" fill="#4ade80"/><g stroke="#141817" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M18.5 49.5 C26 41.5 32.5 34 39.5 23.5"/><path d="M28.5 38.5 L37 40.5"/><path d="M33.5 30.5 L29 24.5"/></g><circle cx="39.5" cy="23.5" r="2.8" fill="#141817"/><circle cx="37" cy="40.5" r="2.3" fill="#141817"/><circle cx="29" cy="24.5" r="2.3" fill="#141817"/></svg>`
 
@@ -55,8 +57,11 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--border);p
 hr{border:none;border-top:1px solid var(--border);margin:28px 0}
 mark{background:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--text)}
 .wiki-link{color:var(--accent)}
+.wiki-link-broken{color:var(--text-2)}
 .callout{border:1px solid var(--border);border-radius:10px;padding:.6rem 1rem;margin:1rem 0;background:var(--raised)}
 .callout-title{font-weight:600;margin:0 0 .35rem}
+.katex-html{display:none}
+.katex-display{display:block;margin:1em 0;overflow-x:auto;text-align:center}
 .index-group{margin:22px 0}
 .index-group h2{font-size:1.05rem;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);padding-bottom:6px}
 .index-list{list-style:none;padding:0;margin:10px 0}
@@ -99,6 +104,14 @@ export async function exportSiteZip(name = 'My notes'): Promise<number> {
 
   const notes = entries.filter((e) => e.kind === 'file' && isMarkdown(e.path))
   const titleOf = (path: string) => graph.get(path)?.title ?? stem(path)
+  // `![[name.png]]` names a file by its path or, more often, just its filename.
+  const attachments = new Map<string, string>()
+  for (const e of entries) {
+    if (e.kind !== 'file' || isMarkdown(e.path)) continue
+    attachments.set(e.path.toLowerCase(), e.path)
+    const name = e.path.split('/').pop()!.toLowerCase()
+    if (!attachments.has(name)) attachments.set(name, e.path)
+  }
 
   for (const note of notes) {
     const text = await adapter.readText(note.path)
@@ -106,7 +119,14 @@ export async function exportSiteZip(name = 'My notes'): Promise<number> {
       const resolved = graph.resolve(target, note.path)
       return resolved ? relHtml(note.path, resolved) : null
     }
-    const body = await renderMarkdown(text, { resolveLink, staticLinks: true })
+    const resolveEmbed = (target: string) => {
+      const found = attachments.get(target.toLowerCase())
+      if (found) return relPath(note.path, found)
+      // `![[Another note]]` links to that note's page in the static site.
+      const embedded = graph.resolve(target, note.path)
+      return embedded && isMarkdown(embedded) ? relHtml(note.path, embedded) : null
+    }
+    const body = await renderMarkdown(text, { resolveLink, resolveEmbed, staticLinks: true })
     const article = `<h1>${esc(titleOf(note.path))}</h1>\n${body}`
     files[htmlPath(note.path)] = strToU8(
       pageShell(titleOf(note.path), article, toRoot(note.path), true),

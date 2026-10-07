@@ -1,42 +1,46 @@
-# Support Neoma
+# Neoma support
 
-Neoma is free and open source, and always will be. It is built by one independent
-developer in Australia, in the open, because your knowledge should belong to you,
-not to a subscription on someone else's server.
+Need help with Neoma for iPhone, iPad, desktop or the web?
+Email [iwan.dominik@outlook.com](mailto:iwan.dominik@outlook.com?subject=Neoma%20support).
+You can also [report an issue on GitHub](https://github.com/infinitumio/neoma/issues).
 
-If Neoma is useful to you, there are a few ways to help keep it alive and growing.
+## Getting started
 
-## Back the Kickstarter
+Choose **New vault** on a phone, or **Create my first vault** on desktop.
+A vault is a collection of notes and attachments stored on your device.
+Choose a starter or a blank vault, then create a page from **Files**.
+Use the **…** beside a page to rename, move, duplicate, export or delete it.
 
-The best way to support Neoma right now is to back the campaign to fund **Neoma
-Pro**: optional, end-to-end encrypted cloud sync and one-click publishing. The app
-stays free and open source forever; backing the campaign pre-orders Pro at a
-founder price and pays for the servers and development time to build it.
+## Back up your notes
 
-- Back on Kickstarter (launching soon): [neomadev.app](https://neomadev.app)
+Open **Files**, choose **More vault actions (…)**, then **Export vault as ZIP**.
+On iPhone or iPad, wait for **Export ready**, tap **Share or save**, then choose
+**Save to Files**. Keep a copy outside the app, preferably on another device too.
 
-## Sponsor ongoing development
+iPhone and iPad vaults are stored inside Neoma. They are not folders you can
+browse in Files until you export them. Deleting the app can delete its local notes.
+In the web app, clearing site data can delete browser vaults. Export before either action.
+Desktop folder vaults remain ordinary files in the folder you chose.
 
-Prefer to chip in regularly? Sponsorship covers the day-to-day: fixing bugs,
-shipping features, and keeping the lights on.
+## Restore or move notes
 
-- Sponsor on GitHub: [github.com/sponsors/infinitumio](https://github.com/sponsors/infinitumio)
+From the welcome screen choose **Import vault**, then select your exported ZIP.
+You can also import into an open vault through **Files → More vault actions → Import files or ZIP**.
+Import into a new vault when restoring a backup: importing into an existing vault
+can replace files with the same names. Transfer ZIPs between devices manually;
+Neoma does not currently provide automatic cloud sync.
 
-## Free ways that genuinely help
+## Recover a deleted page
 
-Not everything costs money. These make a real difference:
+Open **More → Recently deleted** on your phone and restore the page.
+Permanently deleted vaults cannot be recovered by us. We do not hold a copy of your notes.
+If content is missing, avoid clearing app data and contact support before reinstalling.
 
-- **Star the repo** on [GitHub](https://github.com/infinitumio/neoma) so more people find it.
-- **Try the web app** at [neomadev.app/app](https://neomadev.app/app) and tell a friend.
-- **Share it** with anyone who cares about privacy, local-first tools, or studying.
-- **Report bugs and ideas** as [issues](https://github.com/infinitumio/neoma/issues).
-- **Contribute** code, docs, or translations. It is all open source.
+## Report a problem
 
-## Where the money goes
+Include your Neoma version, device model, operating-system version, what you
+expected, what happened, and steps that reproduce it. For export problems, mention
+whether **Export ready** and the system share sheet appeared.
 
-Neoma is a lean, independent project. Funding goes to development time and the
-hosting for the optional Pro services. Pro is priced cheaply, roughly to cover
-what it costs to run, not to be a profit centre. The local-first app is, and will
-remain, free.
-
-Thank you for helping keep your knowledge rooted locally.
+Do not send private notes, passwords or confidential attachments. If an example
+is needed, create a small sample with invented content.

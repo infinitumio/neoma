@@ -217,6 +217,31 @@ mark.mark-grey {
   padding: 0 0.4em;
 }
 
+.markdown-body .embed-missing {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+/* ![[Note]] / ![[Note#Heading]]: the embedded note, read-only, under its link. */
+.markdown-body .note-embed {
+  margin: 1em 0;
+  padding: 0.6em 1em 0.2em;
+  border-left: 3px solid var(--color-accent-muted);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--color-bg-raised);
+}
+
+.markdown-body .note-embed-title {
+  display: inline-block;
+  font-size: 0.8em;
+  font-weight: 600;
+  margin-bottom: 0.3em;
+}
+
+.markdown-body .note-embed-body > :first-child {
+  margin-top: 0;
+}
+
 .markdown-body .embed-image {
   display: block;
   max-width: 100%;

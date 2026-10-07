@@ -145,8 +145,12 @@ export function remarkInlineExtensions(options: InlineExtensionOptions = {}) {
           value: '',
           data: {
             hName: 'span',
-            hProperties: { className: ['embed'], 'data-embed': target },
-            hChildren: [{ type: 'text', value: target }],
+            hProperties: {
+              className: ['embed'],
+              'data-embed': target,
+              ...(heading ? { 'data-heading': heading } : {}),
+            },
+            hChildren: [{ type: 'text', value: heading ? `${target} › ${heading}` : target }],
           },
         } as PhrasingContent
       }

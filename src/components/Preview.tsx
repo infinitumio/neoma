@@ -15,6 +15,7 @@ import { openNoteByTarget } from '@/app/navigation'
 import { pdfThumbnail } from './pdfThumbnail'
 import { basename, dirname, isImage, isPdf, joinPath, normalizePath } from '@/utils/paths'
 import { isTaskCheckbox, isTasksHeading } from '@/tasks/tasks'
+import { noteSection } from '@/markdown/sections'
 import 'katex/dist/katex.min.css'
 
 // Lazy so pdf.js stays out of the initial bundle; embeds render it inline.
@@ -181,9 +182,9 @@ export function Preview({ path, content }: PreviewProps) {
 
     if (!adapter) return
 
-    const resolveTo = async (raw: string): Promise<string | null> => {
+    const resolveTo = async (raw: string, from = path): Promise<string | null> => {
       const clean = normalizePath(decodeURIComponent(raw))
-      for (const candidate of [clean, joinPath(dirname(path), clean)]) {
+      for (const candidate of [clean, joinPath(dirname(from), clean)]) {
         try {
           const blob = await adapter.readBinary(candidate)
           const url = URL.createObjectURL(blob)
@@ -198,14 +199,64 @@ export function Preview({ path, content }: PreviewProps) {
 
     const allowRemote = useSettings.getState().settings.allowRemoteContent
 
-    for (const img of container.querySelectorAll<HTMLImageElement>('img')) {
-      const src = img.getAttribute('src') ?? ''
-      if (/^[a-z][a-z0-9+.-]*:/i.test(src) || src.startsWith('blob:')) continue
-      void resolveTo(src).then((url) => {
-        if (url) img.src = url
-        else img.alt = `Missing attachment: ${src}`
-      })
+    const resolveImages = (root: ParentNode, from: string) => {
+      for (const img of root.querySelectorAll<HTMLImageElement>('img')) {
+        const src = img.getAttribute('src') ?? ''
+        if (/^[a-z][a-z0-9+.-]*:/i.test(src) || src.startsWith('blob:')) continue
+        void resolveTo(src, from).then((url) => {
+          if (url) img.src = url
+          else img.alt = `Missing attachment: ${src}`
+        })
+      }
     }
+    resolveImages(container, path)
+
+    /**
+     * `![[Note]]` / `![[Note#Heading]]`: render the note (or that section)
+     * inline, read-only, under a link to it. Embeds inside the embedded note
+     * stay as chips, so a note that embeds itself or a cycle cannot recurse.
+     */
+    const embedNote = async (embed: HTMLElement, notePath: string, heading?: string) => {
+      const text =
+        useVault.getState().notes.get(notePath)?.content ??
+        (await adapter.readText(notePath).catch(() => null))
+      const section = text == null ? null : noteSection(text, heading)
+      if (section == null || !embed.isConnected) {
+        embed.classList.add('embed-missing')
+        embed.title = heading
+          ? `No heading "${heading}" in ${basename(notePath)}`
+          : 'Note not found'
+        return
+      }
+      const rendered = await renderMarkdown(section, {
+        resolveLink: (t) => getLinkGraph().resolve(t, notePath),
+      })
+      if (!embed.isConnected) return
+      const block = document.createElement('div')
+      block.className = 'note-embed'
+      const title = document.createElement('a')
+      title.className = 'wiki-link note-embed-title'
+      title.href = '#'
+      title.dataset.target = notePath
+      title.dataset.resolved = notePath
+      if (heading) title.dataset.heading = heading
+      title.textContent =
+        basename(notePath).replace(/\.md$/i, '') + (heading ? ` › ${heading}` : '')
+      const body = document.createElement('div')
+      body.className = 'note-embed-body'
+      body.innerHTML = allowRemote ? rendered : neutraliseRemoteHtml(rendered)
+      for (const img of body.querySelectorAll<HTMLImageElement>('img[data-remote-src]')) {
+        img.replaceWith(blockedPlaceholder('image', img.dataset.remoteSrc ?? ''))
+      }
+      block.append(title, body)
+      // An embed alone on its line replaces the paragraph rather than nesting a
+      // block inside it.
+      const para = embed.parentElement
+      if (para?.tagName === 'P' && para.childNodes.length === 1) para.replaceWith(block)
+      else embed.replaceWith(block)
+      resolveImages(body, notePath)
+    }
+
     for (const embed of container.querySelectorAll<HTMLElement>('.embed[data-embed]')) {
       const target = embed.dataset.embed ?? ''
       if (isImage(target)) {
@@ -230,6 +281,11 @@ export function Preview({ path, content }: PreviewProps) {
           </Suspense>,
         )
         roots.push(root)
+      } else {
+        const resolved = getLinkGraph().resolve(target, path)
+        if (resolved && /\.md$/i.test(resolved) && resolved !== path) {
+          void embedNote(embed, resolved, embed.dataset.heading)
+        }
       }
     }
     // PDF links (`[label](file.pdf)`) get a preview card that opens the viewer.

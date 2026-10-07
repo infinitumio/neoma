@@ -6,6 +6,9 @@ import { fuzzyMatch } from '@/editor/slash/fuzzy'
 import { rankSlashCommands, listSlashCommands } from '@/editor/slash/registry'
 import { recordUsage, getRecents, toggleFavourite, getFavourites } from '@/editor/slash/usage'
 import { SLASH_COMMANDS, registerSlashCommands } from '@/editor/slash/commands'
+import { EditorView } from '@codemirror/view'
+import { EditorState } from '@codemirror/state'
+import { parseTasks } from '@/tasks/tasks'
 
 describe('fuzzyMatch', () => {
   it('matches a subsequence and reports indices', () => {
@@ -94,5 +97,17 @@ describe('command definitions', () => {
       expect(c.icon).toBeTruthy()
       expect(c.description.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('slash snippets', () => {
+  it('Reminder inserts a task the Tasks panel tracks, with a due date', () => {
+    const view = new EditorView({ state: EditorState.create({ doc: '' }) })
+    const reminder = SLASH_COMMANDS.find((c) => c.id === 'org.reminder')!
+    reminder.run({ view } as never)
+    const [task] = parseTasks('Note.md', view.state.doc.toString())
+    expect(task).toBeDefined()
+    expect(task.due).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    view.destroy()
   })
 })
