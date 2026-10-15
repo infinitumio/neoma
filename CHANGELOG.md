@@ -38,6 +38,17 @@ historical work, not files included in this web-only checkout.
 
 ## [Unreleased]
 
+### Changed (identity)
+
+- **New identity.** The Tidal block mark (a page parted by a tilde), Fern and Sage on Paper and
+  Ink, and IBM Plex Sans and Mono bundled for offline use. The old leaf and neon green are retired.
+- **One design system.** `brand/tokens.css` drives the app's palette and type. Every logo file
+  comes from `scripts/brand-assets.mjs` (`npm run icons`).
+- **Command palette** opens on the core actions; editing blocks come last; shortcuts show as
+  keycaps. Slash menu and find bar restyled.
+- **Docs vault** added at `website/docs`; it is published at neomadev.app/docs.
+- The GitHub Pages build is now a small landing page plus the live web app.
+
 ### Added (calendar, tasks & desktop round)
 
 - **Planner** — a collapsible rail group that expands to three separate panels:

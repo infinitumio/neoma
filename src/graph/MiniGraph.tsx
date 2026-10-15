@@ -141,7 +141,7 @@ export function MiniGraph() {
       context.stroke()
       context.globalAlpha = 1
 
-      const accent = css('--color-accent') || '#4ade80'
+      const accent = css('--color-accent') || '#7cc49a'
       for (const node of simulation.nodes) {
         const isCurrent = node.id === activePath
         const radius = (isCurrent ? 6 : 4) + Math.min(node.degree, 6) * 0.5

@@ -92,5 +92,5 @@ export function applyAppearance(settings: ApplicationSettings): void {
   root.style.setProperty('--font-size-editor', `${settings.editorFontSize / 16}rem`)
   root.style.setProperty('--editor-line-width', `${settings.editorLineWidth}rem`)
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute('content', settings.theme === 'dark' ? '#141817' : '#f6f8f7')
+  if (meta) meta.setAttribute('content', settings.theme === 'dark' ? '#141815' : '#f7f8f4')
 }

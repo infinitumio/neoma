@@ -34,9 +34,9 @@ function relPath(from: string, to: string): string {
 /** Relative, URL-encoded `.html` link from one vault path to another note. */
 const relHtml = (from: string, to: string) => relPath(from, htmlPath(to))
 
-const LEAF = `<svg viewBox="0 0 64 64" width="24" height="24" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#141817"/><path d="M47 12 C47 33 35 46.5 18.5 49.5 C15.5 33 27 17.5 47 12 Z" fill="#4ade80"/><g stroke="#141817" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M18.5 49.5 C26 41.5 32.5 34 39.5 23.5"/><path d="M28.5 38.5 L37 40.5"/><path d="M33.5 30.5 L29 24.5"/></g><circle cx="39.5" cy="23.5" r="2.8" fill="#141817"/><circle cx="37" cy="40.5" r="2.3" fill="#141817"/><circle cx="29" cy="24.5" r="2.3" fill="#141817"/></svg>`
+const LEAF = `<svg viewBox="18 18 64 64" width="20" height="20" aria-hidden="true"><mask id="nm-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><path d="M4 60 C18 30, 38 32, 50 50 C62 68, 82 70, 96 40" fill="none" stroke="#000" stroke-width="9"/></mask><rect x="18" y="18" width="64" height="64" rx="9" fill="#ebefea" mask="url(#nm-cut)"/></svg>`
 
-const SITE_CSS = `:root{--bg:#101413;--raised:#1b211f;--border:#262d2a;--accent:#4ade80;--text:#ece9e2;--text-2:#98a39d;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+const SITE_CSS = `:root{--bg:#141815;--raised:#1b211d;--border:#29302b;--accent:#7cc49a;--text:#ebefea;--text-2:#a3aca5;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}

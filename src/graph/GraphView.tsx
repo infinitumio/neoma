@@ -23,18 +23,19 @@ interface ViewTransform {
   scale: number
 }
 
-// Distinct, on-theme hues for colour-by-cluster (cycled for many clusters).
+// Muted, distinct hues for the optional colour-by-cluster mode (cycled for
+// many clusters). By default the graph stays neutral with one Fern highlight.
 const CLUSTER_PALETTE = [
-  '#4ade80',
-  '#60a5fa',
-  '#f472b6',
-  '#fbbf24',
-  '#a78bfa',
-  '#22d3ee',
-  '#fb923c',
-  '#34d399',
-  '#f87171',
-  '#c084fc',
+  '#7cc49a',
+  '#8fa9d6',
+  '#d3a0b6',
+  '#d6b468',
+  '#a99bd6',
+  '#7fbfc4',
+  '#d69f7a',
+  '#a5c47e',
+  '#d68c86',
+  '#b49ad0',
 ]
 
 type LayoutMode = 'force' | 'radial' | 'folder' | 'chronological'
@@ -467,7 +468,7 @@ export default function GraphView() {
       }
       context.globalAlpha = 1
 
-      const accent = css('--color-accent') || '#4ade80'
+      const accent = css('--color-accent') || '#7cc49a'
       const faint = css('--color-text-faint') || '#6b7672'
       const q = query.trim().toLowerCase()
       for (let i = 0; i < simulation.nodes.length; i++) {
@@ -717,7 +718,7 @@ export default function GraphView() {
     const ctx = out.getContext('2d')
     if (!ctx) return
     ctx.fillStyle =
-      getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim() || '#101413'
+      getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim() || '#141815'
     ctx.fillRect(0, 0, out.width, out.height)
     ctx.drawImage(canvas, 0, 0)
     out.toBlob((blob) => {

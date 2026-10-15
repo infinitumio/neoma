@@ -84,7 +84,7 @@ export function StatusBar() {
           className={`network-badge${online ? '' : ' offline'}`}
           title={
             online
-              ? 'neoma runs locally. Being online is never required.'
+              ? 'Neoma runs locally. Being online is never required.'
               : 'Offline. Everything keeps working, notes are stored on this device.'
           }
         >

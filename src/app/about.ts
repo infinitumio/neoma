@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /** Project identity constants (placeholders documented in the README). */
 export const APP_NAME = 'Neoma'
-export const APP_TAGLINE = 'Your knowledge, rooted locally.'
+export const APP_TAGLINE = 'Your notes should outlive the app.'
 export const APP_VERSION = '1.0.4'
 export const CREATOR = 'Iwan'
 export const REPOSITORY_URL = 'https://github.com/infinitumio/neoma'

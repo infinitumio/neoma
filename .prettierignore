@@ -9,3 +9,6 @@ CHANGELOG.md
 # Rust / Tauri build output and generated mobile projects
 src-tauri/target
 src-tauri/gen
+# Neoma Docs is a vault of notes written for Neoma's renderer (columns, callouts)
+website/docs
+dist-site

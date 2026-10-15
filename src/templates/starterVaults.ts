@@ -35,7 +35,7 @@ tags:
   - tour
 ---
 
-# 👋 Welcome to the neoma feature tour
+# 👋 Welcome to the Neoma feature tour
 
 This vault is filled with live examples. Your notes are stored locally as Markdown on
 your device and can be exported as files — nothing is uploaded. Work through the pages below, then delete
