@@ -10,7 +10,7 @@
     />
     <link rel="canonical" href="https://www.neomadev.app/" />
     <meta name="theme-color" content="#f7f8f4" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#141815" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0e1210" media="(prefers-color-scheme: dark)" />
     <meta property="og:title" content="Neoma | Open-source edition" />
     <meta property="og:description" content="Your notes should outlive the app." />
     <meta property="og:image" content="og.png" />
@@ -37,25 +37,25 @@
       }
       .mark {
         display: block;
-        width: 40px;
-        height: 40px;
+        width: 32px;
+        height: 32px;
         background: var(--nm-accent);
         -webkit-mask: url('brand/logo/icon-knockout.svg') center / contain no-repeat;
         mask: url('brand/logo/icon-knockout.svg') center / contain no-repeat;
       }
       .eyebrow {
-        margin: 28px 0 10px;
-        font: 12px var(--nm-font-mono);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--nm-text-faint);
+        margin: 28px 0 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--nm-accent);
       }
       h1 {
         margin: 0;
-        font-size: clamp(2rem, 6vw, 2.75rem);
-        font-weight: 600;
-        letter-spacing: -0.03em;
-        line-height: 1.1;
+        font-family: var(--nm-font-display);
+        font-size: clamp(2.25rem, 6vw, 3rem);
+        font-weight: 500;
+        letter-spacing: -0.015em;
+        line-height: 1.06;
       }
       p {
         color: var(--nm-text-muted);
@@ -80,9 +80,9 @@
         font-size: 0.875rem;
       }
       a.btn.primary {
-        background: var(--nm-text);
-        border-color: var(--nm-text);
-        color: var(--nm-bg);
+        background: var(--nm-accent);
+        border-color: var(--nm-accent);
+        color: var(--nm-on-accent);
       }
       a:focus-visible {
         outline: none;

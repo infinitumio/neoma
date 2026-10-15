@@ -19,8 +19,8 @@ export default defineConfig({
         short_name: 'Neoma',
         description:
           'A lightweight, open-source research journal and linked-note application. Your knowledge, rooted locally.',
-        theme_color: '#141815',
-        background_color: '#141815',
+        theme_color: '#0e1210',
+        background_color: '#0e1210',
         display: 'standalone',
         // Match the deploy base so the installed PWA scopes correctly (root for
         // Tauri/Docker, /neoma/app/ for the GitHub Pages demo).
