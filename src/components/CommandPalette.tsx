@@ -21,6 +21,41 @@ interface Item {
   run: () => void
 }
 
+/**
+ * The palette is Neoma's front door, so it opens on the core actions, in this
+ * order, then everything else the app does, and the slash menu's editing
+ * blocks last (they are one keystroke away with / anyway).
+ */
+const CORE_COMMANDS = [
+  'app.search',
+  'graph.open',
+  'vault.publish-site',
+  'daily.open-today',
+  'note.new',
+  'note.quick-open',
+  'app.settings',
+  'vault.switch',
+  'app.help',
+]
+const APP_CATEGORIES = new Set([
+  'Application',
+  'Pages',
+  'View',
+  'Search',
+  'Tabs',
+  'Daily notes',
+  'Export',
+  'Templates',
+])
+function paletteRank(id: string, category: string | undefined, title: string, terms: string[]) {
+  const core = CORE_COMMANDS.indexOf(id)
+  const group = core >= 0 ? 0 : APP_CATEGORIES.has(category ?? '') ? 1 : 2
+  if (!terms.length) return group * 100 + (core >= 0 ? core : 0)
+  // Typing: a title that starts with the query beats one that merely contains it.
+  const starts = title.startsWith(terms[0]) ? 0 : title.includes(terms[0]) ? 1 : 2
+  return starts * 1000 + group * 100
+}
+
 export function CommandPalette() {
   const open = useUi((s) => s.paletteOpen)
   const mode = useUi((s) => s.paletteMode)
@@ -61,6 +96,7 @@ export function CommandPalette() {
           run: () => useTabs.getState().openNote(meta.path),
         }))
     }
+    const terms = q.split(/\s+/).filter(Boolean)
     return listCommands()
       .filter(
         (command) =>
@@ -68,7 +104,9 @@ export function CommandPalette() {
           command.title.toLowerCase().includes(q) ||
           (command.category ?? '').toLowerCase().includes(q),
       )
-      .map((command) => ({
+      .map((c, i) => ({ c, i, rank: paletteRank(c.id, c.category, c.title.toLowerCase(), terms) }))
+      .sort((a, b) => a.rank - b.rank || a.i - b.i)
+      .map(({ c: command }) => ({
         id: command.id,
         label: command.title,
         category: command.category,
@@ -149,7 +187,17 @@ export function CommandPalette() {
               )}
               <span className="palette-label">{item.label}</span>
               {item.category && <span className="palette-category">{item.category}</span>}
-              {item.shortcut && <span className="kbd">{formatShortcut(item.shortcut)}</span>}
+              {item.shortcut && (
+                <span className="palette-keys" aria-label={formatShortcut(item.shortcut)}>
+                  {formatShortcut(item.shortcut)
+                    .split(/ \+ | /)
+                    .map((key, i) => (
+                      <kbd key={i} className="kbd" aria-hidden>
+                        {key}
+                      </kbd>
+                    ))}
+                </span>
+              )}
             </li>
           ))}
         </ul>

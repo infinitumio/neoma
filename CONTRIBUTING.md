@@ -1,7 +1,20 @@
-# Contributing to neoma
+# Contributing to Neoma
 
-Thank you for considering a contribution! neoma is a community-driven project and aims
-to be an approachable codebase.
+Thank you for considering a contribution. Neoma is a community-friendly project and aims to
+be an approachable codebase.
+
+## Your first contribution
+
+1. **Pick something small.** Issues labelled
+   [`good first issue`](https://github.com/infinitumio/neoma/issues?q=is%3Aopen+label%3A%22good+first+issue%22)
+   are scoped for a first pull request. Docs fixes are always welcome: every page in
+   [`website/docs`](website/docs) is a short Markdown note.
+2. **Set up** (Node 20): `npm ci && npm run dev`, then open http://localhost:5173.
+3. **Make the change** on a branch. For anything a person sees, use the tokens, type and icons
+   in [`brand/`](brand/README.md); do not add new colours or fonts.
+4. **Check it:** `npm run typecheck && npm run lint && npm run format:check && npm test`.
+5. **Open a pull request.** The template asks for the design intent, how you tested it, and
+   which docs changed. Small pull requests are reviewed fastest.
 
 **This is the right repository for pull requests.** Contributions land here, in the
 open-source (AGPL) edition.

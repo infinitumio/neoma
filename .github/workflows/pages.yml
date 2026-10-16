@@ -10,6 +10,7 @@ on:
     branches: [main]
     paths:
       - 'website/**'
+      - 'brand/**'
       - 'src/**'
       - 'index.html'
       - 'vite.config.ts'

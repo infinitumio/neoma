@@ -22,7 +22,7 @@ tags:
   - meta
 ---
 
-**Your knowledge, rooted locally.**
+**Your notes should outlive the app.**
 
 Neoma is a lightweight research journal and linked-note app. Everything you write stays on this device as plain Markdown.
 
@@ -432,7 +432,7 @@ tags:
 ---
 
 > [!note] The short version
-> neoma does not collect, transmit or sell your notes or usage data. Your vault remains on your device unless you deliberately export or synchronise it using another tool.
+> Neoma does not collect, transmit or sell your notes or usage data. Your vault remains on your device unless you deliberately export or synchronise it using another tool.
 
 ## Where your notes live
 

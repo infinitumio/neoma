@@ -1,0 +1,206 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/*
+ * Neoma brand tokens. The single source of truth for colour, type, spacing,
+ * radius and depth, shared by the website, the docs, the published-site
+ * themes and the app (src/themes/tokens.css maps its --color-* names onto
+ * these). Change a value here and every surface follows.
+ *
+ * Palette: warm paper, deep graphite and one accent, Fern. Sage is Fern's
+ * quieter relative for secondary detail and for the accent on dark. Green
+ * marks actions, active states and the one thing that matters; it is never
+ * decoration.
+ *
+ * Contrast (WCAG, against --nm-bg): text 16.2:1, muted 5.5:1, faint 4.6:1,
+ * accent 6.3:1. Dark: text 15.8:1, muted 7.2:1, faint 5.0:1, accent 9.2:1.
+ *
+ * Theme: light by default; dark when the OS asks for it, unless a page pins a
+ * theme with data-theme="light" | "dark" on <html>.
+ */
+
+@font-face {
+  font-family: 'Neoma Sans';
+  src: url('fonts/plex-sans.woff2') format('woff2');
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neoma Sans';
+  src: url('fonts/plex-sans-italic.woff2') format('woff2');
+  font-weight: 100 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neoma Serif';
+  src: url('fonts/plex-serif-medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neoma Mono';
+  src: url('fonts/plex-mono.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neoma Mono';
+  src: url('fonts/plex-mono-medium.woff2') format('woff2');
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---- Primitives (do not use directly in components) ---- */
+  --nm-paper: #f7f8f4;
+  --nm-stone: #e8ece7;
+  --nm-ink: #171c19;
+  --nm-ink-2: #0e1210;
+  --nm-graphite: #5e6761;
+  --nm-fern-600: #276749;
+  --nm-fern-700: #1d5038;
+  --nm-fern-100: #e5f0e8;
+  --nm-fern-300: #7cc49a;
+  --nm-fern-200: #a3d9b8;
+
+  /* ---- Type ---- */
+  --nm-font-sans:
+    'Neoma Sans', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  /* Display: marketing and docs headlines only. Never interface text. */
+  --nm-font-display: 'Neoma Serif', 'IBM Plex Serif', Charter, 'Iowan Old Style', Georgia, serif;
+  --nm-font-mono:
+    'Neoma Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Five sizes carry the hierarchy; weight and colour do the rest. */
+  --nm-text-xs: 0.75rem;
+  --nm-text-sm: 0.875rem;
+  --nm-text-md: 1rem;
+  --nm-text-lg: 1.1875rem;
+  --nm-text-xl: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+  --nm-text-2xl: clamp(2.5rem, 1.6rem + 3.2vw, 4.25rem);
+  /* Kept for components that predate the five-size scale. */
+  --nm-text-3xl: var(--nm-text-2xl);
+  --nm-leading-tight: 1.08;
+  --nm-leading: 1.6;
+  --nm-tracking-tight: -0.02em;
+  --nm-tracking-mono: 0.02em;
+  --nm-measure: 34rem;
+
+  /* ---- Space (4px grid) ---- */
+  --nm-space-1: 0.25rem;
+  --nm-space-2: 0.5rem;
+  --nm-space-3: 0.75rem;
+  --nm-space-4: 1rem;
+  --nm-space-5: 1.5rem;
+  --nm-space-6: 2rem;
+  --nm-space-7: 3rem;
+  --nm-space-8: 4.5rem;
+  --nm-space-9: 6.5rem;
+
+  /* ---- Shape: restrained, editorial ---- */
+  --nm-radius-xs: 2px;
+  --nm-radius-sm: 4px;
+  --nm-radius-md: 6px;
+  --nm-radius-lg: 10px;
+
+  /* ---- Motion ---- */
+  --nm-ease: cubic-bezier(0.2, 0, 0, 1);
+  --nm-fast: 120ms;
+  --nm-medium: 220ms;
+
+  /* ---- Light (default) ---- */
+  color-scheme: light;
+  --nm-bg: var(--nm-paper);
+  --nm-bg-sunken: #eff2ec;
+  --nm-surface: #ffffff;
+  --nm-surface-2: #fbfcf9;
+  --nm-hover: rgba(23, 28, 25, 0.045);
+  --nm-active: rgba(23, 28, 25, 0.075);
+  --nm-text: var(--nm-ink);
+  --nm-text-muted: var(--nm-graphite);
+  --nm-text-faint: #6a736c;
+  --nm-border: #e3e8e2;
+  --nm-border-strong: #cfd6ce;
+  --nm-accent: var(--nm-fern-600);
+  --nm-accent-strong: var(--nm-fern-700);
+  --nm-accent-soft: var(--nm-fern-100);
+  --nm-accent-subtle: rgba(39, 103, 73, 0.08);
+  --nm-accent-line: rgba(39, 103, 73, 0.3);
+  --nm-secondary: #4f8a68;
+  --nm-on-accent: #ffffff;
+  --nm-selection: rgba(39, 103, 73, 0.15);
+  --nm-success: #3b7a2f;
+  --nm-warning: #8a5a0b;
+  --nm-danger: #b0342c;
+  --nm-info: #3d5a80;
+  --nm-shadow-sm: 0 1px 1px rgba(23, 28, 25, 0.03);
+  --nm-shadow-md: 0 1px 2px rgba(23, 28, 25, 0.04), 0 4px 16px rgba(23, 28, 25, 0.04);
+  --nm-shadow-lg: 0 1px 2px rgba(23, 28, 25, 0.04), 0 24px 64px -24px rgba(23, 28, 25, 0.16);
+  --nm-focus-ring: 0 0 0 2px var(--nm-bg), 0 0 0 4px var(--nm-accent);
+}
+
+/* Dark: a near-black green, with Sage as the accent. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --nm-bg: var(--nm-ink-2);
+    --nm-bg-sunken: #0a0d0b;
+    --nm-surface: #151a17;
+    --nm-surface-2: #1a201c;
+    --nm-hover: rgba(232, 236, 231, 0.05);
+    --nm-active: rgba(232, 236, 231, 0.085);
+    --nm-text: #e8ece7;
+    --nm-text-muted: #98a29a;
+    --nm-text-faint: #7c867e;
+    --nm-border: #232a25;
+    --nm-border-strong: #333c36;
+    --nm-accent: var(--nm-fern-300);
+    --nm-accent-strong: var(--nm-fern-200);
+    --nm-accent-soft: rgba(124, 196, 154, 0.12);
+    --nm-accent-subtle: rgba(124, 196, 154, 0.1);
+    --nm-accent-line: rgba(124, 196, 154, 0.34);
+    --nm-secondary: #5f9f7b;
+    --nm-on-accent: #0e1210;
+    --nm-selection: rgba(124, 196, 154, 0.22);
+    --nm-success: #9ccb78;
+    --nm-warning: #d9a84a;
+    --nm-danger: #e57a70;
+    --nm-info: #9db4d6;
+    --nm-shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.3);
+    --nm-shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+    --nm-shadow-lg: 0 1px 2px rgba(0, 0, 0, 0.3), 0 24px 64px -24px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --nm-bg: var(--nm-ink-2);
+  --nm-bg-sunken: #0a0d0b;
+  --nm-surface: #151a17;
+  --nm-surface-2: #1a201c;
+  --nm-hover: rgba(232, 236, 231, 0.05);
+  --nm-active: rgba(232, 236, 231, 0.085);
+  --nm-text: #e8ece7;
+  --nm-text-muted: #98a29a;
+  --nm-text-faint: #7c867e;
+  --nm-border: #232a25;
+  --nm-border-strong: #333c36;
+  --nm-accent: var(--nm-fern-300);
+  --nm-accent-strong: var(--nm-fern-200);
+  --nm-accent-soft: rgba(124, 196, 154, 0.12);
+  --nm-accent-subtle: rgba(124, 196, 154, 0.1);
+  --nm-accent-line: rgba(124, 196, 154, 0.34);
+  --nm-secondary: #5f9f7b;
+  --nm-on-accent: #0e1210;
+  --nm-selection: rgba(124, 196, 154, 0.22);
+  --nm-success: #9ccb78;
+  --nm-warning: #d9a84a;
+  --nm-danger: #e57a70;
+  --nm-info: #9db4d6;
+  --nm-shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.3);
+  --nm-shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+  --nm-shadow-lg: 0 1px 2px rgba(0, 0, 0, 0.3), 0 24px 64px -24px rgba(0, 0, 0, 0.6);
+}

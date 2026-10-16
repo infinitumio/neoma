@@ -1,8 +1,8 @@
 # Security Policy
 
-## neoma's security model
+## Neoma's security model
 
-neoma is a fully client-side application. There is no server, no account system and no
+Neoma is a fully client-side application. There is no server, no account system and no
 data transmission — which removes whole classes of risk, but the following still matter:
 
 - **Rendered Markdown** must never execute script. The render pipeline drops raw HTML
@@ -10,7 +10,7 @@ data transmission — which removes whole classes of risk, but the following sti
 - **Imported ZIP archives** are untrusted input. Entries with path traversal (`..`) or
   hidden segments are skipped.
 - **Vault data at rest** uses the browser's storage (IndexedDB) or the user's own files.
-  neoma does not add encryption at rest; use OS-level disk encryption if you need it.
+  Neoma does not add encryption at rest; use OS-level disk encryption if you need it.
 - **The service worker** only ever caches same-origin build assets.
 
 ## Supported versions

@@ -49,11 +49,20 @@
   color: var(--color-accent);
 }
 
+/* The Neoma tile with the page cut out (brand/logo/icon-knockout.svg), tinted
+   by the accent: Fern on light, Sage on dark, with the surface showing through. */
+.brand-tile {
+  display: block;
+  flex-shrink: 0;
+  background: var(--color-accent);
+  -webkit-mask: url('../../brand/logo/icon-knockout.svg') center / contain no-repeat;
+  mask: url('../../brand/logo/icon-knockout.svg') center / contain no-repeat;
+}
+
 .rail-logo {
-  width: 2rem;
-  height: 2rem;
-  margin-bottom: var(--space-2);
-  border-radius: var(--radius-md);
+  width: 1.625rem;
+  height: 1.625rem;
+  margin: 0.125rem 0 var(--space-2);
 }
 
 /* ---- Sidebar (file explorer & panels) ---- */
@@ -682,7 +691,7 @@
 }
 
 .slash-item.selected {
-  background: var(--color-accent-subtle);
+  background: var(--color-bg-active);
 }
 
 .slash-item.disabled {
@@ -694,17 +703,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.85rem;
-  height: 1.85rem;
+  width: 1.625rem;
+  height: 1.625rem;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  color: var(--color-accent);
+  color: var(--color-text-secondary);
 }
 
 .slash-item.selected .slash-item-icon {
-  border-color: var(--color-accent-muted);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .slash-item-body {
@@ -1958,6 +1968,7 @@
 
 .palette-input {
   width: 100%;
+  min-height: 3rem;
   padding: var(--space-3) var(--space-4);
   background: transparent;
   border: none;
@@ -1981,15 +1992,29 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  min-height: 2.125rem;
+  padding: 0.3rem var(--space-3);
   border-radius: var(--radius-md);
   cursor: pointer;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
+}
+
+.palette-item > svg {
+  color: var(--color-text-faint);
+  flex-shrink: 0;
 }
 
 .palette-item[aria-selected='true'] {
-  background: var(--color-accent-subtle);
-  color: var(--color-text);
+  background: var(--color-bg-active);
+}
+
+.palette-item[aria-selected='true'] > svg {
+  color: var(--color-accent);
+}
+
+.palette-keys {
+  display: flex;
+  gap: 0.2rem;
 }
 
 .palette-item .palette-label {
@@ -2312,10 +2337,9 @@
   margin-bottom: var(--space-2);
 }
 
-.welcome-logo img {
-  width: 3.75rem;
-  height: 3.75rem;
-  border-radius: var(--radius-lg);
+.welcome-logo .brand-tile {
+  width: 3rem;
+  height: 3rem;
 }
 
 .welcome-logo h1 {
