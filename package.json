@@ -81,7 +81,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "fake-indexeddb": "^6.0.0",
-    "jsdom": "^25.0.1",
+    "jsdom": "^30.0.0",
     "prettier": "^3.4.2",
     "sharp": "^0.35.3",
     "typescript": "~5.7.0",
