@@ -47,9 +47,9 @@
     "@tauri-apps/plugin-fs": "^2.7.1",
     "@tauri-apps/plugin-process": "^2.4.0",
     "@tauri-apps/plugin-updater": "^2.14.0",
-    "dexie": "^4.4.6",
+    "dexie": "^4.4.7",
     "fflate": "^0.8.2",
-    "katex": "^0.19.0",
+    "katex": "^0.19.1",
     "lucide-react": "^0.469.0",
     "minisearch": "^7.1.0",
     "pdfjs-dist": "^4.10.38",
@@ -63,9 +63,9 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.0",
     "unified": "^11.0.5",
-    "unist-util-visit": "^5.0.0",
+    "unist-util-visit": "^5.2.0",
     "yaml": "^2.9.1",
-    "zustand": "^5.0.15"
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
@@ -85,7 +85,7 @@
     "prettier": "^3.9.10",
     "sharp": "^0.35.5",
     "typescript": "~5.7.0",
-    "typescript-eslint": "^8.72.0",
+    "typescript-eslint": "^8.72.1",
     "vite": "^6.0.0",
     "vite-plugin-pwa": "^0.21.0",
     "vitest": "^2.1.8"
